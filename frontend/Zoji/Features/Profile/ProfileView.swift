@@ -147,8 +147,9 @@ struct ProfileView: View {
                             Spacer()
                             Text(appearance.displayName)
                                 .font(.subheadline)
-                                .foregroundStyle(theme.accent)
+                                .foregroundStyle(.secondary)
                         }
+                        .foregroundStyle(.primary)
                         .contentShape(Rectangle())
                     }
                     Button {
