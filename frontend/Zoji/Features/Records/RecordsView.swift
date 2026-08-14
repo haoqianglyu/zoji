@@ -145,7 +145,11 @@ struct RecordsView: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .background(theme.background)
-            .searchable(text: $query, prompt: "搜索记录、类型或医院")
+            .searchable(
+                text: $query,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "搜索记录、类型或医院"
+            )
             .navigationTitle("健康记录")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -285,66 +289,135 @@ private struct AnnualExpenseSummary: Sendable {
 
 private struct AnnualExpenseSummaryCard: View {
     @Environment(\.appColorTheme) private var theme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let summary: AnnualExpenseSummary
+    @State private var isExpanded = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 12) {
-                Image(systemName: "chart.pie.fill")
-                    .font(.headline)
-                    .foregroundStyle(theme.accent)
-                    .frame(width: 40, height: 40)
-                    .background(theme.accentSoft, in: Circle())
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(summary.year.formatted(.number.grouping(.never).locale(L10n.locale)))
-                        .font(.headline)
-                    Text("\(summary.recordCount) 笔含费用记录")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: isExpanded ? 14 : 0) {
+            Button {
+                withAnimation(.snappy(duration: 0.28)) {
+                    isExpanded.toggle()
                 }
+            } label: {
+                expenseHeader
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(.isButton)
 
-            ForEach(summary.currencyGroups) { group in
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(RegionalFormat.currencyString(minorUnits: group.totalMinorUnits, code: group.code))
-                        .font(.title3.bold())
-                        .foregroundStyle(theme.accentDeep)
+            if isExpanded {
+                Divider()
 
-                    ForEach(group.kindAmounts) { item in
-                        VStack(spacing: 5) {
-                            HStack {
-                                Label(item.kind.displayName, systemImage: item.kind.symbol)
-                                    .lineLimit(1)
-                                Spacer(minLength: 8)
-                                Text(RegionalFormat.currencyString(minorUnits: item.minorUnits, code: group.code))
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                            }
-                            .font(.caption)
-
-                            ProgressView(
-                                value: Double(item.minorUnits),
-                                total: Double(max(group.totalMinorUnits, 1))
-                            )
-                            .tint(theme.accent)
+                ForEach(summary.currencyGroups) { group in
+                    VStack(alignment: .leading, spacing: 10) {
+                        if summary.currencyGroups.count > 1 {
+                            Text(RegionalFormat.currencyString(minorUnits: group.totalMinorUnits, code: group.code))
+                                .font(.subheadline.bold())
+                                .foregroundStyle(theme.accentDeep)
                         }
+
+                        ForEach(group.kindAmounts) { item in
+                            VStack(spacing: 5) {
+                                HStack {
+                                    Label(item.kind.displayName, systemImage: item.kind.symbol)
+                                        .lineLimit(1)
+                                    Spacer(minLength: 8)
+                                    Text(RegionalFormat.currencyString(minorUnits: item.minorUnits, code: group.code))
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
+                                .font(.caption)
+
+                                ProgressView(
+                                    value: Double(item.minorUnits),
+                                    total: Double(max(group.totalMinorUnits, 1))
+                                )
+                                .tint(theme.accent)
+                            }
+                        }
+                    }
+
+                    if group.id != summary.currencyGroups.last?.id {
+                        Divider()
                     }
                 }
 
-                if group.id != summary.currencyGroups.last?.id {
-                    Divider()
-                }
-            }
-
-            if summary.currencyGroups.count > 1 {
                 Text("不同币种分别统计，不进行汇率换算。")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+
+                if summary.currencyGroups.contains(where: { $0.code == "XXX" }) {
+                    Text("部分记录的币种未知，已单独列出且未并入人民币。")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                }
             }
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .contain)
+    }
+
+    @ViewBuilder
+    private var expenseHeader: some View {
+        if dynamicTypeSize >= .xxLarge {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 12) {
+                    expenseIcon
+                    expenseIdentity
+                    Spacer(minLength: 8)
+                    expansionChevron
+                }
+                expenseTotals
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else {
+            HStack(spacing: 12) {
+                expenseIcon
+                expenseIdentity
+                Spacer(minLength: 10)
+                expenseTotals
+                expansionChevron
+            }
+        }
+    }
+
+    private var expenseIcon: some View {
+        Image(systemName: "chart.pie.fill")
+            .font(.headline)
+            .foregroundStyle(theme.accent)
+            .frame(width: 40, height: 40)
+            .background(theme.accentSoft, in: Circle())
+    }
+
+    private var expenseIdentity: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(summary.year.formatted(.number.grouping(.never).locale(L10n.locale)))
+                .font(.headline)
+            Text("\(summary.recordCount) 笔含费用记录")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var expenseTotals: some View {
+        VStack(alignment: dynamicTypeSize >= .xxLarge ? .leading : .trailing, spacing: 2) {
+            ForEach(summary.currencyGroups) { group in
+                Text(RegionalFormat.currencyString(minorUnits: group.totalMinorUnits, code: group.code))
+                    .font(.subheadline.bold())
+                    .foregroundStyle(theme.accentDeep)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+        }
+    }
+
+    private var expansionChevron: some View {
+        Image(systemName: "chevron.down")
+            .font(.caption.bold())
+            .foregroundStyle(.tertiary)
+            .rotationEffect(.degrees(isExpanded ? 180 : 0))
     }
 }
 
@@ -400,6 +473,7 @@ struct HealthRecordEditorView: View {
     @State private var isLoadingAttachments = false
     @State private var attachmentProcessingMessage: String?
     @State private var recognizingAttachmentID: UUID?
+    @State private var recognitionTask: Task<Void, Never>?
     @State private var recognitionMessage: String?
     @State private var setsReminder = false
     @State private var reminderDueAt: Date
@@ -409,6 +483,7 @@ struct HealthRecordEditorView: View {
     @State private var linkedReminderID: UUID?
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @State private var errorTitle = L10n.string("无法保存")
     @State private var selectionSheet: SelectionSheet?
     @State private var showsAdvancedReminderSettings = false
     @FocusState private var focusedField: FocusedField?
@@ -487,6 +562,10 @@ struct HealthRecordEditorView: View {
             .task {
                 restoreLinkedReminderIfNeeded()
             }
+            .onDisappear {
+                recognitionTask?.cancel()
+                recognitionTask = nil
+            }
             .fileImporter(
                 isPresented: $isImportingPDFs,
                 allowedContentTypes: [.pdf],
@@ -512,7 +591,7 @@ struct HealthRecordEditorView: View {
                 .presentationDragIndicator(.visible)
             }
             .interactiveDismissDisabled(isSaving)
-            .alert("无法保存", isPresented: Binding(
+            .alert(errorTitle, isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
             )) {
@@ -656,7 +735,7 @@ struct HealthRecordEditorView: View {
         } header: {
             Text("附件")
         } footer: {
-            Text("最多 9 个、总计 75 MB。文字识别仅在点击图片上的扫描按钮后于本机进行；保存前请核对识别内容。")
+            Text("最多 9 个、总计 75 MB。文字识别仅在点击扫描按钮后于本机进行；多张图片可连续识别，保存前请核对内容。")
         }
     }
 
@@ -765,6 +844,16 @@ struct HealthRecordEditorView: View {
                 }
                 .buttonStyle(.bordered)
             }
+            .disabled(recognizingAttachmentID != nil || isLoadingAttachments)
+        }
+
+        if attachments.filter({ $0.kind == .image }).count > 1 {
+            Button {
+                recognizeAllImageAttachments()
+            } label: {
+                Label("识别全部图片", systemImage: "text.viewfinder")
+            }
+            .buttonStyle(.bordered)
             .disabled(recognizingAttachmentID != nil || isLoadingAttachments)
         }
 
@@ -967,6 +1056,7 @@ struct HealthRecordEditorView: View {
                 try await saveLinkedReminder(recordID: savedRecordID)
                 dismiss()
             } catch {
+                errorTitle = L10n.string("无法保存")
                 errorMessage = error.localizedDescription
             }
         }
@@ -1144,14 +1234,64 @@ struct HealthRecordEditorView: View {
         recognizingAttachmentID = attachment.id
         recognitionMessage = nil
 
-        Task {
+        recognitionTask?.cancel()
+        recognitionTask = Task {
             defer { recognizingAttachmentID = nil }
             do {
                 let result = try await MedicalRecordRecognitionService.recognize(imageData: attachment.data)
+                try Task.checkCancellation()
                 guard attachments.contains(where: { $0.id == attachment.id }) else { return }
                 applyRecognitionResult(result)
+            } catch is CancellationError {
+                return
             } catch {
+                errorTitle = L10n.string("无法识别")
                 errorMessage = L10n.string("无法识别这张图片，请选择更清晰的图片重试。")
+            }
+        }
+    }
+
+    private func recognizeAllImageAttachments() {
+        let imageAttachments = attachments.filter { $0.kind == .image }
+        guard imageAttachments.count > 1, recognizingAttachmentID == nil else { return }
+        recognitionMessage = nil
+
+        recognitionTask?.cancel()
+        recognitionTask = Task {
+            var recognizedCount = 0
+            var failedCount = 0
+            defer { recognizingAttachmentID = nil }
+
+            for attachment in imageAttachments {
+                do {
+                    try Task.checkCancellation()
+                    guard attachments.contains(where: { $0.id == attachment.id }) else { continue }
+                    recognizingAttachmentID = attachment.id
+                    let result = try await MedicalRecordRecognitionService.recognize(imageData: attachment.data)
+                    try Task.checkCancellation()
+                    guard attachments.contains(where: { $0.id == attachment.id }) else { continue }
+                    applyRecognitionResult(result)
+                    recognizedCount += 1
+                } catch is CancellationError {
+                    return
+                } catch {
+                    failedCount += 1
+                }
+            }
+
+            if recognizedCount == 0 {
+                errorTitle = L10n.string("无法识别")
+                errorMessage = L10n.string("这些图片均未识别成功，请选择更清晰的图片重试。")
+            } else if failedCount > 0 {
+                recognitionMessage = String(
+                    localized: "识别完成：\(recognizedCount) 张；未成功：\(failedCount) 张",
+                    locale: L10n.locale
+                )
+            } else {
+                recognitionMessage = String(
+                    localized: "识别完成：\(recognizedCount) 张，已合并到详情",
+                    locale: L10n.locale
+                )
             }
         }
     }
@@ -1275,9 +1415,17 @@ struct HealthRecordEditorView: View {
         }
 
         var filledFields: [String] = []
-        if notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        let existingNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        if existingNotes.isEmpty {
             notes = String(trimmedText.prefix(5_000))
             filledFields.append(L10n.string("详情"))
+        } else if !existingNotes.contains(trimmedText), notes.count < 5_000 {
+            let separator = "\n\n"
+            let remainingCount = max(0, 5_000 - notes.count - separator.count)
+            if remainingCount > 0 {
+                notes += separator + String(trimmedText.prefix(remainingCount))
+                filledFields.append(L10n.string("详情（已追加）"))
+            }
         }
 
         if (title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || title == kind.defaultTitle),
@@ -1294,7 +1442,7 @@ struct HealthRecordEditorView: View {
 
         if costAmount.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
            let cost = result.suggestedCost {
-            costAmount = cost
+            costAmount = RegionalFormat.numberInputString(cost)
             filledFields.append(L10n.string("费用"))
         }
 
@@ -1774,51 +1922,83 @@ struct HealthRecordDetailView: View {
 
 private struct HealthRecordTimelineRow: View {
     @Environment(\.appColorTheme) private var theme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let record: HealthRecord
 
     var body: some View {
-        HStack(spacing: 13) {
-            VStack(spacing: 3) {
-                Text(dayText)
-                    .font(.title3.bold().monospacedDigit())
-                    .lineLimit(1)
-                Text(weekdayText)
+        Group {
+            if dynamicTypeSize >= .xxLarge {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 13) {
+                        dateColumn
+                        kindIcon
+                        titleColumn
+                        Spacer(minLength: 0)
+                    }
+                    costLabel
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+            } else {
+                HStack(spacing: 13) {
+                    dateColumn
+                    kindIcon
+                    titleColumn
+                    Spacer(minLength: 4)
+                    costLabel
+                }
+            }
+        }
+        .padding(.vertical, 5)
+    }
+
+    private var dateColumn: some View {
+        VStack(spacing: 3) {
+            Text(dayText)
+                .font(.title3.bold().monospacedDigit())
+                .lineLimit(1)
+            Text(weekdayText)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .frame(minWidth: 46, alignment: .center)
+        .fixedSize(horizontal: true, vertical: false)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(L10n.date(record.occurredAt, dateStyle: .long, timeStyle: .omitted))
+    }
+
+    private var kindIcon: some View {
+        Image(systemName: record.kind.symbol)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(theme.accent)
+            .frame(width: 38, height: 38)
+            .background(theme.accentSoft, in: Circle())
+    }
+
+    private var titleColumn: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(localizedTitle)
+                .font(.headline)
+                .lineLimit(dynamicTypeSize >= .xxLarge ? 2 : 1)
+                .fixedSize(horizontal: false, vertical: true)
+            if let secondaryText {
+                Text(secondaryText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
-            .frame(minWidth: 46, alignment: .center)
-            .fixedSize(horizontal: true, vertical: false)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(L10n.date(record.occurredAt, dateStyle: .long, timeStyle: .omitted))
-
-            Image(systemName: record.kind.symbol)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(theme.accent)
-                .frame(width: 38, height: 38)
-                .background(theme.accentSoft, in: Circle())
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(localizedTitle)
-                    .font(.headline)
-                    .lineLimit(1)
-                if let secondaryText {
-                    Text(secondaryText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-            }
-
-            Spacer(minLength: 4)
-
-            if let cost = record.costCents {
-                Text(RegionalFormat.currencyString(minorUnits: cost, code: record.resolvedCurrencyCode))
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
-            }
         }
-        .padding(.vertical, 5)
+    }
+
+    @ViewBuilder
+    private var costLabel: some View {
+        if let cost = record.costCents {
+            Text(RegionalFormat.currencyString(minorUnits: cost, code: record.resolvedCurrencyCode))
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
     }
 
     private var dayText: String {

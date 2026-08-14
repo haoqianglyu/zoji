@@ -139,6 +139,12 @@ enum RegionalFormat {
         )
     }
 
+    static func representsSameDisplayedMass(_ lhsKilograms: Double, _ rhsKilograms: Double) -> Bool {
+        let lhs = (displayedMass(fromKilograms: lhsKilograms) * 100).rounded()
+        let rhs = (displayedMass(fromKilograms: rhsKilograms) * 100).rounded()
+        return lhs == rhs
+    }
+
     static func massString(fromKilograms kilograms: Double) -> String {
         "\(massInputString(fromKilograms: kilograms)) \(massUnitSymbol)"
     }
@@ -194,7 +200,17 @@ enum RegionalFormat {
 
     static func normalizedCurrencyCode(_ code: String) -> String {
         let normalized = code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        return normalized.count == 3 ? normalized : "CNY"
+        return validatedCurrencyCode(normalized) ?? "XXX"
+    }
+
+    static func validatedCurrencyCode(_ code: String) -> String? {
+        let normalized = code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        guard normalized.count == 3,
+              normalized.allSatisfy({ $0.isASCII && $0.isLetter }),
+              Locale.commonISOCurrencyCodes.contains(normalized) || normalized == "XXX" else {
+            return nil
+        }
+        return normalized
     }
 
     static func currencySymbol(for code: String) -> String {
@@ -215,6 +231,17 @@ enum RegionalFormat {
                 .precision(.fractionLength(0 ... digits))
                 .locale(L10n.locale)
         )
+    }
+
+    static func numberInputString(_ value: Decimal, maximumFractionDigits: Int = 2) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = L10n.locale
+        formatter.numberStyle = .decimal
+        formatter.usesGroupingSeparator = false
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = maximumFractionDigits
+        return formatter.string(from: NSDecimalNumber(decimal: value))
+            ?? NSDecimalNumber(decimal: value).stringValue
     }
 
     static func currencyString(minorUnits: Int, code: String) -> String {

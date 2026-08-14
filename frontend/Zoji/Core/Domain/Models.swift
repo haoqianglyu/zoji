@@ -237,7 +237,8 @@ struct HealthRecord: Identifiable, Hashable, Codable, Sendable {
 
     var resolvedCurrencyCode: String {
         // Records created before currency support always stored Chinese yuan.
-        RegionalFormat.normalizedCurrencyCode(currencyCode ?? "CNY")
+        guard let currencyCode else { return "CNY" }
+        return RegionalFormat.validatedCurrencyCode(currencyCode) ?? "XXX"
     }
 }
 

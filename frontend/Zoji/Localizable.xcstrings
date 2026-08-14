@@ -70,9 +70,21 @@
     "%@ 的“%@”还有 %lld 天" : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@'s “%2$@” is due in %3$lld days"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@'s “%2$@” is due in %3$lld day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@'s “%2$@” is due in %3$lld days"
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
@@ -239,6 +251,28 @@
         }
       }
     },
+    "%lld 笔含费用记录" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cost entry"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cost entries"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "0" : {
 
     },
@@ -302,6 +336,19 @@
         }
       }
     },
+    "haoqianglyu@gmail.com" : {
+
+    },
+    "iCloud 同步时间较长" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud Is Taking Longer Than Usual"
+          }
+        }
+      }
+    },
     "iCloud 同步暂时不可用，数据仍会安全保存在本机。" : {
       "localizations" : {
         "en" : {
@@ -313,7 +360,14 @@
       }
     },
     "iCloud 响应较慢，请重试" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud is taking longer than usual. Try again."
+          }
+        }
+      }
     },
     "iCloud 状态" : {
       "localizations" : {
@@ -412,6 +466,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unavailable"
+          }
+        }
+      }
+    },
+    "不同币种分别统计，不进行汇率换算。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Currencies are totaled separately without exchange-rate conversion."
           }
         }
       }
@@ -1142,11 +1206,22 @@
       }
     },
     "最多 9 个、总计 75 MB。文字识别仅在点击图片上的扫描按钮后于本机进行；保存前请核对识别内容。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Up to 9 attachments and 75 MB total. Text recognition runs on device only after you tap an image's scan button; review the result before saving."
+          }
+        }
+      }
+    },
+    "最多 9 个、总计 75 MB。文字识别仅在点击扫描按钮后于本机进行；多张图片可连续识别，保存前请核对内容。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to 9 attachments and 75 MB total. Text recognition runs on device only after you tap a scan button; you can process multiple images in sequence. Review the result before saving."
           }
         }
       }
@@ -2297,7 +2372,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pet profiles and health records are stored on this device first. With iCloud enabled, they sync between Apple devices through your private iCloud storage."
+            "value" : "Pet profiles and health records are stored locally on this device. With iCloud enabled, they sync across your Apple devices using your private iCloud storage."
           }
         }
       }
@@ -2576,6 +2651,16 @@
         }
       }
     },
+    "已找到 %lld 只宠物，其他资料会继续同步。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pets restored: %lld. More data may still appear."
+          }
+        }
+      }
+    },
     "已撤回“%@”，其他宠物保持不变。" : {
       "localizations" : {
         "en" : {
@@ -2664,9 +2749,21 @@
     "已添加 %lld 个 PDF，共 %@" : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Added %1$lld PDFs, %2$@ total"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Added %1$lld PDF, %2$@ total"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Added %1$lld PDFs, %2$@ total"
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
@@ -2680,9 +2777,21 @@
     "已添加 %lld 张，压缩 %@ → %@" : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Added %1$lld images, compressed %2$@ → %3$@"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Added %1$lld image, compressed %2$@ → %3$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Added %1$lld images, compressed %2$@ → %3$@"
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
@@ -2696,9 +2805,21 @@
     "已添加 %lld 张图片" : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Added %lld images"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Added %lld image"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Added %lld images"
+                }
+              }
+            }
           }
         }
       }
@@ -2706,9 +2827,21 @@
     "已添加 %lld 项健康提醒。之后完成任一提醒时，会自动生成对应的健康记录。" : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Added %lld health reminders. Completing a reminder will automatically create the corresponding health record."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Added %lld health reminder. Completing it will automatically create the corresponding health record."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Added %lld health reminders. Completing one will automatically create the corresponding health record."
+                }
+              }
+            }
           }
         }
       }
@@ -2886,6 +3019,16 @@
         }
       }
     },
+    "年度花费" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annual Spending"
+          }
+        }
+      }
+    },
     "年龄" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2951,7 +3094,6 @@
       }
     },
     "开始记录 %@ 的健康" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3337,7 +3479,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Complete care tasks on time and keep every health change traceable."
+            "value" : "Complete care tasks on time and keep a clear record of changes in your pet’s health."
           }
         }
       }
@@ -3396,9 +3538,21 @@
     "提前 %lld 天" : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld days before"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld day before"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld days before"
+                }
+              }
+            }
           }
         }
       }
@@ -3644,7 +3798,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Search records, types, or hospitals"
+            "value" : "Search records"
           }
         }
       }
@@ -3849,7 +4003,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Data Used to Provide Services"
+            "value" : "How Zoji Uses Your Data"
           }
         }
       }
@@ -4015,6 +4169,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unable to accept the family invitation. Make sure you are signed in to iCloud."
+          }
+        }
+      }
+    },
+    "无法识别" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to Recognize"
           }
         }
       }
@@ -4297,9 +4461,21 @@
     "有 %lld 个 PDF 未添加：%@" : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld PDFs were not added: %2$@"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld PDF was not added: %2$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld PDFs were not added: %2$@"
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
@@ -4313,9 +4489,21 @@
     "有 %lld 张图片未添加：%@" : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld images were not added: %2$@"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld image was not added: %2$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld images were not added: %2$@"
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
@@ -4518,6 +4706,7 @@
       }
     },
     "查看高德地图开放平台隐私权政策" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4674,6 +4863,16 @@
         }
       }
     },
+    "正在从 iCloud 恢复资料…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restoring from iCloud…"
+          }
+        }
+      }
+    },
     "正在准备%@的邀请…" : {
       "localizations" : {
         "en" : {
@@ -4744,6 +4943,16 @@
         }
       }
     },
+    "正在查找宠物档案、健康记录和提醒。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking for pet profiles, health records, and reminders."
+          }
+        }
+      }
+    },
     "正在查找附近的宠物医院…" : {
       "localizations" : {
         "en" : {
@@ -4760,6 +4969,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Checking iCloud status. Local data is unaffected."
+          }
+        }
+      }
+    },
+    "正在检查 iCloud 资料…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking iCloud…"
           }
         }
       }
@@ -4808,9 +5027,21 @@
     "每 %lld 个月" : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every %lld months"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld month"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld months"
+                }
+              }
+            }
           }
         }
       }
@@ -4818,9 +5049,21 @@
     "每 %lld 天" : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every %lld days"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld days"
+                }
+              }
+            }
           }
         }
       }
@@ -4828,9 +5071,21 @@
     "每 %lld 年" : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every %lld years"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld year"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld years"
+                }
+              }
+            }
           }
         }
       }
@@ -5185,6 +5440,16 @@
         }
       }
     },
+    "添加疫苗、驱虫、复诊或日常护理提醒。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add vaccination, deworming, follow-up, or routine care reminders."
+          }
+        }
+      }
+    },
     "添加第一只宠物，开始整理它的健康资料。" : {
       "localizations" : {
         "en" : {
@@ -5216,6 +5481,7 @@
       }
     },
     "点击“同意并继续”，表示你已了解上述信息，并同意爪记在提供相应功能时按说明处理必要信息。正式发布前还会补充完整的《用户协议》和《隐私政策》页面。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5257,6 +5523,7 @@
       }
     },
     "点击右上角添加疫苗、驱虫、复诊或日常护理提醒。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5301,7 +5568,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Information is provided by AMap. Call ahead to confirm before visiting."
+            "value" : "Zoji only displays map listings and does not guarantee a hospital’s credentials, current hours, or services. Call ahead before visiting."
           }
         }
       }
@@ -6274,6 +6541,7 @@
       }
     },
     "记录 %@ 的健康" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6445,6 +6713,36 @@
         }
       }
     },
+    "识别全部图片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognize All Images"
+          }
+        }
+      }
+    },
+    "识别完成：%lld 张，已合并到详情" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognition complete: %lld successful. Results were added to Details."
+          }
+        }
+      }
+    },
+    "识别完成：%lld 张；未成功：%lld 张" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognition complete: %1$lld succeeded; %2$lld failed."
+          }
+        }
+      }
+    },
     "识别文字" : {
       "localizations" : {
         "en" : {
@@ -6503,6 +6801,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Details"
+          }
+        }
+      }
+    },
+    "详情（已追加）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details (Appended)"
           }
         }
       }
@@ -6593,7 +6901,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Please Review and Accept the Privacy Notice"
+            "value" : "Please review and accept the Privacy Policy and Terms of Use."
           }
         }
       }
@@ -6845,6 +7153,16 @@
         }
       }
     },
+    "资料会继续在后台恢复，你可以先使用已显示的内容。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restoration will continue in the background. You can use the content already shown."
+          }
+        }
+      }
+    },
     "距离" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6984,6 +7302,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This backup was created by an incompatible version of Zoji."
+          }
+        }
+      }
+    },
+    "这些图片均未识别成功，请选择更清晰的图片重试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None of these images could be recognized. Choose clearer images and try again."
           }
         }
       }
@@ -7326,6 +7654,16 @@
         }
       }
     },
+    "部分记录的币种未知，已单独列出且未并入人民币。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some records have an unknown currency. They are listed separately and are not included in the CNY total."
+          }
+        }
+      }
+    },
     "配色主题" : {
       "localizations" : {
         "en" : {
@@ -7352,6 +7690,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Repeat Interval"
+          }
+        }
+      }
+    },
+    "重新检查" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check Again"
           }
         }
       }
@@ -7614,36 +7962,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sage"
-          }
-        }
-      }
-    },
-    "%lld 笔含费用记录" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld records with costs"
-          }
-        }
-      }
-    },
-    "不同币种分别统计，不进行汇率换算。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Currencies are totaled separately without exchange-rate conversion."
-          }
-        }
-      }
-    },
-    "年度花费" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Annual Spending"
           }
         }
       }

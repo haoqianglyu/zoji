@@ -593,13 +593,22 @@ final class AMapHospitalProvider: NSObject, HospitalMapProviding, @preconcurrenc
 
 @MainActor
 enum HospitalProviderPolicy {
-    static func shouldOfferAMap(at coordinate: CLLocationCoordinate2D) -> Bool {
+    private static var countryCache: [String: Bool] = [:]
+
+    static func shouldOfferAMap(at coordinate: CLLocationCoordinate2D) async -> Bool {
         #if targetEnvironment(simulator)
         false
         #else
         guard AMapSDKConfiguration.apiKey != nil else { return false }
-        return coordinate.latitude >= 17.5 && coordinate.latitude <= 54.5 &&
-            coordinate.longitude >= 72 && coordinate.longitude <= 136
+        let cacheKey = "\((coordinate.latitude * 10).rounded() / 10),\((coordinate.longitude * 10).rounded() / 10)"
+        if let cached = countryCache[cacheKey] { return cached }
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let countryCode = try? await CLGeocoder()
+            .reverseGeocodeLocation(location, preferredLocale: Locale(identifier: "en_US_POSIX"))
+            .first?.isoCountryCode
+        let isMainlandChina = countryCode?.uppercased() == "CN"
+        countryCache[cacheKey] = isMainlandChina
+        return isMainlandChina
         #endif
     }
 }
@@ -625,7 +634,7 @@ final class AutomaticHospitalProvider: HospitalMapProviding {
             referenceLocation: referenceLocation
         )
         #else
-        guard HospitalProviderPolicy.shouldOfferAMap(at: region.center),
+        guard await HospitalProviderPolicy.shouldOfferAMap(at: region.center),
               AMapPrivacyConsent.isGranted else {
             return try await mapKitProvider.searchHospitals(
                 query: query,

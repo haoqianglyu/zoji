@@ -156,6 +156,20 @@ final class RegionalFormatTests: XCTestCase {
         XCTAssertEqual(decoded.resolvedCurrencyCode, "CNY")
     }
 
+    func testMalformedCurrencyDoesNotMergeIntoChineseYuan() {
+        let record = HealthRecord(
+            id: UUID(),
+            petID: UUID(),
+            kind: .custom,
+            title: "Imported",
+            occurredAt: Date(),
+            costCents: 100,
+            currencyCode: "US"
+        )
+
+        XCTAssertEqual(record.resolvedCurrencyCode, "XXX")
+    }
+
     func testMassConversionRoundTripsStoredKilograms() {
         let displayed = RegionalFormat.displayedMass(fromKilograms: 27)
 
@@ -164,6 +178,67 @@ final class RegionalFormatTests: XCTestCase {
             27,
             accuracy: 0.000_001
         )
+    }
+
+    func testDisplayedMassComparisonIgnoresEditorRoundTripNoise() {
+        let storedKilograms = 28.0
+        let displayed = RegionalFormat.displayedMass(fromKilograms: storedKilograms)
+        let editorKilograms = RegionalFormat.kilograms(fromDisplayedMass: (displayed * 100).rounded() / 100)
+
+        XCTAssertTrue(RegionalFormat.representsSameDisplayedMass(storedKilograms, editorKilograms))
+    }
+}
+
+final class MedicalRecordRecognitionTests: XCTestCase {
+    func testRecognizesUSGroupedAmount() {
+        XCTAssertEqual(
+            MedicalRecordRecognitionService.detectedCost(in: "Total: 1,234.56"),
+            Decimal(string: "1234.56")
+        )
+    }
+
+    func testRecognizesEuropeanGroupedAmount() {
+        XCTAssertEqual(
+            MedicalRecordRecognitionService.detectedCost(in: "Amount 1.234,56"),
+            Decimal(string: "1234.56")
+        )
+    }
+
+    func testTreatsThreeTrailingDigitsAsThousands() {
+        XCTAssertEqual(
+            MedicalRecordRecognitionService.detectedCost(in: "合计 ¥1,234"),
+            Decimal(string: "1234")
+        )
+    }
+}
+
+final class FamilyPetMergeTests: XCTestCase {
+    func testConcurrentWeightAdditionsAreBothPreserved() {
+        let petID = UUID()
+        let original = WeightEntry(measuredAt: Date(timeIntervalSince1970: 1), kilograms: 10)
+        let local = WeightEntry(measuredAt: Date(timeIntervalSince1970: 2), kilograms: 11)
+        let remote = WeightEntry(measuredAt: Date(timeIntervalSince1970: 3), kilograms: 12)
+        let base = Pet(id: petID, name: "豆豆", species: .dog, weightKilograms: 10, weightEntries: [original])
+        let desired = Pet(id: petID, name: "豆豆", species: .dog, weightKilograms: 11, weightEntries: [original, local])
+        let server = Pet(id: petID, name: "豆豆", species: .dog, weightKilograms: 12, weightEntries: [original, remote])
+
+        let merged = FamilySharingService.mergingPetChange(server: server, desired: desired, base: base)
+
+        XCTAssertEqual(Set(merged.sortedWeightEntries.map(\.id)), Set([original.id, local.id, remote.id]))
+        XCTAssertEqual(merged.weightKilograms, 12)
+    }
+
+    func testLocalWeightDeletionDoesNotDeleteConcurrentRemoteAddition() {
+        let petID = UUID()
+        let deleted = WeightEntry(measuredAt: Date(timeIntervalSince1970: 1), kilograms: 10)
+        let remote = WeightEntry(measuredAt: Date(timeIntervalSince1970: 2), kilograms: 12)
+        let base = Pet(id: petID, name: "豆豆", species: .dog, weightKilograms: 10, weightEntries: [deleted])
+        let desired = Pet(id: petID, name: "豆豆", species: .dog, weightEntries: [])
+        let server = Pet(id: petID, name: "豆豆", species: .dog, weightKilograms: 12, weightEntries: [deleted, remote])
+
+        let merged = FamilySharingService.mergingPetChange(server: server, desired: desired, base: base)
+
+        XCTAssertEqual(merged.sortedWeightEntries.map(\.id), [remote.id])
     }
 }
 

@@ -1,3 +1,5 @@
+import CloudKit
+import CoreData
 import SwiftUI
 
 struct AppRootView: View {
@@ -6,8 +8,11 @@ struct AppRootView: View {
     @Environment(FamilySharingStore.self) private var familyStore
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(AppPrivacyConsent.storageKey) private var hasPrivacyConsent = false
+    @AppStorage(InitialCloudRestore.storageKey) private var hasCompletedInitialCloudRestore = false
     @State private var shareAcceptance = FamilyShareAcceptanceState.shared
     @State private var shareAcceptanceError: String?
+    @State private var initialCloudRestoreTask: Task<Void, Never>?
+    @State private var initialCloudRestoreSettleTask: Task<Void, Never>?
 
     var body: some View {
         Group {
@@ -18,7 +23,11 @@ struct AppRootView: View {
             } else {
                 RootTabView()
                     .task {
-                        await reloadDataAndSharedSnapshots()
+                        if hasCompletedInitialCloudRestore {
+                            await reloadDataAndSharedSnapshots()
+                        } else {
+                            await startInitialCloudRestore()
+                        }
                         familyStore.startSync()
                     }
                     .transition(.opacity)
@@ -49,6 +58,12 @@ struct AppRootView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: FamilySharingService.pendingChangesDidUpdateNotification)) { _ in
             familyStore.startSync()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSPersistentCloudKitContainer.eventChangedNotification)) { notification in
+            handleCloudKitEvent(notification)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: InitialCloudRestore.retryNotification)) { _ in
+            Task { await startInitialCloudRestore(force: true) }
         }
         .onReceive(NotificationCenter.default.publisher(for: FamilySharingService.didAcceptShareNotification)) { notification in
             if let error = notification.userInfo?["error"] as? Error {
@@ -123,6 +138,113 @@ struct AppRootView: View {
     private func reloadDataAndSharedSnapshots() async {
         await appStore.reloadPersistedAndFamilyData(using: familyStore)
     }
+
+    private func startInitialCloudRestore(force: Bool = false) async {
+        if force {
+            hasCompletedInitialCloudRestore = false
+        } else if hasCompletedInitialCloudRestore {
+            return
+        }
+
+        initialCloudRestoreTask?.cancel()
+        initialCloudRestoreSettleTask?.cancel()
+        appStore.initialCloudRestorePhase = .checking(restoredPetCount: appStore.pets.count)
+        await reloadDataAndSharedSnapshots()
+
+        guard PersistenceController.isCloudKitConfigured else {
+            finishInitialCloudRestore()
+            return
+        }
+
+        var accountCheckWasDelayed = false
+        do {
+            let accountStatus = try await CKContainer(
+                identifier: PersistenceController.cloudKitContainerIdentifier
+            ).accountStatus()
+            guard accountStatus == .available else {
+                finishInitialCloudRestore()
+                return
+            }
+        } catch {
+            accountCheckWasDelayed = true
+            appStore.initialCloudRestorePhase = .delayed(restoredPetCount: appStore.pets.count)
+        }
+
+        if !accountCheckWasDelayed {
+            appStore.initialCloudRestorePhase = .restoring(restoredPetCount: appStore.pets.count)
+        }
+        initialCloudRestoreTask = Task { @MainActor in
+            var lastPetIDs = Set(appStore.pets.map(\.id))
+
+            // SwiftData does not expose a direct "initial CloudKit import is done"
+            // API. Import notifications normally finish this task earlier; this
+            // loop keeps the UI current and provides a bounded fallback.
+            for attempt in 0 ..< 16 {
+                guard !Task.isCancelled, !hasCompletedInitialCloudRestore else { return }
+                try? await Task.sleep(for: .milliseconds(750))
+                guard !Task.isCancelled else { return }
+
+                await appStore.reloadPersistedData()
+                let currentPetIDs = Set(appStore.pets.map(\.id))
+                if currentPetIDs != lastPetIDs {
+                    lastPetIDs = currentPetIDs
+                    appStore.initialCloudRestorePhase = .restoring(
+                        restoredPetCount: currentPetIDs.count
+                    )
+                } else if attempt == 7 {
+                    appStore.initialCloudRestorePhase = .delayed(
+                        restoredPetCount: currentPetIDs.count
+                    )
+                }
+            }
+
+            await reloadDataAndSharedSnapshots()
+            finishInitialCloudRestore()
+        }
+    }
+
+    private func handleCloudKitEvent(_ notification: Notification) {
+        guard hasPrivacyConsent,
+              !hasCompletedInitialCloudRestore,
+              let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
+                as? NSPersistentCloudKitContainer.Event,
+              event.type == .import else {
+            return
+        }
+
+        initialCloudRestoreSettleTask?.cancel()
+
+        if event.endDate == nil {
+            appStore.initialCloudRestorePhase = .restoring(restoredPetCount: appStore.pets.count)
+            return
+        }
+
+        guard event.succeeded else {
+            appStore.initialCloudRestorePhase = .delayed(restoredPetCount: appStore.pets.count)
+            return
+        }
+
+        initialCloudRestoreSettleTask = Task { @MainActor in
+            // Give SwiftData a short moment to merge the final imported records
+            // into the local model context before hiding the status.
+            try? await Task.sleep(for: .milliseconds(1_200))
+            guard !Task.isCancelled else { return }
+            await reloadDataAndSharedSnapshots()
+            finishInitialCloudRestore()
+        }
+    }
+
+    private func finishInitialCloudRestore() {
+        initialCloudRestoreTask?.cancel()
+        initialCloudRestoreTask = nil
+        initialCloudRestoreSettleTask?.cancel()
+        initialCloudRestoreSettleTask = nil
+        hasCompletedInitialCloudRestore = true
+
+        withAnimation(.easeInOut(duration: 0.25)) {
+            appStore.initialCloudRestorePhase = .idle
+        }
+    }
 }
 
 private struct FamilyShareLoadingOverlay: View {
@@ -182,7 +304,7 @@ enum AMapPrivacyConsent {
         case declined = 2
     }
 
-    static let storageKey = "zoji.amap-privacy-consent.v1"
+    static let storageKey = "zoji.amap-privacy-consent.v2"
 
     static var status: Status {
         Status(rawValue: UserDefaults.standard.integer(forKey: storageKey)) ?? .undetermined
@@ -249,7 +371,7 @@ private struct PrivacyConsentView: View {
                             title: "附近宠物医院",
                             detail: LegalCopy.text(
                                 "只有在你使用医院功能并允许定位后，才会使用附近区域查找医院；如果需要启用第三方地图服务，会另行说明并征求同意。",
-                                "Your nearby area is used only when you open hospital search and grant location access. Optional third-party map services will be explained and require separate consent before use."
+                                "Your approximate location is used only when you search for nearby veterinary hospitals and grant location access. Optional third-party map services are explained separately and require your consent before use."
                             )
                         )
                     }
@@ -263,10 +385,10 @@ private struct PrivacyConsentView: View {
 
                     Text(LegalCopy.text(
                         "点击“同意并继续”，表示你已阅读并同意《隐私政策》和《用户协议》。高德等可选第三方服务会在实际需要时另行征求同意。",
-                        "By tapping Agree and Continue, you confirm that you have read and accepted the Privacy Policy and Terms of Use. Optional third-party services such as AMap will request separate consent only when needed."
+                        "By tapping Agree and Continue, you confirm that you have read and accepted the Privacy Policy and Terms of Use. Optional third-party services, such as AMap, ask for separate consent only when needed."
                     ))
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                         .fixedSize(horizontal: false, vertical: true)
 
                     Button(action: onAgree) {
@@ -280,7 +402,7 @@ private struct PrivacyConsentView: View {
                     .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 24)
-                .padding(.top, 54)
+                .padding(.top, 36)
                 .padding(.bottom, 36)
             }
         }
@@ -308,7 +430,7 @@ private struct PrivacyConsentView: View {
                     .font(.headline)
                 Text(L10n.dynamic(detail))
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -337,9 +459,9 @@ struct AMapPrivacyConsentView: View {
 
                     Text(LegalCopy.text(
                         "为了在中国大陆提供更完整的附近医院结果，爪记可以使用高德地图搜索服务。",
-                        "To provide more complete nearby hospital results in mainland China, Zoji can use AMap Search."
+                        "Use AMap for better hospital results in mainland China."
                     ))
-                    .font(.title3.weight(.semibold))
+                    .font(.title3.weight(.bold))
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
 
@@ -375,7 +497,15 @@ struct AMapPrivacyConsentView: View {
                     )
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(theme.accent)
-
+                }
+                .padding(20)
+                .padding(.bottom, 12)
+            }
+            .background(theme.background)
+            .navigationTitle(LegalCopy.text("高德医院搜索", "AMap Hospital Search"))
+            .navigationBarTitleDisplayMode(.inline)
+            .safeAreaInset(edge: .bottom) {
+                VStack(spacing: 8) {
                     Button {
                         onAgree()
                         dismiss()
@@ -393,26 +523,18 @@ struct AMapPrivacyConsentView: View {
                         onDecline()
                         dismiss()
                     } label: {
-                        Text(LegalCopy.text("暂不启用，使用 Apple 地图", "Not Now — Use Apple Maps"))
+                        Text(LegalCopy.text("改用 Apple 地图", "Use Apple Maps Instead"))
                             .font(.subheadline.weight(.semibold))
                             .frame(maxWidth: .infinity)
-                            .frame(height: 46)
+                            .frame(height: 44)
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(theme.accent)
                 }
-                .padding(20)
-            }
-            .background(theme.background)
-            .navigationTitle(LegalCopy.text("高德医院搜索", "AMap Hospital Search"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(LegalCopy.text("关闭", "Close")) {
-                        onDecline()
-                        dismiss()
-                    }
-                }
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+                .padding(.bottom, 8)
+                .background(theme.background)
             }
         }
         .interactiveDismissDisabled()
@@ -425,7 +547,7 @@ struct AMapPrivacyConsentView: View {
                 .frame(width: 24)
             Text(text)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -496,28 +618,28 @@ struct LegalDocumentView: View {
                 LegalCopy.text("我们处理的数据", "Data We Process"),
                 LegalCopy.text(
                     "爪记用于管理你主动输入的宠物资料、健康记录、提醒、费用、医院收藏及附件。爪记不提供独立账号系统，也不使用这些内容投放广告或进行跨 App 跟踪。",
-                    "Zoji manages pet profiles, health records, reminders, expenses, hospital favorites, and attachments that you choose to enter. Zoji does not operate its own account system and does not use this content for advertising or cross-app tracking."
+                    "Zoji stores the pet profiles, health records, reminders, expenses, favorite hospitals, and attachments that you choose to enter. Zoji does not operate its own account system or use this content for advertising or cross-app tracking."
                 )
             ),
             (
                 LegalCopy.text("本地保存与 iCloud", "Local Storage and iCloud"),
                 LegalCopy.text(
                     "数据会先保存在你的设备上。启用 iCloud 后，Apple 可通过你的私有 CloudKit 空间在设备间同步。家庭共享仅会向你选择并邀请的成员共享指定宠物的数据。",
-                    "Data is stored on your device first. When iCloud is enabled, Apple may sync it between devices through your private CloudKit storage. Family Sharing shares only the selected pet with members you invite."
+                    "Zoji stores data locally on your device. When iCloud is enabled, Apple syncs it across your devices using your private CloudKit storage. Family Sharing shares data only for the selected pet with people you invite."
                 )
             ),
             (
                 LegalCopy.text("病例识别", "Medical Record Recognition"),
                 LegalCopy.text(
                     "图片文字识别使用 Apple Vision，尽可能在设备上完成。被识别的图片只有在你保存记录时才会作为附件保存。",
-                    "Image text recognition uses Apple Vision and is performed on device whenever possible. Recognized images are stored as attachments only when you save the record."
+                    "Text recognition uses Apple Vision and is performed on device whenever possible. Images selected for recognition are saved as attachments only when you save the record."
                 )
             ),
             (
                 LegalCopy.text("位置与地图服务", "Location and Map Services"),
                 LegalCopy.text(
                     "只有在你使用医院功能并授权定位时，附近位置范围才会用于搜索。中国大陆可在另行征得同意后使用高德地图搜索；其他地区使用 Apple 地图。地图服务会按各自政策处理查询。爪记不会把宠物或健康数据发送给地图服务。",
-                    "The nearby area is used only when you open hospital search and grant location access. In mainland China, AMap Search may be used after separate consent; Apple Maps is used elsewhere. Each map provider processes queries under its own policy. Zoji does not send pet or health data to map providers."
+                    "Your approximate location is used only when you search for nearby veterinary hospitals and grant location access. In mainland China, AMap Search may be used after separate consent; Apple Maps is used elsewhere. Each map provider processes queries under its own policy. Zoji does not send pet or health data to map providers."
                 )
             ),
             (

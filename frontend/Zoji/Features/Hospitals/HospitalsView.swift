@@ -38,6 +38,18 @@ private enum HospitalResultScope: String, CaseIterable, Identifiable {
     }
 }
 
+private enum HospitalSheet: Identifiable {
+    case detail(HospitalSummary)
+    case amapConsent
+
+    var id: String {
+        switch self {
+        case .detail(let hospital): "detail-\(hospital.id)"
+        case .amapConsent: "amap-consent"
+        }
+    }
+}
+
 struct HospitalsView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.appColorTheme) private var theme
@@ -48,10 +60,10 @@ struct HospitalsView: View {
     @State private var mode = HospitalPresentationMode.map
     @State private var scope = HospitalResultScope.nearby
     @State private var selectedHospitalID: String?
-    @State private var selectedHospital: HospitalSummary?
+    @State private var presentedSheet: HospitalSheet?
+    @State private var presentsAMapConsentAfterDismiss = false
     @State private var hasCenteredOnUser = false
     @AppStorage(AMapPrivacyConsent.storageKey) private var amapPrivacyStatusRaw = AMapPrivacyConsent.Status.undetermined.rawValue
-    @State private var isAMapPrivacyPresented = false
 
     @State private var currentRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 31.2304, longitude: 121.4737),
@@ -83,6 +95,9 @@ struct HospitalsView: View {
 
                 resultHeader
                 resultList
+                    .layoutPriority(-1)
+                resultDisclaimer
+                    .padding(.bottom, 52)
             }
             .background(theme.background)
             .navigationTitle("宠物医院")
@@ -120,28 +135,39 @@ struct HospitalsView: View {
             }
             .onChange(of: selectedHospitalID) { _, hospitalID in
                 guard let hospitalID else { return }
-                selectedHospital = model.hospital(id: hospitalID)
-            }
-            .sheet(item: $selectedHospital, onDismiss: {
-                selectedHospitalID = nil
-            }) { hospital in
-                HospitalDetailView(
-                    hospital: hospital,
-                    onToggleFavorite: { model.toggleFavorite($0) }
-                )
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-            }
-            .sheet(isPresented: $isAMapPrivacyPresented) {
-                AMapPrivacyConsentView {
-                    amapPrivacyStatusRaw = AMapPrivacyConsent.Status.agreed.rawValue
-                    Task { await searchCurrentRegion() }
-                } onDecline: {
-                    amapPrivacyStatusRaw = AMapPrivacyConsent.Status.declined.rawValue
-                    Task { await searchCurrentRegion() }
+                if let hospital = model.hospital(id: hospitalID) {
+                    presentedSheet = .detail(hospital)
                 }
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
+            }
+            .sheet(item: $presentedSheet, onDismiss: {
+                selectedHospitalID = nil
+                if presentsAMapConsentAfterDismiss {
+                    presentsAMapConsentAfterDismiss = false
+                    Task { @MainActor in
+                        await Task.yield()
+                        presentedSheet = .amapConsent
+                    }
+                }
+            }) { sheet in
+                switch sheet {
+                case .detail(let hospital):
+                    HospitalDetailView(
+                        hospital: hospital,
+                        onToggleFavorite: { model.toggleFavorite($0) }
+                    )
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+                case .amapConsent:
+                    AMapPrivacyConsentView {
+                        amapPrivacyStatusRaw = AMapPrivacyConsent.Status.agreed.rawValue
+                        Task { await searchCurrentRegion() }
+                    } onDecline: {
+                        amapPrivacyStatusRaw = AMapPrivacyConsent.Status.declined.rawValue
+                        Task { await searchCurrentRegion() }
+                    }
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.hidden)
+                }
             }
         }
     }
@@ -259,7 +285,7 @@ struct HospitalsView: View {
         .onMapCameraChange(frequency: .onEnd) { context in
             currentRegion = context.region
         }
-        .frame(height: 285)
+        .frame(height: 250)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(alignment: .bottom) {
             Button {
@@ -331,18 +357,12 @@ struct HospitalsView: View {
                     ForEach(displayedHospitals) { hospital in
                         HospitalRow(
                             hospital: hospital,
-                            onSelect: { selectedHospital = hospital },
+                            onSelect: { presentedSheet = .detail(hospital) },
                             onToggleFavorite: { model.toggleFavorite(hospital) }
                         )
                     }
                 }
 
-                Text("地图信息可能存在延迟，就诊前请电话确认地址、营业时间和接诊范围。")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 10)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
@@ -352,11 +372,25 @@ struct HospitalsView: View {
         }
     }
 
+    private var resultDisclaimer: some View {
+        Text("地图信息可能存在延迟，就诊前请电话确认地址、营业时间和接诊范围。")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 8)
+    }
+
     private func searchCurrentRegion(allowAMapConsentPrompt: Bool = false) async {
         if allowAMapConsentPrompt,
-           HospitalProviderPolicy.shouldOfferAMap(at: currentRegion.center),
+           locationManager.location != nil,
+           await HospitalProviderPolicy.shouldOfferAMap(at: currentRegion.center),
            AMapPrivacyConsent.Status(rawValue: amapPrivacyStatusRaw) == .undetermined {
-            isAMapPrivacyPresented = true
+            if presentedSheet == nil {
+                presentedSheet = .amapConsent
+            } else {
+                presentsAMapConsentAfterDismiss = true
+            }
             return
         }
 

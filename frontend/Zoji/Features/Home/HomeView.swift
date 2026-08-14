@@ -26,6 +26,7 @@ struct SelectedPetSwitcher: View {
     }
 
     @Environment(\.appColorTheme) private var theme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let pets: [SelectedPet]
     let selectedID: SelectedPet.ID?
     let style: Style
@@ -85,8 +86,10 @@ struct SelectedPetSwitcher: View {
             Text(selection.pet.name)
                 .font(.caption.weight(isSelected ? .bold : .medium))
                 .foregroundStyle(.primary)
-                .lineLimit(1)
-                .frame(maxWidth: 62)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
+                .multilineTextAlignment(.center)
+                .frame(width: dynamicTypeSize.isAccessibilitySize ? 88 : 62)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -128,6 +131,7 @@ struct SelectedPetSwitcher: View {
 
 struct HomeView: View {
     @Environment(\.appColorTheme) private var theme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(AppStore.self) private var store
     @Environment(FamilySharingStore.self) private var familyStore
     @State private var petEditor: PetEditorPresentation?
@@ -148,6 +152,10 @@ struct HomeView: View {
             ScrollView {
                 if let selectedPet {
                     LazyVStack(spacing: 20) {
+                        if store.initialCloudRestorePhase.isVisible {
+                            initialCloudRestoreBanner
+                                .transition(.move(edge: .top).combined(with: .opacity))
+                        }
                         combinedPetSwitcher
                         petProfileCard(selectedPet)
                         weightTrendCard(selectedPet)
@@ -157,6 +165,11 @@ struct HomeView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
+                } else if store.initialCloudRestorePhase.isVisible {
+                    initialCloudRestoreBanner
+                        .padding(.horizontal, 16)
+                        .padding(.top, 24)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                 } else {
                     emptyPetState
                         .padding(20)
@@ -170,6 +183,7 @@ struct HomeView: View {
             .background(theme.background)
             .tint(theme.accent)
             .animation(.easeInOut(duration: 0.22), value: theme)
+            .animation(.easeInOut(duration: 0.25), value: store.initialCloudRestorePhase)
             .navigationTitle("爪记 Zoji")
             .sheet(item: $petEditor) { presentation in
                 PetEditorView(pet: presentation.pet)
@@ -238,6 +252,79 @@ struct HomeView: View {
         }
     }
 
+    private var initialCloudRestoreBanner: some View {
+        let phase = store.initialCloudRestorePhase
+        let isDelayed: Bool = {
+            if case .delayed = phase { return true }
+            return false
+        }()
+
+        return ZojiCard {
+            HStack(alignment: .top, spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(theme.accentSoft)
+                        .frame(width: 48, height: 48)
+
+                    if isDelayed {
+                        Image(systemName: "icloud.and.arrow.down")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(theme.accent)
+                    } else {
+                        ProgressView()
+                            .tint(theme.accent)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(isDelayed ? L10n.string("iCloud 同步时间较长") : restoreTitle(for: phase))
+                        .font(.headline)
+
+                    Text(restoreDetail(for: phase))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    if isDelayed {
+                        Button("重新检查") {
+                            NotificationCenter.default.post(
+                                name: InitialCloudRestore.retryNotification,
+                                object: nil
+                            )
+                        }
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(theme.accent)
+                        .padding(.top, 2)
+                    }
+                }
+
+                Spacer(minLength: 0)
+            }
+        }
+    }
+
+    private func restoreTitle(for phase: InitialCloudRestorePhase) -> String {
+        if case .checking = phase {
+            return L10n.string("正在检查 iCloud 资料…")
+        }
+        return L10n.string("正在从 iCloud 恢复资料…")
+    }
+
+    private func restoreDetail(for phase: InitialCloudRestorePhase) -> String {
+        if case .delayed = phase {
+            return L10n.string("资料会继续在后台恢复，你可以先使用已显示的内容。")
+        }
+
+        let count = phase.restoredPetCount
+        guard count > 0 else {
+            return L10n.string("正在查找宠物档案、健康记录和提醒。")
+        }
+        return String(
+            localized: "已找到 \(count) 只宠物，其他资料会继续同步。",
+            locale: L10n.locale
+        )
+    }
+
     private var combinedPetSwitcher: some View {
         SelectedPetSwitcher(
             pets: selectablePets,
@@ -282,44 +369,34 @@ struct HomeView: View {
                 .offset(x: 62, y: -72)
 
             VStack(alignment: .leading, spacing: 18) {
-                HStack(spacing: 16) {
-                    PetAvatarView(
-                        avatarData: pet.avatarData,
-                        avatarPresetID: pet.avatarPresetID,
-                        fallbackSymbol: pet.avatarSymbol,
-                        size: 78,
-                        background: .white.opacity(0.94),
-                        foreground: theme.accent
-                    )
-                    .overlay { Circle().stroke(.white.opacity(0.8), lineWidth: 3) }
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(pet.name)
-                            .font(.system(.title, design: .rounded, weight: .bold))
-                            .lineLimit(2)
-
-                        Text(petDescription(pet))
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(.white.opacity(0.82))
-                            .lineLimit(2)
-
-                        if let sharingLabel = selection.sharingLabel,
-                           let sharedPet = selection.sharedPet {
-                            Label(sharingLabel, systemImage: sharedPet.role.symbol)
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(.white.opacity(0.9))
-                        }
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 12) {
+                        profileAvatar(for: pet)
+                        profileIdentity(for: selection)
                     }
-
-                    Spacer(minLength: 0)
+                    .padding(.trailing, 48)
+                } else {
+                    HStack(spacing: 16) {
+                        profileAvatar(for: pet)
+                        profileIdentity(for: selection)
+                        Spacer(minLength: 0)
+                    }
                 }
 
-                HStack(spacing: 0) {
-                    profileMetric(title: "年龄", value: ageText(for: pet))
-                    metricDivider
-                    profileMetric(title: "体重", value: weightText(for: pet))
-                    metricDivider
-                    profileMetric(title: "健康记录", value: recordCountText(selection.records.count))
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(spacing: 10) {
+                        profileMetricRow(title: "年龄", value: ageText(for: pet))
+                        profileMetricRow(title: "体重", value: weightText(for: pet))
+                        profileMetricRow(title: "健康记录", value: recordCountText(selection.records.count))
+                    }
+                } else {
+                    HStack(spacing: 0) {
+                        profileMetric(title: "年龄", value: ageText(for: pet))
+                        metricDivider
+                        profileMetric(title: "体重", value: weightText(for: pet))
+                        metricDivider
+                        profileMetric(title: "健康记录", value: recordCountText(selection.records.count))
+                    }
                 }
             }
             .padding(22)
@@ -363,6 +440,42 @@ struct HomeView: View {
             .frame(width: 1, height: 32)
     }
 
+    private func profileAvatar(for pet: Pet) -> some View {
+        PetAvatarView(
+            avatarData: pet.avatarData,
+            avatarPresetID: pet.avatarPresetID,
+            fallbackSymbol: pet.avatarSymbol,
+            size: 78,
+            background: .white.opacity(0.94),
+            foreground: theme.accent
+        )
+        .overlay { Circle().stroke(.white.opacity(0.8), lineWidth: 3) }
+    }
+
+    private func profileIdentity(for selection: SelectedPet) -> some View {
+        let pet = selection.pet
+        return VStack(alignment: .leading, spacing: 6) {
+            Text(pet.name)
+                .font(.system(.title, design: .rounded, weight: .bold))
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(petDescription(pet))
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.white.opacity(0.82))
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let sharingLabel = selection.sharingLabel,
+               let sharedPet = selection.sharedPet {
+                Label(sharingLabel, systemImage: sharedPet.role.symbol)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
     private func weightTrendCard(_ selection: SelectedPet) -> some View {
         NavigationLink {
             WeightTrendView(
@@ -389,6 +502,20 @@ struct HomeView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.leading, 12)
+    }
+
+    private func profileMetricRow(title: String, value: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text(L10n.dynamic(title))
+                .font(.subheadline)
+                .foregroundStyle(.white.opacity(0.76))
+            Spacer(minLength: 12)
+            Text(value)
+                .font(.headline)
+                .multilineTextAlignment(.trailing)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder
@@ -865,11 +992,17 @@ struct ReminderListView: View {
             }
 
             if activeReminders.isEmpty {
-                ContentUnavailableView(
-                    "暂无提醒",
-                    systemImage: "bell.badge",
-                    description: Text("点击右上角添加疫苗、驱虫、复诊或日常护理提醒。")
-                )
+                ContentUnavailableView {
+                    Label("暂无提醒", systemImage: "bell.badge")
+                } description: {
+                    Text("添加疫苗、驱虫、复诊或日常护理提醒。")
+                } actions: {
+                    Button("添加提醒") {
+                        presentNewReminder()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(selectedPet == nil || selectedPet?.canEdit == false)
+                }
                 .listRowBackground(Color.clear)
             } else {
                 let overdue = activeReminders.filter(\.isOverdue)
@@ -889,11 +1022,7 @@ struct ReminderListView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    editor = ReminderEditorPresentation(
-                        reminder: nil,
-                        petID: selectedPet?.pet.id,
-                        sharedPet: selectedPet?.sharedPet
-                    )
+                    presentNewReminder()
                 } label: {
                     Image(systemName: "plus")
                 }
@@ -947,6 +1076,14 @@ struct ReminderListView: View {
             TransientSuccessBanner(message: $completionMessage)
         }
         .sensoryFeedback(.success, trigger: completionFeedbackTrigger)
+    }
+
+    private func presentNewReminder() {
+        editor = ReminderEditorPresentation(
+            reminder: nil,
+            petID: selectedPet?.pet.id,
+            sharedPet: selectedPet?.sharedPet
+        )
     }
 
     @ViewBuilder

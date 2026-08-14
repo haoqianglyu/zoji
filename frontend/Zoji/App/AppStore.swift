@@ -1,6 +1,31 @@
 import Foundation
 import Observation
 
+enum InitialCloudRestore {
+    static let storageKey = "zoji.initial-cloud-restore.v1"
+    static let retryNotification = Notification.Name("zoji.initial-cloud-restore.retry")
+}
+
+enum InitialCloudRestorePhase: Equatable {
+    case idle
+    case checking(restoredPetCount: Int)
+    case restoring(restoredPetCount: Int)
+    case delayed(restoredPetCount: Int)
+
+    var isVisible: Bool {
+        self != .idle
+    }
+
+    var restoredPetCount: Int {
+        switch self {
+        case .idle:
+            0
+        case .checking(let count), .restoring(let count), .delayed(let count):
+            count
+        }
+    }
+}
+
 @MainActor
 @Observable
 final class AppStore {
@@ -13,6 +38,7 @@ final class AppStore {
     var recordPersistenceMessage: String?
     var reminderPersistenceMessage: String?
     var notificationPermissionMessage: String?
+    var initialCloudRestorePhase = InitialCloudRestorePhase.idle
 
     @ObservationIgnored private let petRepository: (any PetRepository)?
     @ObservationIgnored private let healthRecordRepository: (any HealthRecordRepository)?
@@ -46,20 +72,6 @@ final class AppStore {
 
     var selectedPet: Pet? {
         pets.first { $0.id == selectedPetID }
-    }
-
-    var selectedReminders: [ReminderItem] {
-        guard let selectedPetID else { return [] }
-        return reminders
-            .filter { $0.petID == selectedPetID && $0.isEnabled }
-            .sorted { $0.dueAt < $1.dueAt }
-    }
-
-    var selectedRecords: [HealthRecord] {
-        guard let selectedPetID else { return [] }
-        return records
-            .filter { $0.petID == selectedPetID }
-            .sorted { $0.occurredAt > $1.occurredAt }
     }
 
     func selectedPet(using familyStore: FamilySharingStore) -> SelectedPet? {
@@ -299,7 +311,9 @@ final class AppStore {
         let originalPet = pets[index]
         var weightEntries = originalPet.weightEntries ?? []
         if let weightKilograms,
-           originalPet.weightKilograms.map({ abs($0 - weightKilograms) > 0.000_1 }) ?? true {
+           originalPet.weightKilograms.map({
+               !RegionalFormat.representsSameDisplayedMass($0, weightKilograms)
+           }) ?? true {
             weightEntries.append(WeightEntry(measuredAt: Date(), kilograms: weightKilograms))
         }
         let resolvedWeight = weightKilograms ?? weightEntries.max(by: { $0.measuredAt < $1.measuredAt })?.kilograms

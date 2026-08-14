@@ -4,6 +4,7 @@ import SwiftUI
 struct WeightTrendPreviewCard: View {
     let pet: Pet
     @Environment(\.appColorTheme) private var theme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(AppUnitSystem.storageKey) private var unitSystem = AppUnitSystem.system
 
     private var entries: [WeightEntry] { pet.sortedWeightEntries }
@@ -24,10 +25,14 @@ struct WeightTrendPreviewCard: View {
                         HStack(spacing: 8) {
                             Text(RegionalFormat.massString(fromKilograms: weight))
                                 .font(.subheadline.weight(.semibold))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.72)
                             if let deltaText {
                                 Text(deltaText)
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(deltaColor)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.72)
                             }
                         }
                     } else {
@@ -39,7 +44,7 @@ struct WeightTrendPreviewCard: View {
 
                 Spacer(minLength: 4)
 
-                if entries.count >= 2 {
+                if entries.count >= 2, dynamicTypeSize < .xxLarge {
                     Chart(entries.suffix(8)) { entry in
                         LineMark(
                             x: .value(L10n.string("日期"), entry.measuredAt),

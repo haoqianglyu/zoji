@@ -312,6 +312,7 @@ struct FamilyPendingChange: Codable, Identifiable, Sendable {
     let petID: UUID
     let entityID: UUID
     let pet: Pet?
+    let basePet: Pet?
     let healthRecord: HealthRecord?
     let reminder: ReminderItem?
 
@@ -326,27 +327,38 @@ struct FamilyPendingChange: Codable, Identifiable, Sendable {
 
     static func save(_ pet: Pet, at location: FamilyShareLocation) -> Self {
         Self(id: UUID(), createdAt: Date(), kind: .savePet, location: location,
-             petID: pet.id, entityID: pet.id, pet: pet, healthRecord: nil, reminder: nil)
+             petID: pet.id, entityID: pet.id, pet: pet, basePet: nil,
+             healthRecord: nil, reminder: nil)
+    }
+
+    static func save(_ pet: Pet, replacing basePet: Pet, at location: FamilyShareLocation) -> Self {
+        Self(id: UUID(), createdAt: Date(), kind: .savePet, location: location,
+             petID: pet.id, entityID: pet.id, pet: pet, basePet: basePet,
+             healthRecord: nil, reminder: nil)
     }
 
     static func save(_ record: HealthRecord, at location: FamilyShareLocation) -> Self {
         Self(id: UUID(), createdAt: Date(), kind: .saveHealthRecord, location: location,
-             petID: record.petID, entityID: record.id, pet: nil, healthRecord: record, reminder: nil)
+             petID: record.petID, entityID: record.id, pet: nil, basePet: nil,
+             healthRecord: record, reminder: nil)
     }
 
     static func delete(_ record: HealthRecord, at location: FamilyShareLocation) -> Self {
         Self(id: UUID(), createdAt: Date(), kind: .deleteHealthRecord, location: location,
-             petID: record.petID, entityID: record.id, pet: nil, healthRecord: record, reminder: nil)
+             petID: record.petID, entityID: record.id, pet: nil, basePet: nil,
+             healthRecord: record, reminder: nil)
     }
 
     static func save(_ reminder: ReminderItem, at location: FamilyShareLocation) -> Self {
         Self(id: UUID(), createdAt: Date(), kind: .saveReminder, location: location,
-             petID: reminder.petID, entityID: reminder.id, pet: nil, healthRecord: nil, reminder: reminder)
+             petID: reminder.petID, entityID: reminder.id, pet: nil, basePet: nil,
+             healthRecord: nil, reminder: reminder)
     }
 
     static func delete(_ reminder: ReminderItem, at location: FamilyShareLocation) -> Self {
         Self(id: UUID(), createdAt: Date(), kind: .deleteReminder, location: location,
-             petID: reminder.petID, entityID: reminder.id, pet: nil, healthRecord: nil, reminder: reminder)
+             petID: reminder.petID, entityID: reminder.id, pet: nil, basePet: nil,
+             healthRecord: nil, reminder: reminder)
     }
 }
 
@@ -417,8 +429,28 @@ actor FamilySharingLocalStore {
 
     func enqueue(_ change: FamilyPendingChange) throws {
         try loadIfNeeded()
-        pendingChanges.removeAll { $0.coalescingKey == change.coalescingKey }
-        pendingChanges.append(change)
+        if change.kind == .savePet,
+           let earlier = pendingChanges.first(where: { $0.coalescingKey == change.coalescingKey }) {
+            // Keep the earliest base and the latest desired value. This retains
+            // three-way merge semantics without growing one queue item per edit.
+            let coalesced = FamilyPendingChange(
+                id: change.id,
+                createdAt: change.createdAt,
+                kind: change.kind,
+                location: change.location,
+                petID: change.petID,
+                entityID: change.entityID,
+                pet: change.pet,
+                basePet: earlier.basePet ?? change.basePet,
+                healthRecord: change.healthRecord,
+                reminder: change.reminder
+            )
+            pendingChanges.removeAll { $0.coalescingKey == change.coalescingKey }
+            pendingChanges.append(coalesced)
+        } else {
+            pendingChanges.removeAll { $0.coalescingKey == change.coalescingKey }
+            pendingChanges.append(change)
+        }
         try persistPendingChanges()
     }
 
@@ -1206,7 +1238,7 @@ actor FamilySharingService {
         switch change.kind {
         case .savePet:
             guard let pet = change.pet else { throw FamilySharingError.invalidPayload }
-            try await upsertPet(pet, location: change.location)
+            try await upsertPet(pet, replacing: change.basePet, location: change.location)
         case .saveHealthRecord:
             guard let record = change.healthRecord else { throw FamilySharingError.invalidPayload }
             try await upsertHealthRecord(record, location: change.location)
@@ -1247,18 +1279,63 @@ actor FamilySharingService {
         }
     }
 
-    func upsertPet(_ pet: Pet, location: FamilyShareLocation) async throws {
+    func upsertPet(_ pet: Pet, replacing basePet: Pet?, location: FamilyShareLocation) async throws {
         let database = database(for: location.databaseScope)
         let rootID = Self.rootRecordID(for: pet.id, zoneID: location.zoneID)
-        guard let root = try await existingRecord(id: rootID, in: database) else {
-            throw FamilySharingError.sharedPetNotFound
+        for attempt in 0 ..< 2 {
+            guard let root = try await existingRecord(id: rootID, in: database) else {
+                throw FamilySharingError.sharedPetNotFound
+            }
+            let serverPet: Pet
+            if let asset = root[RecordSchema.petAsset] as? CKAsset, let url = asset.fileURL {
+                serverPet = try decodeAsset(Pet.self, from: url)
+            } else {
+                serverPet = pet
+            }
+            let mergedPet = Self.mergingPetChange(server: serverPet, desired: pet, base: basePet)
+            let url = try makeTemporaryFile(data: encoder.encode(mergedPet), extension: "json")
+            defer { removeTemporaryFiles([url]) }
+            root[RecordSchema.petAsset] = CKAsset(fileURL: url)
+            root[RecordSchema.petName] = mergedPet.name as CKRecordValue
+            root[RecordSchema.updatedAt] = Date() as CKRecordValue
+
+            do {
+                let result = try await database.modifyRecords(
+                    saving: [root],
+                    deleting: [],
+                    savePolicy: .ifServerRecordUnchanged,
+                    atomically: true
+                )
+                try Self.validateSaveResult(result.saveResults, recordID: rootID)
+                return
+            } catch let error as CKError where error.code == .serverRecordChanged && attempt == 0 {
+                continue
+            }
         }
-        let url = try makeTemporaryFile(data: encoder.encode(pet), extension: "json")
-        defer { removeTemporaryFiles([url]) }
-        root[RecordSchema.petAsset] = CKAsset(fileURL: url)
-        root[RecordSchema.petName] = pet.name as CKRecordValue
-        root[RecordSchema.updatedAt] = Date() as CKRecordValue
-        try await saveRecords([root], deleting: [], in: database, retryingConflicts: true)
+        throw FamilySharingError.editConflict
+    }
+
+    nonisolated static func mergingPetChange(server: Pet, desired: Pet, base: Pet?) -> Pet {
+        var merged = desired
+        var entries = Dictionary(uniqueKeysWithValues: server.sortedWeightEntries.map { ($0.id, $0) })
+        let desiredEntries = Dictionary(uniqueKeysWithValues: desired.sortedWeightEntries.map { ($0.id, $0) })
+        let baseEntries = Dictionary(uniqueKeysWithValues: (base?.sortedWeightEntries ?? []).map { ($0.id, $0) })
+
+        for (id, desiredEntry) in desiredEntries {
+            if baseEntries[id] == nil || baseEntries[id] != desiredEntry {
+                entries[id] = desiredEntry
+            }
+        }
+        if base != nil {
+            for id in baseEntries.keys where desiredEntries[id] == nil {
+                entries.removeValue(forKey: id)
+            }
+        }
+
+        let sortedEntries = entries.values.sorted { $0.measuredAt < $1.measuredAt }
+        merged.weightEntries = sortedEntries
+        merged.weightKilograms = sortedEntries.last?.kilograms
+        return merged
     }
 
     func upsertHealthRecord(_ record: HealthRecord, location: FamilyShareLocation) async throws {
@@ -2137,10 +2214,13 @@ final class FamilySharingStore {
     }
 
     func updatePet(_ pet: Pet, in sharedPet: FamilySharedPet) async throws {
-        guard sharedPet.canEdit else { throw FamilySharingError.readOnly }
-        var updated = currentPet(sharedPet)
+        var updated = try liveEditablePet(sharedPet)
+        let basePet = updated.payload.pet
         updated.payload.pet = pet
-        try await applyOptimistic(updated, change: .save(pet, at: updated.location))
+        try await applyOptimistic(
+            updated,
+            change: .save(pet, replacing: basePet, at: updated.location)
+        )
     }
 
     func addWeightEntry(
@@ -2152,12 +2232,13 @@ final class FamilySharingStore {
         guard sharedPet.pet.id == petID else { throw WeightEntryValidationError.petNotFound }
         try validateWeightEntry(kilograms: kilograms, measuredAt: measuredAt)
 
-        var pet = currentPet(sharedPet).pet
+        let livePet = try liveEditablePet(sharedPet)
+        var pet = livePet.pet
         var entries = pet.weightEntries ?? []
         entries.append(WeightEntry(measuredAt: measuredAt, kilograms: kilograms))
         pet.weightEntries = entries.sorted { $0.measuredAt < $1.measuredAt }
         pet.weightKilograms = pet.sortedWeightEntries.last?.kilograms
-        try await updatePet(pet, in: sharedPet)
+        try await updatePet(pet, in: livePet)
     }
 
     func updateWeightEntry(
@@ -2170,7 +2251,8 @@ final class FamilySharingStore {
         guard sharedPet.pet.id == petID else { throw WeightEntryValidationError.petNotFound }
         try validateWeightEntry(kilograms: kilograms, measuredAt: measuredAt)
 
-        var pet = currentPet(sharedPet).pet
+        let livePet = try liveEditablePet(sharedPet)
+        var pet = livePet.pet
         guard var entries = pet.weightEntries,
               let entryIndex = entries.firstIndex(where: { $0.id == entryID }) else {
             throw WeightEntryValidationError.entryNotFound
@@ -2179,7 +2261,7 @@ final class FamilySharingStore {
         entries[entryIndex].measuredAt = measuredAt
         pet.weightEntries = entries.sorted { $0.measuredAt < $1.measuredAt }
         pet.weightKilograms = pet.sortedWeightEntries.last?.kilograms
-        try await updatePet(pet, in: sharedPet)
+        try await updatePet(pet, in: livePet)
     }
 
     func deleteWeightEntry(
@@ -2189,26 +2271,25 @@ final class FamilySharingStore {
     ) async throws {
         guard sharedPet.pet.id == petID else { throw WeightEntryValidationError.petNotFound }
 
-        var pet = currentPet(sharedPet).pet
+        let livePet = try liveEditablePet(sharedPet)
+        var pet = livePet.pet
         guard pet.weightEntries?.contains(where: { $0.id == entryID }) == true else {
             throw WeightEntryValidationError.entryNotFound
         }
         pet.weightEntries?.removeAll { $0.id == entryID }
         pet.weightKilograms = pet.sortedWeightEntries.last?.kilograms
-        try await updatePet(pet, in: sharedPet)
+        try await updatePet(pet, in: livePet)
     }
 
     func saveHealthRecord(_ record: HealthRecord, in sharedPet: FamilySharedPet) async throws {
-        guard sharedPet.canEdit else { throw FamilySharingError.readOnly }
-        var updated = currentPet(sharedPet)
+        var updated = try liveEditablePet(sharedPet)
         updated.payload.records.removeAll { $0.id == record.id }
         updated.payload.records.append(record)
         try await applyOptimistic(updated, change: .save(record, at: updated.location))
     }
 
     func deleteHealthRecord(_ record: HealthRecord, in sharedPet: FamilySharedPet) async throws {
-        guard sharedPet.canEdit else { throw FamilySharingError.readOnly }
-        var updated = currentPet(sharedPet)
+        var updated = try liveEditablePet(sharedPet)
         let linkedReminders = updated.reminders.filter { $0.sourceRecordID == record.id }
         updated.payload.records.removeAll { $0.id == record.id }
         updated.payload.reminders.removeAll { $0.sourceRecordID == record.id }
@@ -2219,22 +2300,20 @@ final class FamilySharingStore {
     }
 
     func saveReminder(_ reminder: ReminderItem, in sharedPet: FamilySharedPet) async throws {
-        guard sharedPet.canEdit else { throw FamilySharingError.readOnly }
-        var updated = currentPet(sharedPet)
+        var updated = try liveEditablePet(sharedPet)
         updated.payload.reminders.removeAll { $0.id == reminder.id }
         updated.payload.reminders.append(reminder)
         try await applyOptimistic(updated, change: .save(reminder, at: updated.location))
     }
 
     func deleteReminder(_ reminder: ReminderItem, in sharedPet: FamilySharedPet) async throws {
-        guard sharedPet.canEdit else { throw FamilySharingError.readOnly }
-        var updated = currentPet(sharedPet)
+        var updated = try liveEditablePet(sharedPet)
         updated.payload.reminders.removeAll { $0.id == reminder.id }
         try await applyOptimistic(updated, change: .delete(reminder, at: updated.location))
     }
 
     func completeReminder(_ reminder: ReminderItem, in sharedPet: FamilySharedPet) async throws -> Date? {
-        guard sharedPet.canEdit else { throw FamilySharingError.readOnly }
+        let livePet = try liveEditablePet(sharedPet)
         let syncResult = await FamilySharingUploadCoordinator.shared.synchronize()
         guard syncResult.remainingCount == 0 else {
             throw FamilySharingError.pendingChangesNotSynced
@@ -2242,7 +2321,7 @@ final class FamilySharingStore {
         let completion = try await FamilySharingService.shared.completeReminder(
             id: reminder.id,
             petID: reminder.petID,
-            location: sharedPet.location
+            location: livePet.location
         )
         try await refresh(sharedPet)
         return completion.nextDueAt
@@ -2378,6 +2457,19 @@ final class FamilySharingStore {
         return ownedSharedPets.first(where: { $0.pet.id == fallback.pet.id }) ?? fallback
     }
 
+    private func liveEditablePet(_ fallback: FamilySharedPet) throws -> FamilySharedPet {
+        let candidates = fallback.location.databaseScope == .shared ? sharedPets : ownedSharedPets
+        guard let livePet = candidates.first(where: {
+            $0.location.zoneName == fallback.location.zoneName &&
+                $0.location.zoneOwnerName == fallback.location.zoneOwnerName &&
+                $0.location.databaseScope == fallback.location.databaseScope
+        }) else {
+            throw FamilySharingError.sharedPetNotFound
+        }
+        guard livePet.canEdit else { throw FamilySharingError.readOnly }
+        return livePet
+    }
+
     private func validateWeightEntry(kilograms: Double, measuredAt: Date) throws {
         guard kilograms > 0, kilograms <= 200 else {
             throw WeightEntryValidationError.weightOutOfRange
@@ -2399,7 +2491,13 @@ final class FamilySharingStore {
             }) else { continue }
             switch change.kind {
             case .savePet:
-                if let pet = change.pet { values[index].payload.pet = pet }
+                if let pet = change.pet {
+                    values[index].payload.pet = FamilySharingService.mergingPetChange(
+                        server: values[index].payload.pet,
+                        desired: pet,
+                        base: change.basePet
+                    )
+                }
             case .saveHealthRecord:
                 if let record = change.healthRecord {
                     values[index].payload.records.removeAll { $0.id == record.id }

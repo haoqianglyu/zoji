@@ -400,7 +400,9 @@ struct PetEditorView: View {
                     let trimmedBreed = breed.trimmingCharacters(in: .whitespacesAndNewlines)
                     var weightEntries = pet.weightEntries ?? []
                     if let weightKilograms,
-                       pet.weightKilograms.map({ abs($0 - weightKilograms) > 0.000_1 }) ?? true {
+                       pet.weightKilograms.map({
+                           !RegionalFormat.representsSameDisplayedMass($0, weightKilograms)
+                       }) ?? true {
                         weightEntries.append(
                             WeightEntry(measuredAt: Date(), kilograms: weightKilograms)
                         )
