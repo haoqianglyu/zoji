@@ -1,0 +1,7258 @@
+{
+  "sourceLanguage" : "zh-Hans",
+  "strings" : {
+    "·" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "·"
+          }
+        }
+      }
+    },
+    "· %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "· %@"
+          }
+        }
+      }
+    },
+    "%@ · %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ 有 %lld 项待办" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@ has %2$lld task"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@ has %2$lld tasks"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ 有 %2$lld 项待办"
+          }
+        }
+      }
+    },
+    "%@ 的“%@”还有 %lld 天" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@'s “%2$@” is due in %3$lld days"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ 的“%2$@”还有 %3$lld 天"
+          }
+        }
+      }
+    },
+    "%@，请稍候" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, please wait"
+          }
+        }
+      }
+    },
+    "%@已加入“%@”的共同照护" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ joined the care team for “%2$@”"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@已加入“%2$@”的共同照护"
+          }
+        }
+      }
+    },
+    "%@已离开“%@”的共同照护" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ left the care team for “%2$@”"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@已离开“%2$@”的共同照护"
+          }
+        }
+      }
+    },
+    "%@的宠物档案" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile for %@"
+          }
+        }
+      }
+    },
+    "%lld / %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld / %2$lld"
+          }
+        }
+      }
+    },
+    "%lld 个月" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld month"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld months"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "kg · km · ℃" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kg · km · °C"
+          }
+        }
+      }
+    },
+    "lb · mi · ℉" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "lb · mi · °F"
+          }
+        }
+      }
+    },
+    "%lld 家" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld place"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld places"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld 岁" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld year"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld years"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld 条" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld record"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld records"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "20" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "20"
+          }
+        }
+      }
+    },
+    "Apple 地图" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Maps"
+          }
+        }
+      }
+    },
+    "Apple 暂未提供其他成员的显示信息。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple has not provided display information for other members yet."
+          }
+        }
+      }
+    },
+    "iCloud 同步暂时不可用，数据仍会安全保存在本机。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud sync is temporarily unavailable. Your data remains safely stored on this device."
+          }
+        }
+      }
+    },
+    "iCloud 响应较慢，请重试" : {
+
+    },
+    "iCloud 状态" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud Status"
+          }
+        }
+      }
+    },
+    "kg" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kg"
+          }
+        }
+      }
+    },
+    "PDF" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF"
+          }
+        }
+      }
+    },
+    "Zoji 健康提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoji Health Reminder"
+          }
+        }
+      }
+    },
+    "一次生成多项提醒，可逐项选择" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create several reminders and choose which ones to add"
+          }
+        }
+      }
+    },
+    "下次提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next Reminder"
+          }
+        }
+      }
+    },
+    "不可用" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unavailable"
+          }
+        }
+      }
+    },
+    "不能为这位成员设置该权限。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This access level cannot be assigned to this member."
+          }
+        }
+      }
+    },
+    "不能修改或删除任何内容" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot edit or delete anything"
+          }
+        }
+      }
+    },
+    "不重复" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Does Not Repeat"
+          }
+        }
+      }
+    },
+    "中华田园犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chinese Native Dog"
+          }
+        }
+      }
+    },
+    "中华田园猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chinese Domestic Cat"
+          }
+        }
+      }
+    },
+    "为 %@ 添加健康记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a health record for %@"
+          }
+        }
+      }
+    },
+    "主诉" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chief Complaint"
+          }
+        }
+      }
+    },
+    "仅允许查看" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View Only"
+          }
+        }
+      }
+    },
+    "仅在使用医院功能时，把必要的位置范围交给地图服务查询。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only the approximate location needed for your search is sent to the map service."
+          }
+        }
+      }
+    },
+    "仅本机" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On Device Only"
+          }
+        }
+      }
+    },
+    "仅查看" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View Only"
+          }
+        }
+      }
+    },
+    "今天该为 %@ 安排：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today for %1$@: %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "今天该为 %1$@ 安排：%2$@"
+          }
+        }
+      }
+    },
+    "仍有修改等待同步，请联网同步完成后再操作。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changes are still waiting to sync. Connect to the internet and finish syncing before continuing."
+          }
+        }
+      }
+    },
+    "从成员视角查看每只宠物的独立权限；撤回一只宠物不会影响其他宠物。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View each pet's permissions from the member's perspective. Revoking one pet does not affect others."
+          }
+        }
+      }
+    },
+    "从文件恢复备份" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore Backup from File"
+          }
+        }
+      }
+    },
+    "从第一次疫苗、驱虫或体检开始，建立专属健康时间线。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build a health timeline starting with the first vaccine, deworming, or checkup."
+          }
+        }
+      }
+    },
+    "会逐只撤回当前列出的宠物，不会删除宠物资料。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access will be revoked for each listed pet without deleting pet data."
+          }
+        }
+      }
+    },
+    "体内驱虫" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deworming"
+          }
+        }
+      }
+    },
+    "体外驱虫" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flea & Tick"
+          }
+        }
+      }
+    },
+    "体重" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weight"
+          }
+        }
+      }
+    },
+    "使用%@默认头像" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the %@ default avatar"
+          }
+        }
+      }
+    },
+    "例如：体内驱虫" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For example: Deworming"
+          }
+        }
+      }
+    },
+    "例如：体外驱虫" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For example: Flea & Tick"
+          }
+        }
+      }
+    },
+    "例如：团子" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For example: Mochi"
+          }
+        }
+      }
+    },
+    "例如：拉肚子" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For example: Diarrhea"
+          }
+        }
+      }
+    },
+    "例如：服用益生菌" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For example: Probiotics"
+          }
+        }
+      }
+    },
+    "例如：洗澡剪毛" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For example: Bath and grooming"
+          }
+        }
+      }
+    },
+    "例如：狂犬疫苗" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For example: Rabies vaccine"
+          }
+        }
+      }
+    },
+    "俄罗斯蓝猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Russian Blue"
+          }
+        }
+      }
+    },
+    "保存" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        }
+      }
+    },
+    "保存位置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Storage"
+          }
+        }
+      }
+    },
+    "保存失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Failed"
+          }
+        }
+      }
+    },
+    "保存疫苗、驱虫、体检或就医经历，建立专属健康时间线。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save vaccinations, deworming, checkups, and medical visits in a dedicated health timeline."
+          }
+        }
+      }
+    },
+    "修改会保存到家庭共享的 iCloud 档案，并同步给其他成员。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changes are saved to the shared iCloud profile and synced with other members."
+          }
+        }
+      }
+    },
+    "修改会同步给共享成员。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changes will sync with shared members."
+          }
+        }
+      }
+    },
+    "修改已保存在本机，但无法建立同步任务：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changes were saved locally, but a sync task could not be created: %@"
+          }
+        }
+      }
+    },
+    "修改已保存在本机，但暂时无法加入 iCloud 同步队列：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changes were saved locally, but could not be added to the iCloud sync queue: %@"
+          }
+        }
+      }
+    },
+    "健康周期模板仅用于提高录入效率，请以接种凭证、产品说明或兽医建议为准。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Health schedule templates are for convenience only. Follow vaccination records, product instructions, or veterinary advice."
+          }
+        }
+      }
+    },
+    "健康提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Health Reminders"
+          }
+        }
+      }
+    },
+    "健康时间线" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Health Timeline"
+          }
+        }
+      }
+    },
+    "健康记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Health Records"
+          }
+        }
+      }
+    },
+    "健康记录与病例附件" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Health Records & Medical Attachments"
+          }
+        }
+      }
+    },
+    "健康记录操作失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Health Record Action Failed"
+          }
+        }
+      }
+    },
+    "允许一起编辑" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Editing"
+          }
+        }
+      }
+    },
+    "元" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CNY"
+          }
+        }
+      }
+    },
+    "先添加宠物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a Pet First"
+          }
+        }
+      }
+    },
+    "先添加宠物，之后可以按宠物分别邀请家人。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a pet first, then invite family members separately for each pet."
+          }
+        }
+      }
+    },
+    "先认识一下你的伙伴" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell Us About Your Companion"
+          }
+        }
+      }
+    },
+    "全部" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All"
+          }
+        }
+      }
+    },
+    "公制" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metric"
+          }
+        }
+      }
+    },
+    "共 %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ total"
+          }
+        }
+      }
+    },
+    "共享成员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage Access"
+          }
+        }
+      }
+    },
+    "共享按宠物管理，只有接受邀请的家人才能查看相应档案。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sharing is managed per pet. Only family members who accept an invitation can view that profile."
+          }
+        }
+      }
+    },
+    "共享时间线" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared Timeline"
+          }
+        }
+      }
+    },
+    "共享档案会出现在首页和记录页；有编辑权限时，家人的修改会同步到同一份 iCloud 数据。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared profiles appear on Home and Records. Family edits sync to the same iCloud data when editing is allowed."
+          }
+        }
+      }
+    },
+    "共享档案过大，请减少病例附件后重试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The shared profile is too large. Remove some medical attachments and try again."
+          }
+        }
+      }
+    },
+    "共享的内容" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared Content"
+          }
+        }
+      }
+    },
+    "共享记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared Records"
+          }
+        }
+      }
+    },
+    "共享邀请通过 Apple 的私有 CloudKit 完成，爪记不建立公开家庭成员目录，也不需要手机号登录。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invitations use Apple’s private iCloud sharing. Zoji does not require phone-number sign-in or publish a family directory."
+          }
+        }
+      }
+    },
+    "共同照护者" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Care Team"
+          }
+        }
+      }
+    },
+    "关闭" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
+    },
+    "关闭附件预览" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Attachment Preview"
+          }
+        }
+      }
+    },
+    "其他" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        }
+      }
+    },
+    "其他（手动填写）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other (Enter Manually)"
+          }
+        }
+      }
+    },
+    "最多 9 个、总计 75 MB。图片会自动缩放压缩；单个 PDF 最多 25 MB。这里的附件不会自动识别文字。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to 9 attachments (75 MB total). Images are optimized automatically; each PDF can be up to 25 MB."
+          }
+        }
+      }
+    },
+    "最近记录" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent Records"
+          }
+        }
+      }
+    },
+    "准备完成后才能发送，请稍候" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please wait until preparation is complete"
+          }
+        }
+      }
+    },
+    "切换到 %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch to %@"
+          }
+        }
+      }
+    },
+    "切换到家人共享的 %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch to shared pet %@"
+          }
+        }
+      }
+    },
+    "列表" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "List"
+          }
+        }
+      }
+    },
+    "创建后每一项都能在提醒列表中单独修改或删除。模板不会自动判断宠物是否适合接种。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After creation, each item can be edited or deleted separately. Templates do not determine whether a vaccine is appropriate for your pet."
+          }
+        }
+      }
+    },
+    "创建宠物档案" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create Pet Profile"
+          }
+        }
+      }
+    },
+    "创建计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create Plan"
+          }
+        }
+      }
+    },
+    "初步诊断" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preliminary Diagnosis"
+          }
+        }
+      }
+    },
+    "删除" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        }
+      }
+    },
+    "删除 %@？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete %@?"
+          }
+        }
+      }
+    },
+    "删除“%@”？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete “%@”?"
+          }
+        }
+      }
+    },
+    "删除健康记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Health Record"
+          }
+        }
+      }
+    },
+    "删除后，该记录会从 %@ 的健康时间线中移除。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This record will be removed from %@'s health timeline."
+          }
+        }
+      }
+    },
+    "删除宠物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Pet"
+          }
+        }
+      }
+    },
+    "删除宠物档案" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Pet Profile"
+          }
+        }
+      }
+    },
+    "删除提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Reminder"
+          }
+        }
+      }
+    },
+    "删除这条提醒？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this reminder?"
+          }
+        }
+      }
+    },
+    "删除这条记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete This Record"
+          }
+        }
+      }
+    },
+    "刷新云端数据" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh Cloud Data"
+          }
+        }
+      }
+    },
+    "刷新共享数据" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh Shared Data"
+          }
+        }
+      }
+    },
+    "包含 %lld 项" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Includes %lld items"
+          }
+        }
+      }
+    },
+    "医院" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hospitals"
+          }
+        }
+      }
+    },
+    "医院/机构" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hospital / Provider"
+          }
+        }
+      }
+    },
+    "医院/机构（选填）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hospital / Provider (Optional)"
+          }
+        }
+      }
+    },
+    "医院信息暂时加载失败，请检查网络后重试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check your connection and try again."
+          }
+        }
+      }
+    },
+    "医院功能会在你允许定位后，将附近区域位置用于搜索医院。境内 POI 由北京高德图强科技有限公司的高德地图搜索 SDK 提供。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With your permission, hospital search uses the nearby area. POI data in mainland China is provided by the AMap Search SDK from Beijing AutoNavi Map Technology Co., Ltd."
+          }
+        }
+      }
+    },
+    "医院加载失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to Load Hospitals"
+          }
+        }
+      }
+    },
+    "医院范围" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hospital Scope"
+          }
+        }
+      }
+    },
+    "医院详情" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hospital Details"
+          }
+        }
+      }
+    },
+    "单个 PDF 不能超过 25 MB。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A PDF cannot exceed 25 MB."
+          }
+        }
+      }
+    },
+    "单位" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Units"
+          }
+        }
+      }
+    },
+    "根据 iPhone 地区自动选择" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Based on your iPhone region"
+          }
+        }
+      }
+    },
+    "博美" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomeranian"
+          }
+        }
+      }
+    },
+    "博美犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomeranian"
+          }
+        }
+      }
+    },
+    "原始图片超过 60 MB，请先在照片中裁剪或压缩。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The original image exceeds 60 MB. Crop or compress it first."
+          }
+        }
+      }
+    },
+    "发生日期" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
+          }
+        }
+      }
+    },
+    "发送邀请前选择权限" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Access Before Inviting"
+          }
+        }
+      }
+    },
+    "取消" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "取消收藏" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Favorite"
+          }
+        }
+      }
+    },
+    "受系统限制" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restricted by System"
+          }
+        }
+      }
+    },
+    "另一位家庭成员刚刚修改了同一条内容，请刷新后再试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Another family member just changed the same item. Refresh and try again."
+          }
+        }
+      }
+    },
+    "只会移除你对这只宠物的访问权限，主人和其他家庭成员的数据不受影响。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only your access to this pet will be removed. The owner and other family members are unaffected."
+          }
+        }
+      }
+    },
+    "只在这里选择的图片会进行本机文字识别；识别图片也会自动保留到附件中，保存前请核对内容。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected images are processed on device and added as attachments. Review the extracted details before saving."
+          }
+        }
+      }
+    },
+    "只撤回当前这只宠物；该成员对其他宠物的共享不会受到影响。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only this pet's access will be revoked. The member's access to other pets is unaffected."
+          }
+        }
+      }
+    },
+    "只撤回这只宠物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoke This Pet Only"
+          }
+        }
+      }
+    },
+    "只有宠物拥有者可以管理共同照护者和权限。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only the pet owner can manage care team members and access."
+          }
+        }
+      }
+    },
+    "只有接受邀请的成员才能访问指定宠物；拥有者可以撤销成员权限。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only invited members who accept can access the selected pet. The owner can revoke access."
+          }
+        }
+      }
+    },
+    "可以按宠物邀请家人共同维护资料、健康记录和提醒。邀请时可选择“可更改”或“仅查看”。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite family members to help care for each pet. Choose edit or view-only access for every invitation."
+          }
+        }
+      }
+    },
+    "可以换一个品种名称或简称试试" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try another breed name or abbreviation"
+          }
+        }
+      }
+    },
+    "可以查看档案，但不能修改或删除内容" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can view the profile but cannot edit or delete anything"
+          }
+        }
+      }
+    },
+    "可以添加和修改资料、记录及提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can add and edit profiles, records, and reminders"
+          }
+        }
+      }
+    },
+    "可修改资料、记录、附件和提醒" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can edit profiles, records, attachments, and reminders"
+          }
+        }
+      }
+    },
+    "可在共享档案中添加第一条记录。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add the first record in the shared profile."
+          }
+        }
+      }
+    },
+    "可在共享档案详情中添加提醒。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add reminders from the shared profile details."
+          }
+        }
+      }
+    },
+    "可拨号" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Call"
+          }
+        }
+      }
+    },
+    "可用" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Available"
+          }
+        }
+      }
+    },
+    "可编辑" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can Edit"
+          }
+        }
+      }
+    },
+    "可访问 %lld 只宠物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can access %lld pets"
+          }
+        }
+      }
+    },
+    "可访问 1 只宠物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can access 1 pet"
+          }
+        }
+      }
+    },
+    "吉娃娃" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chihuahua"
+          }
+        }
+      }
+    },
+    "同意并继续" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agree and Continue"
+          }
+        }
+      }
+    },
+    "名字" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        }
+      }
+    },
+    "启用后由 Apple 在同一 Apple 账号的设备间同步，数据不会进入公开数据库。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When enabled, Apple syncs data between devices using the same Apple Account. Data is not placed in a public database."
+          }
+        }
+      }
+    },
+    "和家人一起照顾宠物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Care for Pets Together"
+          }
+        }
+      }
+    },
+    "品种" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Breed"
+          }
+        }
+      }
+    },
+    "图片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Images"
+          }
+        }
+      }
+    },
+    "图片处理后仍超过 12 MB，请换一张尺寸较小的图片。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The processed image still exceeds 12 MB. Choose a smaller image."
+          }
+        }
+      }
+    },
+    "图片已保存，但没有识别到清晰文字" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The image was saved, but no clear text was recognized"
+          }
+        }
+      }
+    },
+    "图片文字识别优先在设备端通过 Apple Vision 完成。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image text recognition is performed on device using Apple Vision whenever possible."
+          }
+        }
+      }
+    },
+    "图片无法预览" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image Preview Unavailable"
+          }
+        }
+      }
+    },
+    "地图" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Map"
+          }
+        }
+      }
+    },
+    "地图信息可能存在延迟，就诊前请电话确认地址、营业时间和接诊范围。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hospital details may change. Call ahead to confirm."
+          }
+        }
+      }
+    },
+    "地址" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address"
+          }
+        }
+      }
+    },
+    "地址暂未提供" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address Unavailable"
+          }
+        }
+      }
+    },
+    "基本资料" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basic Information"
+          }
+        }
+      }
+    },
+    "备份中存在重复数据，无法安全导入。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The backup contains duplicate data and cannot be imported safely."
+          }
+        }
+      }
+    },
+    "备份中的单条记录超过 9 个附件。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A record in the backup contains more than 9 attachments."
+          }
+        }
+      }
+    },
+    "备份中的单条记录附件总计超过 75 MB。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attachments for a record in the backup exceed 75 MB in total."
+          }
+        }
+      }
+    },
+    "备份中的数据条目数量异常。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The backup contains an invalid number of items."
+          }
+        }
+      }
+    },
+    "备份中的记录没有对应宠物，无法安全导入。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some records in the backup have no matching pet and cannot be imported safely."
+          }
+        }
+      }
+    },
+    "备份包含宠物、健康记录、提醒以及图片/PDF。恢复采用合并方式：相同数据会更新，当前设备独有的数据不会被删除。请妥善保管备份文件。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backups include pets, records, reminders, images, and PDFs. Restoring merges matching data without deleting device-only items. Keep backup files secure."
+          }
+        }
+      }
+    },
+    "备份包含过大的图片或 PDF。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The backup contains an image or PDF that is too large."
+          }
+        }
+      }
+    },
+    "备份操作失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup Failed"
+          }
+        }
+      }
+    },
+    "备份操作完成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup Complete"
+          }
+        }
+      }
+    },
+    "备份文件过大，最大支持 300 MB。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The backup file is too large. The maximum supported size is 300 MB."
+          }
+        }
+      }
+    },
+    "天" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "days"
+          }
+        }
+      }
+    },
+    "头像库" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avatars"
+          }
+        }
+      }
+    },
+    "奶咖" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Latte"
+          }
+        }
+      }
+    },
+    "妹妹" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Female"
+          }
+        }
+      }
+    },
+    "威尔士柯基" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welsh Corgi"
+          }
+        }
+      }
+    },
+    "孟加拉豹猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bengal"
+          }
+        }
+      }
+    },
+    "完成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        }
+      }
+    },
+    "完成提醒时使用 CloudKit 原子校验，同一期不会因多人点击而重复生成记录。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoji prevents the same reminder cycle from being recorded twice when family members act at the same time."
+          }
+        }
+      }
+    },
+    "完整备份已导出。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Full backup exported."
+          }
+        }
+      }
+    },
+    "定位到当前位置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to Current Location"
+          }
+        }
+      }
+    },
+    "定位未开启。可以拖动地图，并点击“搜索此区域”。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location access is off. Move the map and tap Search This Area."
+          }
+        }
+      }
+    },
+    "宠物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pets"
+          }
+        }
+      }
+    },
+    "宠物医院" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veterinary Hospitals"
+          }
+        }
+      }
+    },
+    "宠物拥有者不能退出自己的共享，可以在共享管理中停止共享。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pet owners cannot leave their own share. Stop sharing from sharing management instead."
+          }
+        }
+      }
+    },
+    "宠物权限" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pet Access"
+          }
+        }
+      }
+    },
+    "宠物档案" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pet Profiles"
+          }
+        }
+      }
+    },
+    "宠物类型" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pet Type"
+          }
+        }
+      }
+    },
+    "宠物资料与头像" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pet Profiles & Avatars"
+          }
+        }
+      }
+    },
+    "宠物资料和健康记录会先保存在本机；开启 iCloud 后，可通过你的私有 iCloud 空间在 Apple 设备间同步。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pet profiles and health records are stored on this device first. With iCloud enabled, they sync between Apple devices through your private iCloud storage."
+          }
+        }
+      }
+    },
+    "宠物资料操作失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pet Profile Action Failed"
+          }
+        }
+      }
+    },
+    "家人共享 · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family Shared · %@"
+          }
+        }
+      }
+    },
+    "家人分享 · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared by Family · %@"
+          }
+        }
+      }
+    },
+    "家人分享给我" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared with Me"
+          }
+        }
+      }
+    },
+    "家庭共享" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family Sharing"
+          }
+        }
+      }
+    },
+    "家庭共享 · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family Sharing · %@"
+          }
+        }
+      }
+    },
+    "家庭共享动态" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family Sharing Updates"
+          }
+        }
+      }
+    },
+    "家庭共享成员已发生变化。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family sharing members have changed."
+          }
+        }
+      }
+    },
+    "家庭共享数据不完整，无法安全读取。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family sharing data is incomplete and cannot be read safely."
+          }
+        }
+      }
+    },
+    "家庭共享数据已读取，但暂时无法更新本机副本：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family sharing data was loaded, but the local copy could not be updated: %@"
+          }
+        }
+      }
+    },
+    "家庭动态" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family Activity"
+          }
+        }
+      }
+    },
+    "家庭成员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family Members"
+          }
+        }
+      }
+    },
+    "家庭邀请" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite Family"
+          }
+        }
+      }
+    },
+    "家庭邀请已接受，正在读取共享档案。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family invitation accepted. Loading the shared profile."
+          }
+        }
+      }
+    },
+    "对方可以修改宠物资料、健康记录、附件和提醒。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They can edit this pet’s profile, records, attachments, and reminders."
+          }
+        }
+      }
+    },
+    "对方可以查看档案，但不能修改或删除内容。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They can view this pet’s profile but cannot make changes."
+          }
+        }
+      }
+    },
+    "导出完整备份" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Full Backup"
+          }
+        }
+      }
+    },
+    "导航" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Directions"
+          }
+        }
+      }
+    },
+    "将撤回对 %lld 只宠物的访问；宠物资料和其他成员不受影响。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access to %lld pets will be revoked. Pet data and other members are unaffected."
+          }
+        }
+      }
+    },
+    "已加入" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Joined"
+          }
+        }
+      }
+    },
+    "已完成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed"
+          }
+        }
+      }
+    },
+    "已将“%@”设为%@。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%1$@” is now set to %2$@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已将“%1$@”设为%2$@。"
+          }
+        }
+      }
+    },
+    "已将%@设为“%@”。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is now set to “%2$@.”"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已将%1$@设为“%2$@”。"
+          }
+        }
+      }
+    },
+    "已建立档案" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiles Created"
+          }
+        }
+      }
+    },
+    "已开启" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enabled"
+          }
+        }
+      }
+    },
+    "已开启家庭共享" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared with Family"
+          }
+        }
+      }
+    },
+    "已撤回“%@”，其他宠物保持不变。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoked “%@.” Other pets are unchanged."
+          }
+        }
+      }
+    },
+    "已撤回%@对“%@”的访问。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoked %1$@'s access to “%2$@.”"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已撤回%1$@对“%2$@”的访问。"
+          }
+        }
+      }
+    },
+    "已撤销%@对“%@”的访问。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoked %1$@'s access to “%2$@.”"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已撤销%1$@对“%2$@”的访问。"
+          }
+        }
+      }
+    },
+    "已撤销此成员的全部宠物共享。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All pet sharing for this member has been revoked."
+          }
+        }
+      }
+    },
+    "已收藏" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved"
+          }
+        }
+      }
+    },
+    "已无共享权限" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Longer Shared"
+          }
+        }
+      }
+    },
+    "已更新待办。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task updated."
+          }
+        }
+      }
+    },
+    "已添加 %lld 个 PDF，共 %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added %1$lld PDFs, %2$@ total"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已添加 %1$lld 个 PDF，共 %2$@"
+          }
+        }
+      }
+    },
+    "已添加 %lld 张，压缩 %@ → %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added %1$lld images, compressed %2$@ → %3$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已添加 %1$lld 张，压缩 %2$@ → %3$@"
+          }
+        }
+      }
+    },
+    "已添加 %lld 张图片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added %lld images"
+          }
+        }
+      }
+    },
+    "已添加 %lld 项健康提醒。之后完成任一提醒时，会自动生成对应的健康记录。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added %lld health reminders. Completing a reminder will automatically create the corresponding health record."
+          }
+        }
+      }
+    },
+    "已添加 %lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added %1$lld/%2$lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已添加 %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "已离开" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left"
+          }
+        }
+      }
+    },
+    "已离开的家庭成员" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Former Family Member"
+          }
+        }
+      }
+    },
+    "已退出“%@”的家庭共享。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left family sharing for “%@.”"
+          }
+        }
+      }
+    },
+    "已选择" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected"
+          }
+        }
+      }
+    },
+    "已逾期" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overdue"
+          }
+        }
+      }
+    },
+    "巴哥犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pug"
+          }
+        }
+      }
+    },
+    "币种" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Currency"
+          }
+        }
+      }
+    },
+    "布偶" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ragdoll"
+          }
+        }
+      }
+    },
+    "布偶猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ragdoll"
+          }
+        }
+      }
+    },
+    "年度体检" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annual Checkup"
+          }
+        }
+      }
+    },
+    "年度免疫评估" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annual Vaccine Review"
+          }
+        }
+      }
+    },
+    "年度疫苗" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annual Vaccination"
+          }
+        }
+      }
+    },
+    "年龄" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Age"
+          }
+        }
+      }
+    },
+    "幼犬基础免疫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puppy Core Vaccination"
+          }
+        }
+      }
+    },
+    "幼猫基础免疫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitten Core Vaccination"
+          }
+        }
+      }
+    },
+    "建立宠物档案后，疫苗、驱虫、体检和就医记录都会整理在它的专属时间线里。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After creating a profile, vaccinations, deworming, checkups, and visits are organized in a dedicated timeline."
+          }
+        }
+      }
+    },
+    "开发版仅本机" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Development: On Device Only"
+          }
+        }
+      }
+    },
+    "开发版待开放" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unavailable in Development Build"
+          }
+        }
+      }
+    },
+    "开始记录 %@ 的健康" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Tracking %@'s Health"
+          }
+        }
+      }
+    },
+    "异国短毛猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exotic Shorthair"
+          }
+        }
+      }
+    },
+    "弟弟" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Male"
+          }
+        }
+      }
+    },
+    "当前" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current"
+          }
+        }
+      }
+    },
+    "当前仅保存在本机。登录 iCloud 后，系统会自动开始同步。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data is currently stored only on this device. Sync starts automatically after signing in to iCloud."
+          }
+        }
+      }
+    },
+    "当前仅自己可见" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private"
+          }
+        }
+      }
+    },
+    "当前权限" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access Options"
+          }
+        }
+      }
+    },
+    "当前构建未启用 iCloud，只保存到本机。启用 CloudKit 并完成共享联调后，才会出现“邀请家人”按钮。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud is not enabled in this build, so data is stored only on this device. The Invite Family button appears after CloudKit and sharing are enabled."
+          }
+        }
+      }
+    },
+    "当前构建未启用 iCloud，数据仅保存在本机。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud is not enabled in this build. Data is stored only on this device."
+          }
+        }
+      }
+    },
+    "当前状态" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current Status"
+          }
+        }
+      }
+    },
+    "当前设备限制了 iCloud；数据仍会保存在本机。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud is restricted on this device; data will remain stored locally."
+          }
+        }
+      }
+    },
+    "当天" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Same day"
+          }
+        }
+      }
+    },
+    "待共享联调" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sharing Setup Pending"
+          }
+        }
+      }
+    },
+    "待办" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks"
+          }
+        }
+      }
+    },
+    "待接受的家庭成员" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pending Invitation"
+          }
+        }
+      }
+    },
+    "待补充" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Added"
+          }
+        }
+      }
+    },
+    "德国牧羊犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "German Shepherd"
+          }
+        }
+      }
+    },
+    "德文卷毛猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Devon Rex"
+          }
+        }
+      }
+    },
+    "快捷计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick Plans"
+          }
+        }
+      }
+    },
+    "性别" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sex"
+          }
+        }
+      }
+    },
+    "成员权限" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Member Access"
+          }
+        }
+      }
+    },
+    "成犬年度免疫评估" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annual Vaccine Review"
+          }
+        }
+      }
+    },
+    "成猫年度免疫评估" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annual Vaccine Review"
+          }
+        }
+      }
+    },
+    "我分享的宠物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pets I Share"
+          }
+        }
+      }
+    },
+    "我的" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile"
+          }
+        }
+      }
+    },
+    "所选项目已经在提醒列表中，无需重复添加。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected items are already in Reminders and do not need to be added again."
+          }
+        }
+      }
+    },
+    "手动备份" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manual Backup"
+          }
+        }
+      }
+    },
+    "拉布拉多" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labrador"
+          }
+        }
+      }
+    },
+    "拉布拉多寻回犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labrador Retriever"
+          }
+        }
+      }
+    },
+    "拉拉" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labrador"
+          }
+        }
+      }
+    },
+    "拥有者" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Owner"
+          }
+        }
+      }
+    },
+    "拥有者授予的是仅查看权限。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The owner granted view-only access."
+          }
+        }
+      }
+    },
+    "拥有者给你的权限是仅查看，无法修改这份档案。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The owner granted view-only access, so this profile cannot be edited."
+          }
+        }
+      }
+    },
+    "拨号" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Call"
+          }
+        }
+      }
+    },
+    "按时完成照护事项，让每一次健康变化都有迹可循。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complete care tasks on time and keep every health change traceable."
+          }
+        }
+      }
+    },
+    "按计划重复" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repeat as Scheduled"
+          }
+        }
+      }
+    },
+    "换个关键词搜索标题、类型或医院。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try another keyword for a title, type, or hospital."
+          }
+        }
+      }
+    },
+    "接下来" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        }
+      }
+    },
+    "接受邀请失败：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to accept invitation: %@"
+          }
+        }
+      }
+    },
+    "推荐" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recommended"
+          }
+        }
+      }
+    },
+    "提前 %lld 天" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld days before"
+          }
+        }
+      }
+    },
+    "提前通知" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notify Before"
+          }
+        }
+      }
+    },
+    "提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminders"
+          }
+        }
+      }
+    },
+    "提醒仍会保存在 App 中。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The reminder remains saved in the app."
+          }
+        }
+      }
+    },
+    "提醒会与本条健康记录关联，并在所选日期前通过系统通知提示你。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The reminder will be linked to this health record and sent before the selected date."
+          }
+        }
+      }
+    },
+    "提醒内容" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder Details"
+          }
+        }
+      }
+    },
+    "提醒名称" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder Name"
+          }
+        }
+      }
+    },
+    "提醒对象" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pets"
+          }
+        }
+      }
+    },
+    "提醒已保存，但系统通知安排失败，请稍后再试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The reminder was saved, but system notifications could not be scheduled. Try again later."
+          }
+        }
+      }
+    },
+    "提醒已保存，但系统通知尚未开启。可稍后到 iPhone 设置中允许 Zoji 通知。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The reminder was saved, but notifications are not enabled. You can allow Zoji notifications later in iPhone Settings."
+          }
+        }
+      }
+    },
+    "提醒已完成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder Completed"
+          }
+        }
+      }
+    },
+    "提醒操作失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder Action Failed"
+          }
+        }
+      }
+    },
+    "提醒日期" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder Date"
+          }
+        }
+      }
+    },
+    "提醒日期不能早于今天。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The reminder date cannot be earlier than today."
+          }
+        }
+      }
+    },
+    "提醒时间" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder Time"
+          }
+        }
+      }
+    },
+    "提醒规则与完成记录" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder Rules & Completion History"
+          }
+        }
+      }
+    },
+    "提醒规则可以同步，但每台设备分别创建和管理本地通知。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder rules can sync, but local notifications are created and managed separately on each device."
+          }
+        }
+      }
+    },
+    "搜索品种名称或简称" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search breed name or abbreviation"
+          }
+        }
+      }
+    },
+    "搜索宠物医院或动物诊所" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search hospitals or clinics"
+          }
+        }
+      }
+    },
+    "搜索结果" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Results"
+          }
+        }
+      }
+    },
+    "搜索医院名称或所在城市" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search by hospital name or city"
+          }
+        }
+      }
+    },
+    "搜索此区域" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Area"
+          }
+        }
+      }
+    },
+    "搜索记录、类型或医院" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search records, types, or hospitals"
+          }
+        }
+      }
+    },
+    "撤回“%@”？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoke “%@”?"
+          }
+        }
+      }
+    },
+    "撤回%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoke %@"
+          }
+        }
+      }
+    },
+    "撤回%@对这只宠物的访问？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoke %@'s access to this pet?"
+          }
+        }
+      }
+    },
+    "撤回这只宠物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Access to This Pet"
+          }
+        }
+      }
+    },
+    "撤销全部共享" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoke All Sharing"
+          }
+        }
+      }
+    },
+    "撤销此成员的全部共享" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoke All Access for This Member"
+          }
+        }
+      }
+    },
+    "撤销此成员的全部共享？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoke all access for this member?"
+          }
+        }
+      }
+    },
+    "操作已完成。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Action completed."
+          }
+        }
+      }
+    },
+    "支持图片与 PDF，不进行文字识别" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Images and PDFs added here won’t be scanned"
+          }
+        }
+      }
+    },
+    "收藏" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorites"
+          }
+        }
+      }
+    },
+    "收藏医院" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorites"
+          }
+        }
+      }
+    },
+    "收藏常去的医院后，会在这里快速找到。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorite hospitals you visit often to find them quickly here."
+          }
+        }
+      }
+    },
+    "放大查看 %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enlarge %@"
+          }
+        }
+      }
+    },
+    "放大查看图片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enlarge Image"
+          }
+        }
+      }
+    },
+    "数据与同步" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data & Sync"
+          }
+        }
+      }
+    },
+    "数据与隐私" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data & Privacy"
+          }
+        }
+      }
+    },
+    "数据保存" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data Storage"
+          }
+        }
+      }
+    },
+    "数据先保存在本机，系统会自动同步到你的私有 iCloud 空间。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data is stored on this device first and automatically synced to your private iCloud storage."
+          }
+        }
+      }
+    },
+    "数据来源" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data Source"
+          }
+        }
+      }
+    },
+    "数据用于提供服务" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data Used to Provide Services"
+          }
+        }
+      }
+    },
+    "文字识别完成；已有内容未被覆盖" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text recognition complete; existing content was not overwritten"
+          }
+        }
+      }
+    },
+    "斯芬克斯" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sphynx"
+          }
+        }
+      }
+    },
+    "斯芬克斯猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sphynx"
+          }
+        }
+      }
+    },
+    "新伙伴" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Pet"
+          }
+        }
+      }
+    },
+    "新增健康记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Health Record"
+          }
+        }
+      }
+    },
+    "新增和修改会先写入当前设备，即使暂时没有网络也能使用。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New and updated data is written to this device first, so it remains available without a network connection."
+          }
+        }
+      }
+    },
+    "新增成员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Member"
+          }
+        }
+      }
+    },
+    "新增成员后，可在这里单独调整权限或撤回这只宠物。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After adding a member, adjust access or revoke this pet here."
+          }
+        }
+      }
+    },
+    "无毛猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hairless Cat"
+          }
+        }
+      }
+    },
+    "无法保存" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to Save"
+          }
+        }
+      }
+    },
+    "无法保存提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to Save Reminder"
+          }
+        }
+      }
+    },
+    "无法准备邀请" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to Prepare Invitation"
+          }
+        }
+      }
+    },
+    "无法创建家庭邀请，请稍后再试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to create a family invitation. Try again later."
+          }
+        }
+      }
+    },
+    "无法创建计划" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to Create Plan"
+          }
+        }
+      }
+    },
+    "无法导入 PDF，请重新选择。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to import the PDF. Please select it again."
+          }
+        }
+      }
+    },
+    "无法接受家庭邀请，请确认已登录 iCloud。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to accept the family invitation. Make sure you are signed in to iCloud."
+          }
+        }
+      }
+    },
+    "无法读取这个 PDF，文件可能已损坏或受密码保护。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to read this PDF. It may be damaged or password-protected."
+          }
+        }
+      }
+    },
+    "无法读取这个备份文件。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to read this backup file."
+          }
+        }
+      }
+    },
+    "无法读取这张图片，请重新选择。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to read this image. Please select it again."
+          }
+        }
+      }
+    },
+    "无法读取这张照片，请换一张后再试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to read this photo. Try another one."
+          }
+        }
+      }
+    },
+    "无需注册爪记账号" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Zoji account required"
+          }
+        }
+      }
+    },
+    "日期" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
+          }
+        }
+      }
+    },
+    "显示方式" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View"
+          }
+        }
+      }
+    },
+    "显示模式" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appearance"
+          }
+        }
+      }
+    },
+    "晴空蓝" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sky Blue"
+          }
+        }
+      }
+    },
+    "智能识别" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smart Recognition"
+          }
+        }
+      }
+    },
+    "暂无健康记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Health Records"
+          }
+        }
+      }
+    },
+    "暂无提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Reminders"
+          }
+        }
+      }
+    },
+    "暂无适用模板" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Applicable Templates"
+          }
+        }
+      }
+    },
+    "暂时不可用" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporarily Unavailable"
+          }
+        }
+      }
+    },
+    "暂时无法获取定位，可以拖动地图后搜索。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to get your location right now. Move the map and search again."
+          }
+        }
+      }
+    },
+    "暂时无法读取共享成员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to Load Shared Members"
+          }
+        }
+      }
+    },
+    "暂时无法连接 iCloud；数据会保存在本机并在服务恢复后同步。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud is temporarily unavailable. Data stays on this device and syncs when service resumes."
+          }
+        }
+      }
+    },
+    "暂时没有待办" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Upcoming Tasks"
+          }
+        }
+      }
+    },
+    "暂未找到医院" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Hospitals Nearby"
+          }
+        }
+      }
+    },
+    "暖杏" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apricot"
+          }
+        }
+      }
+    },
+    "暹罗" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siamese"
+          }
+        }
+      }
+    },
+    "暹罗猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siamese"
+          }
+        }
+      }
+    },
+    "更多信息" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More Information"
+          }
+        }
+      }
+    },
+    "有 %lld 个 PDF 未添加：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld PDFs were not added: %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "有 %1$lld 个 PDF 未添加：%2$@"
+          }
+        }
+      }
+    },
+    "有 %lld 张图片未添加：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld images were not added: %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "有 %1$lld 张图片未添加：%2$@"
+          }
+        }
+      }
+    },
+    "未满月" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Under One Month"
+          }
+        }
+      }
+    },
+    "未登录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Signed In"
+          }
+        }
+      }
+    },
+    "未知" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        }
+      }
+    },
+    "本周期已经完成，下次到期后才能再次记录。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This cycle is complete. It can be recorded again after the next due date."
+          }
+        }
+      }
+    },
+    "本地优先" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local-First Storage"
+          }
+        }
+      }
+    },
+    "本地优先存储" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local-First Storage"
+          }
+        }
+      }
+    },
+    "本期已完成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done This Cycle"
+          }
+        }
+      }
+    },
+    "本机 + 私有 iCloud" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device + Private iCloud"
+          }
+        }
+      }
+    },
+    "本条记录的附件总计不能超过 75 MB。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attachments for this record cannot exceed 75 MB in total."
+          }
+        }
+      }
+    },
+    "本次已记录，下次提醒：%@。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recorded. Next reminder: %@."
+          }
+        }
+      }
+    },
+    "权限与隐私" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permissions & Privacy"
+          }
+        }
+      }
+    },
+    "查看 %@ 的健康" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View %@'s Health"
+          }
+        }
+      }
+    },
+    "查看 %@ 的健康提醒" : {
+
+    },
+    "查看 %@ 的健康记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View %@'s Health Records"
+          }
+        }
+      }
+    },
+    "查看 PDF" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View PDF"
+          }
+        }
+      }
+    },
+    "查看 PDF %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View PDF %@"
+          }
+        }
+      }
+    },
+    "查看医院网站" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visit Hospital Website"
+          }
+        }
+      }
+    },
+    "查看提醒详情：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View reminder details: %@"
+          }
+        }
+      }
+    },
+    "查看高德地图开放平台隐私权政策" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View AMap Platform Privacy Policy"
+          }
+        }
+      }
+    },
+    "柯基" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Corgi"
+          }
+        }
+      }
+    },
+    "柴犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shiba Inu"
+          }
+        }
+      }
+    },
+    "核对狂犬疫苗有效期" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check Rabies Vaccine Status"
+          }
+        }
+      }
+    },
+    "核心疫苗按 4 周间隔建立待办，并安排狂犬疫苗与首年加强评估。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schedules core vaccines 4 weeks apart, plus rabies and first-year booster reviews."
+          }
+        }
+      }
+    },
+    "核心联苗按 4 周间隔建立待办，并安排狂犬疫苗与首年加强评估。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schedules core combination vaccines 4 weeks apart, plus rabies and first-year booster reviews."
+          }
+        }
+      }
+    },
+    "检查中" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking"
+          }
+        }
+      }
+    },
+    "检查中…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking…"
+          }
+        }
+      }
+    },
+    "模板只用于安排日程，不代替兽医诊疗。疫苗品种、针数、间隔和驱虫频率请以兽医、产品说明及当地规定为准。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Templates help organize care and do not replace veterinary advice. Follow your veterinarian, product instructions, and local requirements."
+          }
+        }
+      }
+    },
+    "樱花粉" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sakura"
+          }
+        }
+      }
+    },
+    "橘子猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orange Tabby"
+          }
+        }
+      }
+    },
+    "橘猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orange Tabby"
+          }
+        }
+      }
+    },
+    "欢迎使用爪记" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome to Zoji"
+          }
+        }
+      }
+    },
+    "正在准备%@的邀请…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing %@'s invitation…"
+          }
+        }
+      }
+    },
+    "正在加入家庭共享" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Joining Family Sharing"
+          }
+        }
+      }
+    },
+    "正在处理附件…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processing attachments…"
+          }
+        }
+      }
+    },
+    "正在安全读取宠物资料、健康记录和提醒…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Securely loading pet profiles, health records, and reminders…"
+          }
+        }
+      }
+    },
+    "正在接受家庭邀请" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accepting Family Invitation"
+          }
+        }
+      }
+    },
+    "正在搜索" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searching"
+          }
+        }
+      }
+    },
+    "正在搜索宠物医院…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searching for veterinary hospitals…"
+          }
+        }
+      }
+    },
+    "正在查找附近的宠物医院…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finding nearby veterinary hospitals…"
+          }
+        }
+      }
+    },
+    "正在检查 iCloud 状态，本机数据不受影响。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking iCloud status. Local data is unaffected."
+          }
+        }
+      }
+    },
+    "正在检查共享状态…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking sharing status…"
+          }
+        }
+      }
+    },
+    "正在识别病例文字…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognizing medical record text…"
+          }
+        }
+      }
+    },
+    "正式发布前将补充完整的隐私政策、数据导出和删除说明。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A complete privacy policy and data export and deletion instructions will be provided before release."
+          }
+        }
+      }
+    },
+    "此操作会将记录从健康时间线中移除。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This removes the record from the health timeline."
+          }
+        }
+      }
+    },
+    "每 %lld 个月" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every %lld months"
+          }
+        }
+      }
+    },
+    "每 %lld 天" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every %lld days"
+          }
+        }
+      }
+    },
+    "每 %lld 年" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every %lld years"
+          }
+        }
+      }
+    },
+    "每 3 个月" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every 3 Months"
+          }
+        }
+      }
+    },
+    "每 30 天" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every 30 Days"
+          }
+        }
+      }
+    },
+    "每位成员只拥有这只宠物的独立权限" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each member has separate access to this pet."
+          }
+        }
+      }
+    },
+    "每半年" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every 6 Months"
+          }
+        }
+      }
+    },
+    "每只宠物分别授权" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access Is Granted Per Pet"
+          }
+        }
+      }
+    },
+    "每周" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weekly"
+          }
+        }
+      }
+    },
+    "每年" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yearly"
+          }
+        }
+      }
+    },
+    "每年提醒复核核心疫苗、狂犬疫苗有效期及所在地区风险。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review core vaccines, rabies status, and local risks each year."
+          }
+        }
+      }
+    },
+    "每年提醒复核核心疫苗、狂犬疫苗有效期和生活方式风险。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review core vaccines, rabies status, and lifestyle risks each year."
+          }
+        }
+      }
+    },
+    "每月" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monthly"
+          }
+        }
+      }
+    },
+    "每条健康记录最多添加 9 个附件。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each health record can have up to 9 attachments."
+          }
+        }
+      }
+    },
+    "比熊" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bichon"
+          }
+        }
+      }
+    },
+    "比熊犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bichon Frise"
+          }
+        }
+      }
+    },
+    "没有找到匹配的宠物医院，请尝试医院全名、所在城市或其他关键词。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No matching veterinary hospital was found. Try its full name, city, or another keyword."
+          }
+        }
+      }
+    },
+    "没有找到匹配的头像" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Matching Avatars"
+          }
+        }
+      }
+    },
+    "没有找到记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Records Found"
+          }
+        }
+      }
+    },
+    "法国斗牛犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "French Bulldog"
+          }
+        }
+      }
+    },
+    "波斯" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Persian"
+          }
+        }
+      }
+    },
+    "波斯猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Persian"
+          }
+        }
+      }
+    },
+    "泰迪" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teddy Poodle"
+          }
+        }
+      }
+    },
+    "洗澡护理" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bath & Grooming"
+          }
+        }
+      }
+    },
+    "浅色" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light"
+          }
+        }
+      }
+    },
+    "深色" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark"
+          }
+        }
+      }
+    },
+    "添加" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add"
+          }
+        }
+      }
+    },
+    "添加健康记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Health Record"
+          }
+        }
+      }
+    },
+    "添加健康资料" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Attachments"
+          }
+        }
+      }
+    },
+    "添加宠物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Pet"
+          }
+        }
+      }
+    },
+    "添加提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Reminder"
+          }
+        }
+      }
+    },
+    "添加疫苗、驱虫、复诊或护理提醒，Zoji 会按时通知你。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add vaccination, deworming, follow-up, or care reminders and Zoji will notify you on time."
+          }
+        }
+      }
+    },
+    "添加第一只宠物，开始整理它的健康资料。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add your first pet and start organizing its health information."
+          }
+        }
+      }
+    },
+    "添加第一条记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add First Record"
+          }
+        }
+      }
+    },
+    "清除搜索" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Search"
+          }
+        }
+      }
+    },
+    "点击“同意并继续”，表示你已了解上述信息，并同意爪记在提供相应功能时按说明处理必要信息。正式发布前还会补充完整的《用户协议》和《隐私政策》页面。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By tapping Agree and Continue, you acknowledge the information above and consent to Zoji processing the necessary data as described. Full Terms of Use and Privacy Policy pages will be added before release."
+          }
+        }
+      }
+    },
+    "点击“邀请”先选择权限，再从 Apple 的共享面板选择家人。对方只会看到这只宠物。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap Invite, choose access, then select a family member in Apple's sharing panel. They will only see this pet."
+          }
+        }
+      }
+    },
+    "点击“邀请”后，爪记会先让你明确选择“允许一起编辑”或“仅允许查看”，再选择家人。拥有者仍可随时管理成员或停止共享。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose edit or view-only access, then select a family member. You can change access or stop sharing at any time."
+          }
+        }
+      }
+    },
+    "点击上方健康卡片，添加第一条疫苗、驱虫、体检或就医记录。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the health card above to add the first vaccination, deworming, checkup, or medical visit."
+          }
+        }
+      }
+    },
+    "点击右上角添加疫苗、驱虫、复诊或日常护理提醒。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the button in the top-right to add vaccination, deworming, follow-up, or routine care reminders."
+          }
+        }
+      }
+    },
+    "点击宠物可以编辑资料；首页可切换当前查看的宠物。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap a pet to edit its profile. Choose the active pet from Home."
+          }
+        }
+      }
+    },
+    "照护计划模板" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Care Plan Templates"
+          }
+        }
+      }
+    },
+    "爪记 Zoji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoji"
+          }
+        }
+      }
+    },
+    "爪记仅展示地图地点信息，不对医院资质、营业状态或诊疗服务作保证，请在就诊前电话确认。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information is provided by AMap. Call ahead to confirm before visiting."
+          }
+        }
+      }
+    },
+    "爪记默认跟随 iPhone 语言；也可以前往系统设置，为爪记单独选择首选语言。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoji follows your iPhone language by default. You can also choose a preferred language for Zoji in system Settings."
+          }
+        }
+      }
+    },
+    "犬核心联苗第 1 针" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puppy Core Vaccine — Dose 1"
+          }
+        }
+      }
+    },
+    "犬核心联苗第 2 针" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puppy Core Vaccine — Dose 2"
+          }
+        }
+      }
+    },
+    "犬核心联苗第 3 针" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puppy Core Vaccine — Dose 3"
+          }
+        }
+      }
+    },
+    "状态未知" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status Unknown"
+          }
+        }
+      }
+    },
+    "狂犬疫苗评估" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rabies Vaccine Review"
+          }
+        }
+      }
+    },
+    "狗" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dog"
+          }
+        }
+      }
+    },
+    "狗狗" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dogs"
+          }
+        }
+      }
+    },
+    "狗狗常规驱虫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Routine Parasite Care"
+          }
+        }
+      }
+    },
+    "猫" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cat"
+          }
+        }
+      }
+    },
+    "猫三联" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FVRCP Vaccine"
+          }
+        }
+      }
+    },
+    "猫咪" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cats"
+          }
+        }
+      }
+    },
+    "猫咪常规驱虫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Routine Parasite Care"
+          }
+        }
+      }
+    },
+    "猫核心疫苗第 1 针" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitten Core Vaccine — Dose 1"
+          }
+        }
+      }
+    },
+    "猫核心疫苗第 2 针" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitten Core Vaccine — Dose 2"
+          }
+        }
+      }
+    },
+    "猫核心疫苗第 3 针" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitten Core Vaccine — Dose 3"
+          }
+        }
+      }
+    },
+    "猫狗以外的宠物可以使用右上角加号创建自定义提醒。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For pets other than cats and dogs, use the plus button in the top-right to create custom reminders."
+          }
+        }
+      }
+    },
+    "生日" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Birthday"
+          }
+        }
+      }
+    },
+    "生日不能晚于今天。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Birthday cannot be later than today."
+          }
+        }
+      }
+    },
+    "用药" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medication"
+          }
+        }
+      }
+    },
+    "用药记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medication Record"
+          }
+        }
+      }
+    },
+    "由健康提醒完成后自动生成。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created automatically when a health reminder was completed."
+          }
+        }
+      }
+    },
+    "由家庭共享提醒完成后自动生成。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created automatically when a shared reminder was completed."
+          }
+        }
+      }
+    },
+    "电话" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phone"
+          }
+        }
+      }
+    },
+    "疫苗" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaccination"
+          }
+        }
+      }
+    },
+    "疫苗与驱虫计划模板" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaccination & Parasite Plans"
+          }
+        }
+      }
+    },
+    "疫苗接种" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaccination"
+          }
+        }
+      }
+    },
+    "病例识别" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On-Device Text Recognition"
+          }
+        }
+      }
+    },
+    "目前没有家人分享给你的宠物档案。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No family members have shared a pet profile with you yet."
+          }
+        }
+      }
+    },
+    "相册" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photos"
+          }
+        }
+      }
+    },
+    "看病就医" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medical Visit"
+          }
+        }
+      }
+    },
+    "知道了" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "确认计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm Plan"
+          }
+        }
+      }
+    },
+    "私有 iCloud" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private iCloud Sync"
+          }
+        }
+      }
+    },
+    "移动地图或更换关键词后重新搜索。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move the map or change the keyword, then search again."
+          }
+        }
+      }
+    },
+    "移除头像" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Avatar"
+          }
+        }
+      }
+    },
+    "移除附件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Attachment"
+          }
+        }
+      }
+    },
+    "第 %lld 天" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day %lld"
+          }
+        }
+      }
+    },
+    "等待接受" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pending"
+          }
+        }
+      }
+    },
+    "简体中文" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simplified Chinese"
+          }
+        }
+      }
+    },
+    "简要概括这次记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Briefly describe this record"
+          }
+        }
+      }
+    },
+    "管理" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage"
+          }
+        }
+      }
+    },
+    "管理 %@ 的资料" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage %@'s Profile"
+          }
+        }
+      }
+    },
+    "管理%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage %@"
+          }
+        }
+      }
+    },
+    "管理宠物档案" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage Pet Profiles"
+          }
+        }
+      }
+    },
+    "管理宠物资料、记录、提醒和共享成员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage pet profiles, records, reminders, and shared members"
+          }
+        }
+      }
+    },
+    "管理家庭共享" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage Family Sharing"
+          }
+        }
+      }
+    },
+    "管理提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage Reminders"
+          }
+        }
+      }
+    },
+    "类别" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Category"
+          }
+        }
+      }
+    },
+    "类型" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type"
+          }
+        }
+      }
+    },
+    "系统" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
+          }
+        }
+      }
+    },
+    "系统会在所选时间发送通知。至少选择一个提前日期。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The system will notify you at the selected time. Choose at least one advance date."
+          }
+        }
+      }
+    },
+    "系统通知未开启" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications Are Off"
+          }
+        }
+      }
+    },
+    "缅因" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maine Coon"
+          }
+        }
+      }
+    },
+    "缅因猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maine Coon"
+          }
+        }
+      }
+    },
+    "编辑" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        }
+      }
+    },
+    "编辑健康记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Health Record"
+          }
+        }
+      }
+    },
+    "编辑宠物" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Pet"
+          }
+        }
+      }
+    },
+    "编辑宠物资料" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Pet Profile"
+          }
+        }
+      }
+    },
+    "编辑提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Reminder"
+          }
+        }
+      }
+    },
+    "编辑资料" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Pet"
+          }
+        }
+      }
+    },
+    "美制" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "U.S."
+          }
+        }
+      }
+    },
+    "美国短毛" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "American Shorthair"
+          }
+        }
+      }
+    },
+    "美国短毛猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "American Shorthair"
+          }
+        }
+      }
+    },
+    "美短" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "American"
+          }
+        }
+      }
+    },
+    "自定义" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom"
+          }
+        }
+      }
+    },
+    "自定义品种" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom Breed"
+          }
+        }
+      }
+    },
+    "自定义天数" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom Days"
+          }
+        }
+      }
+    },
+    "苏格兰折耳猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scottish Fold"
+          }
+        }
+      }
+    },
+    "英国短毛" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "British Shorthair"
+          }
+        }
+      }
+    },
+    "英国短毛猫" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "British Shorthair"
+          }
+        }
+      }
+    },
+    "英短" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "British"
+          }
+        }
+      }
+    },
+    "萨摩" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samoyed"
+          }
+        }
+      }
+    },
+    "萨摩耶" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samoyed"
+          }
+        }
+      }
+    },
+    "萨摩耶犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samoyed"
+          }
+        }
+      }
+    },
+    "薄荷青" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mint"
+          }
+        }
+      }
+    },
+    "薰衣草" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lavender"
+          }
+        }
+      }
+    },
+    "蜂蜜黄" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Honey"
+          }
+        }
+      }
+    },
+    "补充信息" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Additional Information"
+          }
+        }
+      }
+    },
+    "西伯利亚哈士奇" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siberian Husky"
+          }
+        }
+      }
+    },
+    "计划对象" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pet"
+          }
+        }
+      }
+    },
+    "计划已保存，但系统通知尚未开启。可稍后到 iPhone 设置中允许 Zoji 通知。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The plan was saved, but notifications are not enabled. You can allow Zoji notifications later in iPhone Settings."
+          }
+        }
+      }
+    },
+    "计划已保存，但部分系统通知安排失败，请稍后再试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The plan was saved, but some system notifications could not be scheduled. Try again later."
+          }
+        }
+      }
+    },
+    "计划已创建" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan Created"
+          }
+        }
+      }
+    },
+    "计划项目" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan Items"
+          }
+        }
+      }
+    },
+    "记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Records"
+          }
+        }
+      }
+    },
+    "记录 %@ 的健康" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track %@'s Health"
+          }
+        }
+      }
+    },
+    "记录不存在" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Not Found"
+          }
+        }
+      }
+    },
+    "记录会先安全保存在这台设备，开启 iCloud 后自动同步。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Records are stored securely on this device first and sync automatically when iCloud is enabled."
+          }
+        }
+      }
+    },
+    "记录内容" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Details"
+          }
+        }
+      }
+    },
+    "记录名称" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Name"
+          }
+        }
+      }
+    },
+    "记录对象" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pets"
+          }
+        }
+      }
+    },
+    "记录已删除" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Deleted"
+          }
+        }
+      }
+    },
+    "记录日期不能晚于今天。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The record date cannot be later than today."
+          }
+        }
+      }
+    },
+    "记录生日" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Birthday"
+          }
+        }
+      }
+    },
+    "记录详情" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Details"
+          }
+        }
+      }
+    },
+    "设为仅查看" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View Only"
+          }
+        }
+      }
+    },
+    "设为可编辑" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can Edit"
+          }
+        }
+      }
+    },
+    "设备能力" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device Capabilities"
+          }
+        }
+      }
+    },
+    "设置下次提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set Next Reminder"
+          }
+        }
+      }
+    },
+    "诊所" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clinic"
+          }
+        }
+      }
+    },
+    "诊断" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnosis"
+          }
+        }
+      }
+    },
+    "该宠物在本机的记录和提醒也会从当前界面移除。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This pet's local records and reminders will also be removed from the current interface."
+          }
+        }
+      }
+    },
+    "该成员对其他宠物的共享和权限保持不变。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This member's access to other pets remains unchanged."
+          }
+        }
+      }
+    },
+    "详情" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        }
+      }
+    },
+    "详情请控制在 5000 个字以内。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep details under 5,000 characters."
+          }
+        }
+      }
+    },
+    "详细记录症状、诊断、用药和医生建议…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record symptoms, diagnosis, medication, and veterinary advice…"
+          }
+        }
+      }
+    },
+    "语言" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
+          }
+        }
+      }
+    },
+    "语言与外观" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language & Appearance"
+          }
+        }
+      }
+    },
+    "语言可以跟随 iPhone，也可以在爪记中单独选择；配色主题会自动适配浅色和深色模式。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language can follow your iPhone or be selected separately in Zoji. Color themes adapt automatically to Light and Dark Mode."
+          }
+        }
+      }
+    },
+    "语言默认跟随 iPhone；单位可跟随地区，也可单独选择公制或美制。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language follows your iPhone. Units can follow your region or use Metric or U.S. units."
+          }
+        }
+      }
+    },
+    "请先在首页创建宠物档案，再为它记录疫苗、驱虫和就医信息。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create a pet profile on Home before adding vaccinations, deworming, or medical visits."
+          }
+        }
+      }
+    },
+    "请先选择宠物。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a pet first."
+          }
+        }
+      }
+    },
+    "请先阅读并同意隐私说明" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please Review and Accept the Privacy Notice"
+          }
+        }
+      }
+    },
+    "请填写宠物名字。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the pet's name."
+          }
+        }
+      }
+    },
+    "请填写提醒名称。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a reminder name."
+          }
+        }
+      }
+    },
+    "请填写记录名称。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a record name."
+          }
+        }
+      }
+    },
+    "请检查填写内容。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check the information entered."
+          }
+        }
+      }
+    },
+    "请稍后再试。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again later."
+          }
+        }
+      }
+    },
+    "请稍后重试。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please try again later."
+          }
+        }
+      }
+    },
+    "请至少选择一个提前通知日期。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select at least one advance notification date."
+          }
+        }
+      }
+    },
+    "请至少选择一个计划项目。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select at least one plan item."
+          }
+        }
+      }
+    },
+    "请输入" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter"
+          }
+        }
+      }
+    },
+    "请输入 0 到 200 千克之间的体重。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a weight between 0 and 200 kg."
+          }
+        }
+      }
+    },
+    "请输入 0 到 440 磅之间的体重。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a weight between 0 and 440 lb."
+          }
+        }
+      }
+    },
+    "请输入正确的体重，例如 4.5。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a valid weight, for example 4.5."
+          }
+        }
+      }
+    },
+    "请选择" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select"
+          }
+        }
+      }
+    },
+    "请选择有效的重复周期。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a valid repeat interval."
+          }
+        }
+      }
+    },
+    "读取健康记录失败，请稍后重试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to load health records. Try again later."
+          }
+        }
+      }
+    },
+    "读取宠物资料失败，请重新打开 App 后再试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to load pet profiles. Reopen the app and try again."
+          }
+        }
+      }
+    },
+    "读取提醒失败，请稍后重试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to load reminders. Try again later."
+          }
+        }
+      }
+    },
+    "贵宾" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poodle"
+          }
+        }
+      }
+    },
+    "贵宾犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poodle"
+          }
+        }
+      }
+    },
+    "费用" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cost"
+          }
+        }
+      }
+    },
+    "费用（选填）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cost (Optional)"
+          }
+        }
+      }
+    },
+    "费用应在 0 到 100 万之间。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cost must be between 0 and 1,000,000."
+          }
+        }
+      }
+    },
+    "费用应在 0 到 100 万元之间。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cost must be between 0 and CNY 1,000,000."
+          }
+        }
+      }
+    },
+    "资料会先保存在这台设备，开启 iCloud 后自动同步。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data is stored on this device first and syncs automatically when iCloud is enabled."
+          }
+        }
+      }
+    },
+    "距离" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Distance"
+          }
+        }
+      }
+    },
+    "跟随系统" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow System"
+          }
+        }
+      }
+    },
+    "辅助填写名称、详情、医院和费用" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extracts the name, details, provider, and cost"
+          }
+        }
+      }
+    },
+    "边境牧羊犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Border Collie"
+          }
+        }
+      }
+    },
+    "近期待办" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upcoming Tasks"
+          }
+        }
+      }
+    },
+    "返回" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        }
+      }
+    },
+    "返回家庭共享页面下拉刷新后再试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return to Family Sharing, pull to refresh, and try again."
+          }
+        }
+      }
+    },
+    "还没有健康记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Health Records Yet"
+          }
+        }
+      }
+    },
+    "还没有共同照护者" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Care Team Members Yet"
+          }
+        }
+      }
+    },
+    "还没有宠物档案" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Pet Profiles Yet"
+          }
+        }
+      }
+    },
+    "还没有收藏医院" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Favorite Hospitals Yet"
+          }
+        }
+      }
+    },
+    "这个区域暂未搜到宠物医院，可以移动地图后重新搜索。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No veterinary hospitals were found in this area. Move the map and search again."
+          }
+        }
+      }
+    },
+    "这个备份由不兼容的爪记版本创建。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This backup was created by an incompatible version of Zoji."
+          }
+        }
+      }
+    },
+    "这份共享宠物档案已不存在或你已没有访问权限。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This shared pet profile no longer exists or you no longer have access."
+          }
+        }
+      }
+    },
+    "这份宠物档案" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Pet Profile"
+          }
+        }
+      }
+    },
+    "这份家庭共享数据来自不兼容的爪记版本。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This family sharing data is from an incompatible version of Zoji."
+          }
+        }
+      }
+    },
+    "这位共同照护者已不在当前共享中，请刷新后重试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This care team member is no longer in the share. Refresh and try again."
+          }
+        }
+      }
+    },
+    "这位成员" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Member"
+          }
+        }
+      }
+    },
+    "这位成员目前不能访问你的任何宠物。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This member currently cannot access any of your pets."
+          }
+        }
+      }
+    },
+    "这只宠物" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Pet"
+          }
+        }
+      }
+    },
+    "这套计划不适用于当前宠物类型。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This plan is not available for the current pet type."
+          }
+        }
+      }
+    },
+    "这条一次性提醒已完成并归档。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This one-time reminder is complete and archived."
+          }
+        }
+      }
+    },
+    "这条共享提醒已被其他家庭成员删除。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This shared reminder was deleted by another family member."
+          }
+        }
+      }
+    },
+    "这条记录" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Record"
+          }
+        }
+      }
+    },
+    "这条记录可能已被其他家庭成员删除。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This record may have been deleted by another family member."
+          }
+        }
+      }
+    },
+    "这里只显示 Apple 为这只宠物提供的成员身份，不展示手机号、邮箱或 Apple ID。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only member identities provided by Apple for this pet are shown. Phone numbers, email addresses, and Apple IDs are not displayed."
+          }
+        }
+      }
+    },
+    "退出“%@”的共享？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave sharing for “%@”?"
+          }
+        }
+      }
+    },
+    "退出共享" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave Sharing"
+          }
+        }
+      }
+    },
+    "退出共享失败：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to leave sharing: %@"
+          }
+        }
+      }
+    },
+    "退出后，这只宠物会从你的爪记中移除；不会删除主人保存的宠物资料，也不会影响其他家庭成员。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After leaving, this pet is removed from your Zoji app. The owner's data and other family members are unaffected."
+          }
+        }
+      }
+    },
+    "退出这只宠物的共享" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave Sharing for This Pet"
+          }
+        }
+      }
+    },
+    "选填" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optional"
+          }
+        }
+      }
+    },
+    "选择图片进行识别" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan Health Documents"
+          }
+        }
+      }
+    },
+    "选择宠物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Pet"
+          }
+        }
+      }
+    },
+    "选择家人并发送" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Family Member"
+          }
+        }
+      }
+    },
+    "选择模板" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Template"
+          }
+        }
+      }
+    },
+    "通知" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications"
+          }
+        }
+      }
+    },
+    "通知与定位设置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification & Location Settings"
+          }
+        }
+      }
+    },
+    "通知时间" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification Time"
+          }
+        }
+      }
+    },
+    "邀请" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite"
+          }
+        }
+      }
+    },
+    "邀请仅查看成员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite Viewer"
+          }
+        }
+      }
+    },
+    "邀请可编辑成员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite Editor"
+          }
+        }
+      }
+    },
+    "邀请已准备好" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready to Share"
+          }
+        }
+      }
+    },
+    "邀请已接受，但共享宠物资料暂时还没有同步完成。请稍后下拉刷新家庭共享。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The invitation was accepted, but the shared pet profile has not finished syncing. Pull to refresh Family Sharing later."
+          }
+        }
+      }
+    },
+    "邀请待接受" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pending Invitation"
+          }
+        }
+      }
+    },
+    "邀请接受前，Apple 可能不会提供成员姓名；姓名或账户信息可用后会自动显示。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple may not provide a member’s identity before the invitation is accepted. Their name or account information will appear when available."
+          }
+        }
+      }
+    },
+    "配色主题" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color Theme"
+          }
+        }
+      }
+    },
+    "重复" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repeat"
+          }
+        }
+      }
+    },
+    "重复周期" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repeat Interval"
+          }
+        }
+      }
+    },
+    "重试" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
+          }
+        }
+      }
+    },
+    "重试未同步的修改" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry Unsynced Changes"
+          }
+        }
+      }
+    },
+    "金毛" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Golden"
+          }
+        }
+      }
+    },
+    "金毛寻回犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Golden Retriever"
+          }
+        }
+      }
+    },
+    "间隔天数" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interval in Days"
+          }
+        }
+      }
+    },
+    "附件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attachments"
+          }
+        }
+      }
+    },
+    "附件内容为空，请重新选择。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The attachment is empty. Please select it again."
+          }
+        }
+      }
+    },
+    "附件已达到 9 个上限，请先移除一个" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The 9-attachment limit has been reached. Remove one first."
+          }
+        }
+      }
+    },
+    "附近" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearby"
+          }
+        }
+      }
+    },
+    "附近医院" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearby Hospitals"
+          }
+        }
+      }
+    },
+    "附近宠物医院" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearby Veterinary Hospitals"
+          }
+        }
+      }
+    },
+    "雪纳瑞犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schnauzer"
+          }
+        }
+      }
+    },
+    "需要先同意隐私说明，才能使用高德医院搜索。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accept the privacy notice before using AMap hospital search."
+          }
+        }
+      }
+    },
+    "需要登录 iCloud" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign In to iCloud"
+          }
+        }
+      }
+    },
+    "首年免疫加强评估" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First-Year Booster Review"
+          }
+        }
+      }
+    },
+    "首次计划日" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First Scheduled Day"
+          }
+        }
+      }
+    },
+    "首次计划日期" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Date"
+          }
+        }
+      }
+    },
+    "首页" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
+          }
+        }
+      }
+    },
+    "高德地图" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AMap"
+          }
+        }
+      }
+    },
+    "高德地图 Key 尚未写入本机配置。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The AMap key has not been added to the local configuration."
+          }
+        }
+      }
+    },
+    "高德地图服务初始化失败，请检查 Key 类型和 Bundle ID。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AMap failed to initialize. Check the key type and Bundle ID."
+          }
+        }
+      }
+    },
+    "黄金猎犬" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Golden Retriever"
+          }
+        }
+      }
+    },
+    "默认体内每 3 个月、体外每月；可生成后按产品和兽医建议调整。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deworming every 3 months and flea & tick care monthly by default. Adjust based on product instructions and veterinary advice."
+          }
+        }
+      }
+    },
+    "默认头像库" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose an Avatar"
+          }
+        }
+      }
+    },
+    "1年" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "1Y" } }
+      }
+    },
+    "1月" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "1M" } }
+      }
+    },
+    "3月" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "3M" } }
+      }
+    },
+    "体重记录操作失败" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weight Entry Error" } }
+      }
+    },
+    "体重趋势" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weight Trend" } }
+      }
+    },
+    "共 %lld 次记录" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld entry" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld entries" } }
+            }
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "new", "value" : "共 %lld 次记录" } }
+      }
+    },
+    "删除记录" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete Entry" } }
+      }
+    },
+    "删除这条体重记录？" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete this weight entry?" } }
+      }
+    },
+    "变化曲线" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Trend" } }
+      }
+    },
+    "定期在相似时间和条件下称重，更容易看出真实变化。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weigh at a similar time and under similar conditions for a clearer trend." } }
+      }
+    },
+    "定期记录后，这里会显示体重变化曲线。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add regular entries to see the weight trend here." } }
+      }
+    },
+    "当前体重" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Current Weight" } }
+      }
+    },
+    "最近变化" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Latest Change" } }
+      }
+    },
+    "档案中的当前体重" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Current Profile Weight" } }
+      }
+    },
+    "添加一次称重后开始建立趋势" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add a measurement to start the trend" } }
+      }
+    },
+    "添加体重记录" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Weight Entry" } }
+      }
+    },
+    "称重信息" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Measurement" } }
+      }
+    },
+    "称重日期" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Date" } }
+      }
+    },
+    "称重记录" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weight History" } }
+      }
+    },
+    "管理这条体重记录" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Manage this weight entry" } }
+      }
+    },
+    "编辑体重" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Weight" } }
+      }
+    },
+    "记录体重" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Log Weight" } }
+      }
+    },
+    "记录体重后查看变化曲线" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Log weight to see its trend" } }
+      }
+    },
+    "记录第一次称重" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Log First Weight" } }
+      }
+    },
+    "还没有体重记录" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Weight Entries Yet" } }
+      }
+    },
+    "找不到这份宠物档案。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This pet profile could not be found." } }
+      }
+    },
+    "找不到这条体重记录。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This weight entry could not be found." } }
+      }
+    },
+    "称重日期不能晚于今天。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The measurement date cannot be in the future." } }
+      }
+    },
+    "下限" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Baseline" } }
+      }
+    },
+    "时间范围" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time Range" } }
+      }
+    },
+    "查看 %@ 的体重趋势" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "View %@'s weight trend" } }
+      }
+    },
+    "鼠尾草" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sage"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

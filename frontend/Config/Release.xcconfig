@@ -1,0 +1,8 @@
+// CocoaPods + shared non-secret build settings for release builds.
+#include? "../Pods/Target Support Files/Pods-Zoji/Pods-Zoji.release.xcconfig"
+// AMap's legacy frameworks do not contain an Apple-silicon simulator slice.
+// The simulator compiles the MapKit provider instead; physical devices keep AMap.
+EXCLUDED_ARCHS[sdk=iphonesimulator*] =
+OTHER_LDFLAGS[sdk=iphonesimulator*] =
+AMAP_API_KEY =
+#include? "Secrets.xcconfig"

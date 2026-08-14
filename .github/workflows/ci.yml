@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install CocoaPods dependencies
+        working-directory: frontend
+        run: pod install
+      - name: Build iOS app
+        working-directory: frontend
+        run: >-
+          xcodebuild
+          -workspace Zoji.xcworkspace
+          -scheme Zoji
+          -configuration Debug
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
+          build

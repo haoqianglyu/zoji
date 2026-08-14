@@ -1,0 +1,27 @@
+platform :ios, '17.0'
+
+use_frameworks!
+
+target 'Zoji' do
+  pod 'AMapSearch-NO-IDFA'
+
+  target 'ZojiTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |configuration|
+      configuration.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
+
+      # AMap's vendored frameworks have no arm64-simulator slice. The app uses
+      # MapKit in Simulator, so keep the generated support framework buildable
+      # for Apple-silicon simulators without linking the AMap binaries there.
+      if ['Pods-Zoji', 'Pods-ZojiTests'].include?(target.name)
+        configuration.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = ''
+        configuration.build_settings['OTHER_LDFLAGS[sdk=iphonesimulator*]'] = ''
+      end
+    end
+  end
+end
