@@ -173,26 +173,6 @@
         }
       }
     },
-    "kg · km · ℃" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kg · km · °C"
-          }
-        }
-      }
-    },
-    "lb · mi · ℉" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "lb · mi · °F"
-          }
-        }
-      }
-    },
     "%lld 家" : {
       "localizations" : {
         "en" : {
@@ -255,6 +235,39 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "0" : {
+
+    },
+    "1年" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1Y"
+          }
+        }
+      }
+    },
+    "1月" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1M"
+          }
+        }
+      }
+    },
+    "3月" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3M"
           }
         }
       }
@@ -323,6 +336,26 @@
         }
       }
     },
+    "kg · km · ℃" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kg · km · °C"
+          }
+        }
+      }
+    },
+    "lb · mi · ℉" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "lb · mi · °F"
+          }
+        }
+      }
+    },
     "PDF" : {
       "localizations" : {
         "en" : {
@@ -359,6 +392,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Next Reminder"
+          }
+        }
+      }
+    },
+    "下限" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baseline"
           }
         }
       }
@@ -580,6 +623,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Weight"
+          }
+        }
+      }
+    },
+    "体重记录操作失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weight Entry Error"
+          }
+        }
+      }
+    },
+    "体重趋势" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weight Trend"
           }
         }
       }
@@ -858,6 +921,16 @@
         }
       }
     },
+    "先认识一下" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Essentials"
+          }
+        }
+      }
+    },
     "先认识一下你的伙伴" : {
       "localizations" : {
         "en" : {
@@ -869,7 +942,6 @@
       }
     },
     "全部" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -895,6 +967,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ total"
+          }
+        }
+      }
+    },
+    "共 %lld 次记录" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld entry"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld entries"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "共 %lld 次记录"
           }
         }
       }
@@ -1031,11 +1131,32 @@
       }
     },
     "最多 9 个、总计 75 MB。图片会自动缩放压缩；单个 PDF 最多 25 MB。这里的附件不会自动识别文字。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Up to 9 attachments (75 MB total). Images are optimized automatically; each PDF can be up to 25 MB."
+          }
+        }
+      }
+    },
+    "最多 9 个、总计 75 MB。文字识别仅在点击图片上的扫描按钮后于本机进行；保存前请核对识别内容。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to 9 attachments and 75 MB total. Text recognition runs on device only after you tap an image's scan button; review the result before saving."
+          }
+        }
+      }
+    },
+    "最近变化" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Latest Change"
           }
         }
       }
@@ -1213,6 +1334,26 @@
         }
       }
     },
+    "删除记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Entry"
+          }
+        }
+      }
+    },
+    "删除这条体重记录？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this weight entry?"
+          }
+        }
+      }
+    },
     "删除这条提醒？" : {
       "localizations" : {
         "en" : {
@@ -1364,16 +1505,6 @@
         }
       }
     },
-    "根据 iPhone 地区自动选择" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Based on your iPhone region"
-          }
-        }
-      }
-    },
     "博美" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1456,6 +1587,16 @@
         }
       }
     },
+    "变化曲线" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trend"
+          }
+        }
+      }
+    },
     "另一位家庭成员刚刚修改了同一条内容，请刷新后再试。" : {
       "localizations" : {
         "en" : {
@@ -1477,6 +1618,7 @@
       }
     },
     "只在这里选择的图片会进行本机文字识别；识别图片也会自动保留到附件中，保存前请核对内容。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1712,6 +1854,16 @@
         }
       }
     },
+    "品种、性别、生日和体重都可以稍后填写" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Breed, sex, birthday, and weight can be added later"
+          }
+        }
+      }
+    },
     "图片" : {
       "localizations" : {
         "en" : {
@@ -1733,6 +1885,7 @@
       }
     },
     "图片已保存，但没有识别到清晰文字" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1924,6 +2077,16 @@
         }
       }
     },
+    "头像可稍后添加" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can add a photo later"
+          }
+        }
+      }
+    },
     "头像库" : {
       "localizations" : {
         "en" : {
@@ -1976,6 +2139,16 @@
         }
       }
     },
+    "完善更多资料" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add More Details"
+          }
+        }
+      }
+    },
     "完成" : {
       "localizations" : {
         "en" : {
@@ -2023,6 +2196,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Location access is off. Move the map and tap Search This Area."
+          }
+        }
+      }
+    },
+    "定期在相似时间和条件下称重，更容易看出真实变化。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weigh at a similar time and under similar conditions for a clearer trend."
+          }
+        }
+      }
+    },
+    "定期记录后，这里会显示体重变化曲线。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add regular entries to see the weight trend here."
           }
         }
       }
@@ -2557,6 +2750,16 @@
         }
       }
     },
+    "已辅助填写：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filled in: %1$@"
+          }
+        }
+      }
+    },
     "已退出“%@”的家庭共享。" : {
       "localizations" : {
         "en" : {
@@ -2573,6 +2776,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Selected"
+          }
+        }
+      }
+    },
+    "已选择头像" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photo selected"
           }
         }
       }
@@ -2626,6 +2839,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ragdoll"
+          }
+        }
+      }
+    },
+    "常用周期" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common Repeat"
           }
         }
       }
@@ -2785,6 +3008,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Private"
+          }
+        }
+      }
+    },
+    "当前体重" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current Weight"
           }
         }
       }
@@ -3005,6 +3238,26 @@
         }
       }
     },
+    "找不到这份宠物档案。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This pet profile could not be found."
+          }
+        }
+      }
+    },
+    "找不到这条体重记录。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This weight entry could not be found."
+          }
+        }
+      }
+    },
     "拉布拉多" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3182,11 +3435,22 @@
       }
     },
     "提醒会与本条健康记录关联，并在所选日期前通过系统通知提示你。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "The reminder will be linked to this health record and sent before the selected date."
+          }
+        }
+      }
+    },
+    "提醒会关联到本条记录；时间、完整周期和提前通知可在更多设置中调整。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This reminder is linked to the record. Adjust its time, full repeat options, and advance alerts in More Settings."
           }
         }
       }
@@ -3242,6 +3506,7 @@
       }
     },
     "提醒已完成" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3313,32 +3578,12 @@
         }
       }
     },
-    "搜索品种名称或简称" : {
+    "提醒设置" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Search breed name or abbreviation"
-          }
-        }
-      }
-    },
-    "搜索宠物医院或动物诊所" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search hospitals or clinics"
-          }
-        }
-      }
-    },
-    "搜索结果" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search Results"
+            "value" : "Reminder Settings"
           }
         }
       }
@@ -3353,12 +3598,43 @@
         }
       }
     },
+    "搜索品种名称或简称" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search breed name or abbreviation"
+          }
+        }
+      }
+    },
+    "搜索宠物医院或动物诊所" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search hospitals or clinics"
+          }
+        }
+      }
+    },
     "搜索此区域" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Search Area"
+          }
+        }
+      }
+    },
+    "搜索结果" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Results"
           }
         }
       }
@@ -3455,6 +3731,7 @@
       }
     },
     "支持图片与 PDF，不进行文字识别" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3578,7 +3855,6 @@
       }
     },
     "文字识别完成；已有内容未被覆盖" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3743,6 +4019,16 @@
         }
       }
     },
+    "无法识别这张图片，请选择更清晰的图片重试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This image could not be recognized. Choose a clearer image and try again."
+          }
+        }
+      }
+    },
     "无法读取这个 PDF，文件可能已损坏或受密码保护。" : {
       "localizations" : {
         "en" : {
@@ -3803,6 +4089,26 @@
         }
       }
     },
+    "时间" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time"
+          }
+        }
+      }
+    },
+    "时间范围" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Range"
+          }
+        }
+      }
+    },
     "显示方式" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3835,6 +4141,7 @@
       }
     },
     "智能识别" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3973,6 +4280,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "More Information"
+          }
+        }
+      }
+    },
+    "更多设置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More Settings"
           }
         }
       }
@@ -4120,6 +4437,16 @@
         }
       }
     },
+    "查看 %@ 的体重趋势" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View %@'s weight trend"
+          }
+        }
+      }
+    },
     "查看 %@ 的健康" : {
       "localizations" : {
         "en" : {
@@ -4251,6 +4578,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schedules core combination vaccines 4 weeks apart, plus rabies and first-year booster reviews."
+          }
+        }
+      }
+    },
+    "根据 iPhone 地区自动选择" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Based on your iPhone region"
+          }
+        }
+      }
+    },
+    "档案中的当前体重" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current Profile Weight"
           }
         }
       }
@@ -4622,16 +4969,6 @@
         }
       }
     },
-    "没有找到匹配的宠物医院，请尝试医院全名、所在城市或其他关键词。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No matching veterinary hospital was found. Try its full name, city, or another keyword."
-          }
-        }
-      }
-    },
     "没有找到匹配的头像" : {
       "localizations" : {
         "en" : {
@@ -4642,12 +4979,32 @@
         }
       }
     },
+    "没有找到匹配的宠物医院，请尝试医院全名、所在城市或其他关键词。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No matching veterinary hospital was found. Try its full name, city, or another keyword."
+          }
+        }
+      }
+    },
     "没有找到记录" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "No Records Found"
+          }
+        }
+      }
+    },
+    "没有识别到清晰文字，请尝试更清晰的图片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No clear text was recognized. Try a clearer image."
           }
         }
       }
@@ -4736,6 +5093,26 @@
         }
       }
     },
+    "添加一次称重后开始建立趋势" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a measurement to start the trend"
+          }
+        }
+      }
+    },
+    "添加体重记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Weight Entry"
+          }
+        }
+      }
+    },
     "添加健康记录" : {
       "localizations" : {
         "en" : {
@@ -4747,11 +5124,32 @@
       }
     },
     "添加健康资料" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add Attachments"
+          }
+        }
+      }
+    },
+    "添加后可点击图片上的扫描按钮识别文字" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After adding an image, tap its scan button to recognize text"
+          }
+        }
+      }
+    },
+    "添加图片或 PDF" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Images or PDFs"
           }
         }
       }
@@ -5267,6 +5665,46 @@
         }
       }
     },
+    "称重信息" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Measurement"
+          }
+        }
+      }
+    },
+    "称重日期" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
+          }
+        }
+      }
+    },
+    "称重日期不能晚于今天。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The measurement date cannot be in the future."
+          }
+        }
+      }
+    },
+    "称重记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weight History"
+          }
+        }
+      }
+    },
     "移动地图或更换关键词后重新搜索。" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5410,6 +5848,16 @@
         }
       }
     },
+    "管理这条体重记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage this weight entry"
+          }
+        }
+      }
+    },
     "类别" : {
       "localizations" : {
         "en" : {
@@ -5488,6 +5936,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Edit"
+          }
+        }
+      }
+    },
+    "编辑体重" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Weight"
           }
         }
       }
@@ -5612,6 +6070,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Custom Days"
+          }
+        }
+      }
+    },
+    "至少保留一个通知时间。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep at least one notification time."
           }
         }
       }
@@ -5835,6 +6303,26 @@
         }
       }
     },
+    "记录体重" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log Weight"
+          }
+        }
+      }
+    },
+    "记录体重后查看变化曲线" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log weight to see its trend"
+          }
+        }
+      }
+    },
     "记录内容" : {
       "localizations" : {
         "en" : {
@@ -5895,6 +6383,16 @@
         }
       }
     },
+    "记录第一次称重" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log First Weight"
+          }
+        }
+      }
+    },
     "记录详情" : {
       "localizations" : {
         "en" : {
@@ -5943,6 +6441,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Set Next Reminder"
+          }
+        }
+      }
+    },
+    "识别文字" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognize Text"
           }
         }
       }
@@ -6359,6 +6867,7 @@
       }
     },
     "辅助填写名称、详情、医院和费用" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6405,6 +6914,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Return to Family Sharing, pull to refresh, and try again."
+          }
+        }
+      }
+    },
+    "还没有体重记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Weight Entries Yet"
           }
         }
       }
@@ -6664,6 +7183,7 @@
       }
     },
     "选择图片进行识别" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6910,6 +7430,7 @@
       }
     },
     "附件已达到 9 个上限，请先移除一个" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7087,175 +7608,42 @@
         }
       }
     },
-    "1年" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "1Y" } }
-      }
-    },
-    "1月" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "1M" } }
-      }
-    },
-    "3月" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "3M" } }
-      }
-    },
-    "体重记录操作失败" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weight Entry Error" } }
-      }
-    },
-    "体重趋势" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weight Trend" } }
-      }
-    },
-    "共 %lld 次记录" : {
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld entry" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld entries" } }
-            }
-          }
-        },
-        "zh-Hans" : { "stringUnit" : { "state" : "new", "value" : "共 %lld 次记录" } }
-      }
-    },
-    "删除记录" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete Entry" } }
-      }
-    },
-    "删除这条体重记录？" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete this weight entry?" } }
-      }
-    },
-    "变化曲线" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Trend" } }
-      }
-    },
-    "定期在相似时间和条件下称重，更容易看出真实变化。" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weigh at a similar time and under similar conditions for a clearer trend." } }
-      }
-    },
-    "定期记录后，这里会显示体重变化曲线。" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add regular entries to see the weight trend here." } }
-      }
-    },
-    "当前体重" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Current Weight" } }
-      }
-    },
-    "最近变化" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Latest Change" } }
-      }
-    },
-    "档案中的当前体重" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Current Profile Weight" } }
-      }
-    },
-    "添加一次称重后开始建立趋势" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add a measurement to start the trend" } }
-      }
-    },
-    "添加体重记录" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Weight Entry" } }
-      }
-    },
-    "称重信息" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Measurement" } }
-      }
-    },
-    "称重日期" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Date" } }
-      }
-    },
-    "称重记录" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weight History" } }
-      }
-    },
-    "管理这条体重记录" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Manage this weight entry" } }
-      }
-    },
-    "编辑体重" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Weight" } }
-      }
-    },
-    "记录体重" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Log Weight" } }
-      }
-    },
-    "记录体重后查看变化曲线" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Log weight to see its trend" } }
-      }
-    },
-    "记录第一次称重" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Log First Weight" } }
-      }
-    },
-    "还没有体重记录" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Weight Entries Yet" } }
-      }
-    },
-    "找不到这份宠物档案。" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "This pet profile could not be found." } }
-      }
-    },
-    "找不到这条体重记录。" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "This weight entry could not be found." } }
-      }
-    },
-    "称重日期不能晚于今天。" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "The measurement date cannot be in the future." } }
-      }
-    },
-    "下限" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Baseline" } }
-      }
-    },
-    "时间范围" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time Range" } }
-      }
-    },
-    "查看 %@ 的体重趋势" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "View %@'s weight trend" } }
-      }
-    },
     "鼠尾草" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sage"
+          }
+        }
+      }
+    },
+    "%lld 笔含费用记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld records with costs"
+          }
+        }
+      }
+    },
+    "不同币种分别统计，不进行汇率换算。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Currencies are totaled separately without exchange-rate conversion."
+          }
+        }
+      }
+    },
+    "年度花费" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annual Spending"
           }
         }
       }

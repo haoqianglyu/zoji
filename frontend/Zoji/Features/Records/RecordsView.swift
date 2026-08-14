@@ -3,24 +3,31 @@ import PDFKit
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
-import Vision
 
 struct RecordsView: View {
     @Environment(AppStore.self) private var store
     @Environment(FamilySharingStore.self) private var familyStore
+    @Environment(\.appColorTheme) private var theme
     @State private var query = ""
     @State private var editor: HealthRecordEditorPresentation?
     @State private var recordPendingDeletion: HealthRecord?
 
-    private var filteredRecords: [HealthRecord] {
-        let records = familyStore.selectedSharedPet?.records.sorted { $0.occurredAt > $1.occurredAt }
+    private var selectedRecords: [HealthRecord] {
+        familyStore.selectedSharedPet?.records.sorted { $0.occurredAt > $1.occurredAt }
             ?? store.selectedRecords
-        guard !query.isEmpty else { return records }
-        return records.filter { record in
+    }
+
+    private var filteredRecords: [HealthRecord] {
+        guard !query.isEmpty else { return selectedRecords }
+        return selectedRecords.filter { record in
             record.title.localizedStandardContains(query)
                 || record.kind.displayName.localizedStandardContains(query)
                 || record.providerName?.localizedStandardContains(query) == true
         }
+    }
+
+    private var annualExpenseSummary: AnnualExpenseSummary? {
+        AnnualExpenseSummary(records: selectedRecords)
     }
 
     private var monthSections: [HealthRecordMonthSection] {
@@ -53,6 +60,12 @@ struct RecordsView: View {
                     Section("记录对象") {
                         petSwitcher
                             .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
+                    }
+
+                    if let annualExpenseSummary {
+                        Section("年度花费") {
+                            AnnualExpenseSummaryCard(summary: annualExpenseSummary)
+                        }
                     }
 
                     if filteredRecords.isEmpty {
@@ -100,7 +113,7 @@ struct RecordsView: View {
                                             } label: {
                                                 Label("编辑", systemImage: "pencil")
                                             }
-                                            .tint(AppTheme.accent)
+                                            .tint(theme.accent)
                                         }
                                     }
                                 }
@@ -124,7 +137,7 @@ struct RecordsView: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(AppTheme.background)
+            .background(theme.background)
             .searchable(text: $query, prompt: "搜索记录、类型或医院")
             .navigationTitle("健康记录")
             .toolbar {
@@ -191,8 +204,8 @@ struct RecordsView: View {
                                 avatarPresetID: pet.avatarPresetID,
                                 fallbackSymbol: pet.avatarSymbol,
                                 size: 32,
-                                background: familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? .white.opacity(0.22) : AppTheme.accentSoft,
-                                foreground: familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? .white : AppTheme.accent
+                                background: familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? .white.opacity(0.22) : theme.accentSoft,
+                                foreground: familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? .white : theme.accent
                             )
                             Text(pet.name)
                                 .font(.subheadline.weight(.semibold))
@@ -201,7 +214,7 @@ struct RecordsView: View {
                         .foregroundStyle(familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? .white : .primary)
                         .padding(.vertical, 7)
                         .padding(.horizontal, 10)
-                        .background(familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? AppTheme.accent : AppTheme.surfaceMuted, in: Capsule())
+                        .background(familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? theme.accent : theme.surfaceMuted, in: Capsule())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("查看 \(pet.name) 的健康记录")
@@ -218,15 +231,15 @@ struct RecordsView: View {
                                 avatarPresetID: sharedPet.pet.avatarPresetID,
                                 fallbackSymbol: sharedPet.pet.avatarSymbol,
                                 size: 32,
-                                background: familyStore.selectedSharedPetID == sharedPet.id ? .white.opacity(0.22) : AppTheme.accentSoft,
-                                foreground: familyStore.selectedSharedPetID == sharedPet.id ? .white : AppTheme.accent
+                                background: familyStore.selectedSharedPetID == sharedPet.id ? .white.opacity(0.22) : theme.accentSoft,
+                                foreground: familyStore.selectedSharedPetID == sharedPet.id ? .white : theme.accent
                             )
                             Text(sharedPet.pet.name).font(.subheadline.weight(.semibold)).lineLimit(1)
                             Image(systemName: "person.2.fill").font(.caption2)
                         }
                         .foregroundStyle(familyStore.selectedSharedPetID == sharedPet.id ? .white : .primary)
                         .padding(.vertical, 7).padding(.horizontal, 10)
-                        .background(familyStore.selectedSharedPetID == sharedPet.id ? AppTheme.accent : AppTheme.surfaceMuted, in: Capsule())
+                        .background(familyStore.selectedSharedPetID == sharedPet.id ? theme.accent : theme.surfaceMuted, in: Capsule())
                     }
                     .buttonStyle(.plain)
                 }
@@ -250,6 +263,125 @@ struct RecordsView: View {
     }
 }
 
+private struct AnnualExpenseSummary: Sendable {
+    struct KindAmount: Identifiable, Sendable {
+        let kind: RecordKind
+        let minorUnits: Int
+        var id: RecordKind { kind }
+    }
+
+    struct CurrencyGroup: Identifiable, Sendable {
+        let code: String
+        let totalMinorUnits: Int
+        let kindAmounts: [KindAmount]
+        var id: String { code }
+    }
+
+    let year: Int
+    let recordCount: Int
+    let currencyGroups: [CurrencyGroup]
+
+    init?(records: [HealthRecord], now: Date = Date(), calendar: Calendar = .autoupdatingCurrent) {
+        let year = calendar.component(.year, from: now)
+        guard let start = calendar.date(from: DateComponents(year: year)),
+              let end = calendar.date(byAdding: .year, value: 1, to: start) else { return nil }
+
+        let paidRecords = records.filter {
+            $0.occurredAt >= start && $0.occurredAt < end && ($0.costCents ?? 0) > 0
+        }
+        guard !paidRecords.isEmpty else { return nil }
+
+        let groupedByCurrency = Dictionary(grouping: paidRecords, by: \.resolvedCurrencyCode)
+        let currencyGroups = groupedByCurrency.map { code, currencyRecords in
+            let total = currencyRecords.reduce(0) { $0 + ($1.costCents ?? 0) }
+            let byKind = Dictionary(grouping: currencyRecords, by: \.kind)
+            let kindAmounts = byKind.map { kind, kindRecords in
+                KindAmount(
+                    kind: kind,
+                    minorUnits: kindRecords.reduce(0) { $0 + ($1.costCents ?? 0) }
+                )
+            }
+            .sorted {
+                if $0.minorUnits == $1.minorUnits {
+                    return $0.kind.displayName < $1.kind.displayName
+                }
+                return $0.minorUnits > $1.minorUnits
+            }
+            return CurrencyGroup(code: code, totalMinorUnits: total, kindAmounts: kindAmounts)
+        }
+        .sorted { $0.code < $1.code }
+
+        self.year = year
+        self.recordCount = paidRecords.count
+        self.currencyGroups = currencyGroups
+    }
+}
+
+private struct AnnualExpenseSummaryCard: View {
+    @Environment(\.appColorTheme) private var theme
+    let summary: AnnualExpenseSummary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 12) {
+                Image(systemName: "chart.pie.fill")
+                    .font(.headline)
+                    .foregroundStyle(theme.accent)
+                    .frame(width: 40, height: 40)
+                    .background(theme.accentSoft, in: Circle())
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(summary.year.formatted(.number.grouping(.never).locale(L10n.locale)))
+                        .font(.headline)
+                    Text("\(summary.recordCount) 笔含费用记录")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            ForEach(summary.currencyGroups) { group in
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(RegionalFormat.currencyString(minorUnits: group.totalMinorUnits, code: group.code))
+                        .font(.title3.bold())
+                        .foregroundStyle(theme.accentDeep)
+
+                    ForEach(group.kindAmounts) { item in
+                        VStack(spacing: 5) {
+                            HStack {
+                                Label(item.kind.displayName, systemImage: item.kind.symbol)
+                                    .lineLimit(1)
+                                Spacer(minLength: 8)
+                                Text(RegionalFormat.currencyString(minorUnits: item.minorUnits, code: group.code))
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+                            .font(.caption)
+
+                            ProgressView(
+                                value: Double(item.minorUnits),
+                                total: Double(max(group.totalMinorUnits, 1))
+                            )
+                            .tint(theme.accent)
+                        }
+                    }
+                }
+
+                if group.id != summary.currencyGroups.last?.id {
+                    Divider()
+                }
+            }
+
+            if summary.currencyGroups.count > 1 {
+                Text("不同币种分别统计，不进行汇率换算。")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .contain)
+    }
+}
+
 struct HealthRecordEditorPresentation: Identifiable {
     let id = UUID()
     let record: HealthRecord?
@@ -257,11 +389,12 @@ struct HealthRecordEditorPresentation: Identifiable {
 }
 
 struct HealthRecordEditorView: View {
+    @Environment(\.appColorTheme) private var theme
+
     private enum SelectionSheet: String, Identifiable {
         case pet
         case recordKind
         case currency
-        case reminderRepeat
 
         var id: String { rawValue }
     }
@@ -271,7 +404,6 @@ struct HealthRecordEditorView: View {
         case details
         case provider
         case cost
-        case reminderInterval
     }
 
     @Environment(AppStore.self) private var store
@@ -290,12 +422,11 @@ struct HealthRecordEditorView: View {
     @State private var notes: String
     @State private var attachments: [HealthRecordAttachment]
     @State private var selectedAttachmentPhotos: [PhotosPickerItem] = []
-    @State private var selectedRecognitionPhotos: [PhotosPickerItem] = []
     @State private var isImportingPDFs = false
     @State private var previewedPDF: HealthRecordAttachment?
     @State private var isLoadingAttachments = false
     @State private var attachmentProcessingMessage: String?
-    @State private var isRecognizingImage = false
+    @State private var recognizingAttachmentID: UUID?
     @State private var recognitionMessage: String?
     @State private var setsReminder = false
     @State private var reminderDueAt: Date
@@ -306,6 +437,7 @@ struct HealthRecordEditorView: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var selectionSheet: SelectionSheet?
+    @State private var showsAdvancedReminderSettings = false
     @FocusState private var focusedField: FocusedField?
 
     init(record: HealthRecord?, initialPetID: UUID, sharedPet: FamilySharedPet? = nil) {
@@ -342,12 +474,11 @@ struct HealthRecordEditorView: View {
                 recordContentSection
                 supplementalInformationSection
                 nextReminderSection
-                recognitionSection
                 attachmentsSection
             }
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
-            .background(AppTheme.background)
+            .background(theme.background)
             .background {
                 KeyboardDismissTapBridge {
                     focusedField = nil
@@ -378,10 +509,7 @@ struct HealthRecordEditorView: View {
                 if value.count > 5_000 { notes = String(value.prefix(5_000)) }
             }
             .onChange(of: selectedAttachmentPhotos) { _, items in
-                loadImages(from: items, recognizesText: false)
-            }
-            .onChange(of: selectedRecognitionPhotos) { _, items in
-                loadImages(from: items, recognizesText: true)
+                loadImages(from: items)
             }
             .task {
                 restoreLinkedReminderIfNeeded()
@@ -399,6 +527,16 @@ struct HealthRecordEditorView: View {
                 selectionView(for: sheet)
                     .presentationDetents([.medium, .large])
                     .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showsAdvancedReminderSettings) {
+                HealthRecordReminderSettingsView(
+                    dueAt: $reminderDueAt,
+                    repeatOption: $reminderRepeatOption,
+                    customIntervalDays: $reminderCustomIntervalDays,
+                    advanceDays: $reminderAdvanceDays
+                )
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
             }
             .interactiveDismissDisabled(isSaving)
             .alert("无法保存", isPresented: Binding(
@@ -452,7 +590,7 @@ struct HealthRecordEditorView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 11)
                     .background(
-                        AppTheme.surfaceMuted,
+                        theme.surfaceMuted,
                         in: RoundedRectangle(cornerRadius: 11, style: .continuous)
                     )
             }
@@ -477,7 +615,7 @@ struct HealthRecordEditorView: View {
                 } label: {
                     HStack(spacing: 7) {
                         Text(RegionalFormat.currencyPickerLabel(for: currencyCode))
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(theme.accent)
                         Image(systemName: "chevron.right")
                             .font(.caption.bold())
                             .foregroundStyle(.tertiary)
@@ -503,68 +641,40 @@ struct HealthRecordEditorView: View {
                     in: Calendar.current.startOfDay(for: Date())...,
                     displayedComponents: .date
                 )
+
+                Picker("常用周期", selection: $reminderRepeatOption) {
+                    ForEach(quickReminderOptions) { option in
+                        Text(option.displayName).tag(option)
+                    }
+                }
+                .pickerStyle(.menu)
+
                 Button {
                     focusedField = nil
-                    selectionSheet = .reminderRepeat
+                    showsAdvancedReminderSettings = true
                 } label: {
                     selectionRow(
-                        title: "重复周期",
-                        value: reminderRepeatOption.displayName
+                        title: "更多设置",
+                        value: L10n.date(reminderDueAt, dateStyle: .omitted, timeStyle: .shortened)
                     )
                 }
                 .buttonStyle(.plain)
-                if reminderRepeatOption == .customDays {
-                    HStack {
-                        Text("间隔天数")
-                        Spacer()
-                        TextField("20", text: $reminderCustomIntervalDays)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 72)
-                            .focused($focusedField, equals: .reminderInterval)
-                        Text("天")
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                DatePicker(
-                    "提醒时间",
-                    selection: $reminderDueAt,
-                    displayedComponents: .hourAndMinute
-                )
-
-                DisclosureGroup("提前通知") {
-                    ForEach([7, 3, 1, 0], id: \.self) { day in
-                        Toggle(day == 0 ? "当天" : "提前 \(day) 天", isOn: Binding(
-                            get: { reminderAdvanceDays.contains(day) },
-                            set: { isOn in
-                                if isOn {
-                                    reminderAdvanceDays.insert(day)
-                                } else {
-                                    reminderAdvanceDays.remove(day)
-                                }
-                            }
-                        ))
-                    }
-                }
             }
         } header: {
             Text("下次提醒")
         } footer: {
             if setsReminder {
-                Text("提醒会与本条健康记录关联，并在所选日期前通过系统通知提示你。")
+                Text("提醒会关联到本条记录；时间、完整周期和提前通知可在更多设置中调整。")
             }
         }
     }
 
-    private var recognitionSection: some View {
-        Section {
-            recognitionEditor
-        } header: {
-            Text("智能识别")
-        } footer: {
-            Text("只在这里选择的图片会进行本机文字识别；识别图片也会自动保留到附件中，保存前请核对内容。")
+    private var quickReminderOptions: [ReminderRepeatOption] {
+        var options: [ReminderRepeatOption] = [.none, .weekly, .every30Days, .monthly, .yearly]
+        if !options.contains(reminderRepeatOption) {
+            options.append(reminderRepeatOption)
         }
+        return options
     }
 
     private var attachmentsSection: some View {
@@ -573,7 +683,7 @@ struct HealthRecordEditorView: View {
         } header: {
             Text("附件")
         } footer: {
-            Text("最多 9 个、总计 75 MB。图片会自动缩放压缩；单个 PDF 最多 25 MB。这里的附件不会自动识别文字。")
+            Text("最多 9 个、总计 75 MB。文字识别仅在点击图片上的扫描按钮后于本机进行；保存前请核对识别内容。")
         }
     }
 
@@ -586,7 +696,7 @@ struct HealthRecordEditorView: View {
                 .scrollContentBackground(.hidden)
                 .padding(8)
                 .background(
-                    AppTheme.surfaceMuted,
+                    theme.surfaceMuted,
                     in: RoundedRectangle(cornerRadius: 12, style: .continuous)
                 )
                 .overlay(alignment: .topLeading) {
@@ -612,10 +722,10 @@ struct HealthRecordEditorView: View {
             Spacer(minLength: 12)
             if let systemImage {
                 Image(systemName: systemImage)
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(theme.accent)
             }
             Text(value)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(theme.accent)
                 .lineLimit(1)
             Image(systemName: "chevron.right")
                 .font(.caption.bold())
@@ -633,59 +743,6 @@ struct HealthRecordEditorView: View {
             HealthRecordKindSelectionView(selection: $kind)
         case .currency:
             HealthRecordCurrencySelectionView(selection: $currencyCode)
-        case .reminderRepeat:
-            HealthRecordRepeatSelectionView(selection: $reminderRepeatOption)
-        }
-    }
-
-    @ViewBuilder
-    private var recognitionEditor: some View {
-        if attachments.count < HealthRecordAttachmentPolicy.maximumCount {
-            PhotosPicker(
-                selection: $selectedRecognitionPhotos,
-                maxSelectionCount: HealthRecordAttachmentPolicy.maximumCount - attachments.count,
-                matching: .images
-            ) {
-                HStack(spacing: 12) {
-                    Image(systemName: "text.viewfinder")
-                        .font(.title2)
-                        .foregroundStyle(AppTheme.accent)
-                        .frame(width: 46, height: 46)
-                        .background(AppTheme.accentSoft, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("选择图片进行识别")
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-                        Text("辅助填写名称、详情、医院和费用")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption.bold())
-                        .foregroundStyle(.tertiary)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(isRecognizingImage || isLoadingAttachments)
-        } else {
-            Label("附件已达到 9 个上限，请先移除一个", systemImage: "exclamationmark.circle")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        }
-
-        if isRecognizingImage {
-            HStack(spacing: 9) {
-                ProgressView()
-                Text("正在识别病例文字…")
-            }
-            .font(.footnote)
-            .foregroundStyle(.secondary)
-        } else if let recognitionMessage {
-            Label(recognitionMessage, systemImage: "checkmark.circle.fill")
-                .font(.footnote)
-                .foregroundStyle(AppTheme.accent)
         }
     }
 
@@ -704,13 +761,13 @@ struct HealthRecordEditorView: View {
             HStack(spacing: 12) {
                 Image(systemName: "paperclip")
                     .font(.title2)
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(theme.accent)
                     .frame(width: 46, height: 46)
-                    .background(AppTheme.accentSoft, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                    .background(theme.accentSoft, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("添加健康资料")
+                    Text("添加图片或 PDF")
                         .font(.headline)
-                    Text("支持图片与 PDF，不进行文字识别")
+                    Text("添加后可点击图片上的扫描按钮识别文字")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -735,7 +792,7 @@ struct HealthRecordEditorView: View {
                 }
                 .buttonStyle(.bordered)
             }
-            .disabled(isRecognizingImage || isLoadingAttachments)
+            .disabled(recognizingAttachmentID != nil || isLoadingAttachments)
         }
 
         if isLoadingAttachments {
@@ -748,7 +805,20 @@ struct HealthRecordEditorView: View {
         } else if let attachmentProcessingMessage {
             Label(attachmentProcessingMessage, systemImage: "checkmark.circle.fill")
                 .font(.footnote)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(theme.accent)
+        }
+
+        if recognizingAttachmentID != nil {
+            HStack(spacing: 9) {
+                ProgressView()
+                Text("正在识别病例文字…")
+            }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+        } else if let recognitionMessage {
+            Label(recognitionMessage, systemImage: "checkmark.circle.fill")
+                .font(.footnote)
+                .foregroundStyle(theme.accent)
         }
 
         if !attachments.isEmpty {
@@ -764,7 +834,7 @@ struct HealthRecordEditorView: View {
 
     private func attachmentTile(_ attachment: HealthRecordAttachment) -> some View {
         ZStack(alignment: .topTrailing) {
-            AppTheme.surfaceMuted
+            theme.surfaceMuted
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
                 Group {
@@ -809,7 +879,7 @@ struct HealthRecordEditorView: View {
             .padding(7)
             .accessibilityLabel("移除附件")
 
-            VStack {
+            VStack(spacing: 0) {
                 Spacer()
                 HStack {
                     Text(HealthRecordAttachmentPolicy.formattedByteCount(attachment.data.count))
@@ -819,10 +889,31 @@ struct HealthRecordEditorView: View {
                         .padding(.vertical, 4)
                         .background(.black.opacity(0.58), in: Capsule())
                     Spacer()
+
+                    if attachment.kind == .image {
+                        Button {
+                            recognizeAttachment(attachment)
+                        } label: {
+                            Group {
+                                if recognizingAttachmentID == attachment.id {
+                                    ProgressView()
+                                        .tint(.white)
+                                } else {
+                                    Image(systemName: "text.viewfinder")
+                                }
+                            }
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 28, height: 28)
+                            .background(.black.opacity(0.58), in: Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(recognizingAttachmentID != nil || isLoadingAttachments)
+                        .accessibilityLabel("识别文字")
+                    }
                 }
             }
             .padding(7)
-            .allowsHitTesting(false)
         }
     }
 
@@ -830,7 +921,7 @@ struct HealthRecordEditorView: View {
         VStack(spacing: 8) {
             Image(systemName: symbol)
                 .font(.title)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(theme.accent)
             Text(L10n.dynamic(title))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
@@ -1012,29 +1103,19 @@ struct HealthRecordEditorView: View {
         let failureReason: String?
     }
 
-    private func loadImages(from items: [PhotosPickerItem], recognizesText: Bool) {
+    private func loadImages(from items: [PhotosPickerItem]) {
         guard !items.isEmpty else { return }
         attachmentProcessingMessage = nil
-        if recognizesText {
-            isRecognizingImage = true
-            recognitionMessage = nil
-        } else {
-            isLoadingAttachments = true
-        }
+        recognitionMessage = nil
+        isLoadingAttachments = true
 
         Task {
             defer {
-                if recognizesText {
-                    isRecognizingImage = false
-                    selectedRecognitionPhotos = []
-                } else {
-                    isLoadingAttachments = false
-                    selectedAttachmentPhotos = []
-                }
+                isLoadingAttachments = false
+                selectedAttachmentPhotos = []
             }
 
             var newAttachments: [HealthRecordAttachment] = []
-            var recognizedPages: [String] = []
             var failedCount = 0
             var failureReasons: [String] = []
             var sourceByteCount = 0
@@ -1061,14 +1142,6 @@ struct HealthRecordEditorView: View {
                     sourceByteCount += processed.sourceByteCount
                     storedByteCount += processed.data.count
                     currentTotalBytes += processed.data.count
-                    if recognizesText {
-                        if let recognizedText = try? await Task.detached(priority: .userInitiated, operation: {
-                            try Self.recognizeText(in: processed.data)
-                        }).value,
-                           !recognizedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            recognizedPages.append(recognizedText)
-                        }
-                    }
                 } catch {
                     failedCount += 1
                     let reason = error.localizedDescription
@@ -1086,17 +1159,26 @@ struct HealthRecordEditorView: View {
                     attachmentProcessingMessage = String(localized: "已添加 \(newAttachments.count) 张图片", locale: L10n.locale)
                 }
             }
-            if recognizesText {
-                if !recognizedPages.isEmpty {
-                    applyRecognizedText(recognizedPages.joined(separator: "\n\n—— 下一张附件 ——\n\n"))
-                } else if !newAttachments.isEmpty {
-                    recognitionMessage = L10n.string("图片已保存，但没有识别到清晰文字")
-                }
-            }
-
             if failedCount > 0 {
                 let reasons = failureReasons.prefix(2).joined(separator: "；")
                 errorMessage = String(localized: "有 \(failedCount) 张图片未添加：\(reasons)", locale: L10n.locale)
+            }
+        }
+    }
+
+    private func recognizeAttachment(_ attachment: HealthRecordAttachment) {
+        guard attachment.kind == .image, recognizingAttachmentID == nil else { return }
+        recognizingAttachmentID = attachment.id
+        recognitionMessage = nil
+
+        Task {
+            defer { recognizingAttachmentID = nil }
+            do {
+                let result = try await MedicalRecordRecognitionService.recognize(imageData: attachment.data)
+                guard attachments.contains(where: { $0.id == attachment.id }) else { return }
+                applyRecognitionResult(result)
+            } catch {
+                errorMessage = L10n.string("无法识别这张图片，请选择更清晰的图片重试。")
             }
         }
     }
@@ -1212,40 +1294,43 @@ struct HealthRecordEditorView: View {
         return page.thumbnail(of: CGSize(width: 360, height: 360), for: .mediaBox)
     }
 
-    private func applyRecognizedText(_ text: String) {
-        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    private func applyRecognitionResult(_ result: MedicalRecordRecognitionResult) {
+        let trimmedText = result.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else {
-            recognitionMessage = L10n.string("图片已保存，但没有识别到清晰文字")
+            recognitionMessage = L10n.string("没有识别到清晰文字，请尝试更清晰的图片")
             return
         }
 
         var filledFields: [String] = []
         if notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             notes = String(trimmedText.prefix(5_000))
-            filledFields.append("详情")
+            filledFields.append(L10n.string("详情"))
         }
 
-        if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-           let diagnosis = Self.firstValue(after: ["初步诊断", "诊断", "主诉"], in: trimmedText) {
+        if (title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || title == kind.defaultTitle),
+           let diagnosis = result.suggestedTitle {
             title = String(diagnosis.prefix(40))
-            filledFields.append("记录名称")
+            filledFields.append(L10n.string("记录名称"))
         }
 
         if providerName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-           let provider = Self.detectProvider(in: trimmedText) {
+           let provider = result.suggestedProvider {
             providerName = provider
-            filledFields.append("医院/机构")
+            filledFields.append(L10n.string("医院/机构"))
         }
 
         if costAmount.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-           let cost = Self.detectCost(in: trimmedText) {
+           let cost = result.suggestedCost {
             costAmount = cost
-            filledFields.append("费用")
+            filledFields.append(L10n.string("费用"))
         }
 
-        recognitionMessage = filledFields.isEmpty
-            ? "文字识别完成；已有内容未被覆盖"
-            : "已辅助填写：\(filledFields.joined(separator: "、"))"
+        if filledFields.isEmpty {
+            recognitionMessage = L10n.string("文字识别完成；已有内容未被覆盖")
+        } else {
+            let fieldSummary = filledFields.joined(separator: L10n.usesEnglish ? ", " : "、")
+            recognitionMessage = String(localized: "已辅助填写：\(fieldSummary)", locale: L10n.locale)
+        }
     }
 
     nonisolated static func processCaseImage(_ data: Data) throws -> ProcessedCaseImage {
@@ -1302,51 +1387,11 @@ struct HealthRecordEditorView: View {
         return ProcessedCaseImage(data: smallestData, sourceByteCount: data.count)
     }
 
-    nonisolated private static func recognizeText(in imageData: Data) throws -> String {
-        var recognizedLines: [String] = []
-        let request = VNRecognizeTextRequest { request, error in
-            guard error == nil, let observations = request.results as? [VNRecognizedTextObservation] else { return }
-            recognizedLines = observations.compactMap { $0.topCandidates(1).first?.string }
-        }
-        request.recognitionLevel = .accurate
-        request.recognitionLanguages = ["zh-Hans", "en-US"]
-        request.usesLanguageCorrection = true
-        try VNImageRequestHandler(data: imageData).perform([request])
-        return recognizedLines.joined(separator: "\n")
-    }
-
-    private static func firstValue(after labels: [String], in text: String) -> String? {
-        for line in text.components(separatedBy: .newlines) {
-            for label in labels where line.contains(label) {
-                let value = line
-                    .replacingOccurrences(of: label, with: "")
-                    .trimmingCharacters(in: CharacterSet(charactersIn: ":： "))
-                if !value.isEmpty { return value }
-            }
-        }
-        return nil
-    }
-
-    private static func detectProvider(in text: String) -> String? {
-        text.components(separatedBy: .newlines).first { line in
-            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            return trimmed.count <= 60
-                && (trimmed.contains("医院") || trimmed.contains("诊所") || trimmed.contains("医疗中心"))
-        }?.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private static func detectCost(in text: String) -> String? {
-        let pattern = "(?:合计|总计|应收|实收|金额|费用)[^0-9]{0,8}([0-9]+(?:\\.[0-9]{1,2})?)"
-        guard let expression = try? NSRegularExpression(pattern: pattern),
-              let match = expression.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-              let range = Range(match.range(at: 1), in: text)
-        else { return nil }
-        return String(text[range])
-    }
 }
 
 private struct HealthRecordPetSelectionView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorTheme) private var theme
     let pets: [Pet]
     @Binding var selection: UUID
 
@@ -1369,7 +1414,7 @@ private struct HealthRecordPetSelectionView: View {
                         Spacer()
                         if selection == pet.id {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(theme.accent)
                         }
                     }
                     .contentShape(Rectangle())
@@ -1377,7 +1422,7 @@ private struct HealthRecordPetSelectionView: View {
                 .buttonStyle(.plain)
             }
             .scrollContentBackground(.hidden)
-            .background(AppTheme.background)
+            .background(theme.background)
             .navigationTitle("宠物档案")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -1391,6 +1436,7 @@ private struct HealthRecordPetSelectionView: View {
 
 private struct HealthRecordKindSelectionView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorTheme) private var theme
     @Binding var selection: RecordKind
 
     var body: some View {
@@ -1403,16 +1449,16 @@ private struct HealthRecordKindSelectionView: View {
                     HStack(spacing: 13) {
                         Image(systemName: kind.symbol)
                             .font(.body.weight(.semibold))
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(theme.accent)
                             .frame(width: 34, height: 34)
-                            .background(AppTheme.accentSoft, in: Circle())
+                            .background(theme.accentSoft, in: Circle())
                         Text(kind.displayName)
                             .foregroundStyle(.primary)
                             .lineLimit(1)
                         Spacer()
                         if selection == kind {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(theme.accent)
                         }
                     }
                     .contentShape(Rectangle())
@@ -1420,7 +1466,7 @@ private struct HealthRecordKindSelectionView: View {
                 .buttonStyle(.plain)
             }
             .scrollContentBackground(.hidden)
-            .background(AppTheme.background)
+            .background(theme.background)
             .navigationTitle("类型")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -1434,6 +1480,7 @@ private struct HealthRecordKindSelectionView: View {
 
 private struct HealthRecordCurrencySelectionView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorTheme) private var theme
     @Binding var selection: String
 
     var body: some View {
@@ -1458,7 +1505,7 @@ private struct HealthRecordCurrencySelectionView: View {
                             .foregroundStyle(.secondary)
                         if selection == code {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(theme.accent)
                         }
                     }
                     .contentShape(Rectangle())
@@ -1466,7 +1513,7 @@ private struct HealthRecordCurrencySelectionView: View {
                 .buttonStyle(.plain)
             }
             .scrollContentBackground(.hidden)
-            .background(AppTheme.background)
+            .background(theme.background)
             .navigationTitle("币种")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -1478,47 +1525,91 @@ private struct HealthRecordCurrencySelectionView: View {
     }
 }
 
-private struct HealthRecordRepeatSelectionView: View {
+private struct HealthRecordReminderSettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @Binding var selection: ReminderRepeatOption
+    @Environment(\.appColorTheme) private var theme
+    @Binding var dueAt: Date
+    @Binding var repeatOption: ReminderRepeatOption
+    @Binding var customIntervalDays: String
+    @Binding var advanceDays: Set<Int>
 
     var body: some View {
         NavigationStack {
-            List(ReminderRepeatOption.allCases) { option in
-                Button {
-                    selection = option
-                    dismiss()
-                } label: {
-                    HStack {
-                        Text(option.displayName)
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
-                        Spacer()
-                        if selection == option {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(AppTheme.accent)
+            Form {
+                Section("提醒时间") {
+                    DatePicker(
+                        "时间",
+                        selection: $dueAt,
+                        displayedComponents: .hourAndMinute
+                    )
+                }
+
+                Section("重复周期") {
+                    Picker("重复", selection: $repeatOption) {
+                        ForEach(ReminderRepeatOption.allCases) { option in
+                            Text(option.displayName).tag(option)
                         }
                     }
-                    .contentShape(Rectangle())
+                    .pickerStyle(.navigationLink)
+
+                    if repeatOption == .customDays {
+                        HStack {
+                            Text("间隔天数")
+                            Spacer()
+                            TextField("20", text: $customIntervalDays)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(minWidth: 56, maxWidth: 88)
+                            Text("天")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
-                .buttonStyle(.plain)
+
+                Section {
+                    ForEach([7, 3, 1, 0], id: \.self) { day in
+                        Toggle(day == 0 ? "当天" : "提前 \(day) 天", isOn: Binding(
+                            get: { advanceDays.contains(day) },
+                            set: { isOn in
+                                if isOn {
+                                    advanceDays.insert(day)
+                                } else if advanceDays.count > 1 {
+                                    advanceDays.remove(day)
+                                }
+                            }
+                        ))
+                    }
+                } header: {
+                    Text("提前通知")
+                } footer: {
+                    Text("至少保留一个通知时间。")
+                }
             }
             .scrollContentBackground(.hidden)
-            .background(AppTheme.background)
-            .navigationTitle("重复周期")
+            .background(theme.background)
+            .navigationTitle("提醒设置")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { dismiss() }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") { dismiss() }
+                        .fontWeight(.semibold)
+                        .disabled(!isCustomIntervalValid)
                 }
             }
         }
+    }
+
+    private var isCustomIntervalValid: Bool {
+        guard repeatOption == .customDays else { return true }
+        guard let days = Int(customIntervalDays) else { return false }
+        return (1 ... 3650).contains(days)
     }
 }
 
 struct HealthRecordDetailView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorTheme) private var theme
     let recordID: UUID
     @State private var editor: HealthRecordEditorPresentation?
     @State private var attachmentGallery: HealthRecordAttachmentGalleryPresentation?
@@ -1536,9 +1627,9 @@ struct HealthRecordDetailView: View {
                         VStack(spacing: 12) {
                             Image(systemName: record.kind.symbol)
                                 .font(.system(size: 32, weight: .semibold))
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(theme.accent)
                                 .frame(width: 74, height: 74)
-                                .background(AppTheme.accentSoft, in: Circle())
+                                .background(theme.accentSoft, in: Circle())
                             Text(L10n.dynamic(record.title))
                                 .font(.title2.bold())
                                 .multilineTextAlignment(.center)
@@ -1596,7 +1687,7 @@ struct HealthRecordDetailView: View {
                     }
                 }
                 .scrollContentBackground(.hidden)
-                .background(AppTheme.background)
+                .background(theme.background)
                 .navigationTitle("记录详情")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -1655,7 +1746,7 @@ struct HealthRecordDetailView: View {
                 initialAttachmentID: attachment.id
             )
         } label: {
-            AppTheme.surfaceMuted
+            theme.surfaceMuted
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
                     Group {
@@ -1672,7 +1763,7 @@ struct HealthRecordDetailView: View {
                         } else {
                             Image(systemName: attachment.kind == .pdf ? "doc.richtext" : "photo.badge.exclamationmark")
                                 .font(.title2)
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(theme.accent)
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -1709,6 +1800,7 @@ struct HealthRecordDetailView: View {
 }
 
 private struct HealthRecordTimelineRow: View {
+    @Environment(\.appColorTheme) private var theme
     let record: HealthRecord
 
     var body: some View {
@@ -1722,15 +1814,16 @@ private struct HealthRecordTimelineRow: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
-            .frame(width: 46, alignment: .center)
+            .frame(minWidth: 46, alignment: .center)
+            .fixedSize(horizontal: true, vertical: false)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(L10n.date(record.occurredAt, dateStyle: .long, timeStyle: .omitted))
 
             Image(systemName: record.kind.symbol)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(theme.accent)
                 .frame(width: 38, height: 38)
-                .background(AppTheme.accentSoft, in: Circle())
+                .background(theme.accentSoft, in: Circle())
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(localizedTitle)
@@ -1797,6 +1890,7 @@ struct HealthRecordAttachmentGalleryPresentation: Identifiable {
 
 struct HealthRecordAttachmentGallery: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorTheme) private var theme
     let attachments: [HealthRecordAttachment]
     @State private var selectedAttachmentID: UUID
 
@@ -1883,12 +1977,13 @@ struct HealthRecordAttachmentGallery: View {
 
 private struct HealthRecordPDFPreview: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorTheme) private var theme
     let attachment: HealthRecordAttachment
 
     var body: some View {
         NavigationStack {
             PDFKitDocumentView(data: attachment.data)
-                .background(AppTheme.background)
+                .background(theme.background)
                 .navigationTitle(attachment.originalName)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {

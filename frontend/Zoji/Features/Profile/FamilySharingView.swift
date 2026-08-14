@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 struct FamilySharingView: View {
     @Environment(AppStore.self) private var store
     @Environment(FamilySharingStore.self) private var familyStore
+    @Environment(\.appColorTheme) private var theme
     @State private var ownedSharedPetIDs = Set<UUID>()
     @State private var hasCheckedOwnedShares = false
     @State private var ownedShareCheckTimedOut = false
@@ -47,9 +48,9 @@ struct FamilySharingView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     Image(systemName: "person.2.crop.square.stack.fill")
                         .font(.system(size: 38, weight: .semibold))
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(theme.accent)
                         .frame(width: 66, height: 66)
-                        .background(AppTheme.accentSoft, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .background(theme.accentSoft, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
 
                     Text("和家人一起照顾宠物")
                         .font(.title2.bold())
@@ -112,9 +113,9 @@ struct FamilySharingView: View {
                             HStack(spacing: 12) {
                                 Image(systemName: "person.crop.circle.fill")
                                     .font(.title2)
-                                    .foregroundStyle(AppTheme.accent)
+                                    .foregroundStyle(theme.accent)
                                     .frame(width: 42, height: 42)
-                                    .background(AppTheme.accentSoft, in: Circle())
+                                    .background(theme.accentSoft, in: Circle())
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text(L10n.dynamic(overview.displayName)).font(.headline)
                                     Text(accessiblePetCountText(overview.accesses.count))
@@ -224,9 +225,9 @@ struct FamilySharingView: View {
             Section {
                 HStack(alignment: .top, spacing: 13) {
                     Image(systemName: "person.2.badge.gearshape.fill")
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(theme.accent)
                         .frame(width: 28, height: 28)
-                        .background(AppTheme.accentSoft, in: Circle())
+                        .background(theme.accentSoft, in: Circle())
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text("发送邀请前选择权限")
@@ -290,9 +291,9 @@ struct FamilySharingView: View {
                     ForEach(familyStore.recentActivities.prefix(5)) { activity in
                         HStack(alignment: .top, spacing: 12) {
                             Image(systemName: activity.kind == .joined ? "person.badge.plus" : "person.badge.minus")
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(theme.accent)
                                 .frame(width: 34, height: 34)
-                                .background(AppTheme.accentSoft, in: Circle())
+                                .background(theme.accentSoft, in: Circle())
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(L10n.dynamic(activity.message))
                                     .font(.subheadline.weight(activity.isAcknowledged ? .regular : .semibold))
@@ -312,7 +313,7 @@ struct FamilySharingView: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background(AppTheme.background)
+        .background(theme.background)
         .navigationTitle("家庭共享")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: Binding(
@@ -401,7 +402,7 @@ struct FamilySharingView: View {
 
     private var syncStatusColor: Color {
         if case .failed = familyStore.syncState { return .orange }
-        return AppTheme.accent
+        return theme.accent
     }
 
     private func sharingContentRow(_ title: String, symbol: String) -> some View {
@@ -432,9 +433,9 @@ struct FamilySharingView: View {
                 .minimumScaleFactor(0.88)
         }
             .font(.caption.weight(.semibold))
-            .foregroundStyle(AppTheme.accent)
+            .foregroundStyle(theme.accent)
             .frame(width: 104, height: 34)
-            .background(AppTheme.accentSoft, in: Capsule())
+            .background(theme.accentSoft, in: Capsule())
     }
 
     @ViewBuilder
@@ -548,6 +549,7 @@ private struct PreparedFamilyInvitation: Identifiable {
 private struct PreparedFamilyInvitationView: View {
     let invitation: PreparedFamilyInvitation
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorTheme) private var theme
 
     var body: some View {
         NavigationStack {
@@ -566,7 +568,7 @@ private struct PreparedFamilyInvitationView: View {
                         .font(.headline)
                     Label(invitation.role == .editor ? "允许一起编辑" : "仅允许查看",
                           systemImage: invitation.role.symbol)
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(theme.accent)
                 }
 
                 Text(invitation.role == .editor
@@ -590,14 +592,14 @@ private struct PreparedFamilyInvitationView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .foregroundStyle(.white)
-                        .background(AppTheme.accent, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(theme.accent, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(.plain)
 
                 Spacer()
             }
             .padding(24)
-            .background(AppTheme.background)
+            .background(theme.background)
             .navigationTitle("家庭邀请")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -616,6 +618,7 @@ private struct FamilyMemberOverviewView: View {
     let fallbackName: String
 
     @Environment(FamilySharingStore.self) private var familyStore
+    @Environment(\.appColorTheme) private var theme
     @State private var pendingRemoval: FamilyMemberPetAccess?
     @State private var showsRemoveAllConfirmation = false
     @State private var updatingAccessID: String?
@@ -642,9 +645,9 @@ private struct FamilyMemberOverviewView: View {
                 HStack(spacing: 12) {
                     Image(systemName: "person.crop.circle.fill")
                         .font(.system(size: 30))
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(theme.accent)
                         .frame(width: 54, height: 54)
-                        .background(AppTheme.accentSoft, in: Circle())
+                        .background(theme.accentSoft, in: Circle())
                     VStack(alignment: .leading, spacing: 4) {
                         Text(accesses.first?.member.displayName ?? fallbackName)
                             .font(.headline)
@@ -737,7 +740,7 @@ private struct FamilyMemberOverviewView: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background(AppTheme.background)
+        .background(theme.background)
         .navigationTitle("成员权限")
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(
@@ -844,6 +847,7 @@ private struct FamilyOwnedPetSharingView: View {
     let onInvite: (FamilyAccessRole) -> Void
 
     @Environment(FamilySharingStore.self) private var familyStore
+    @Environment(\.appColorTheme) private var theme
     @State private var memberPendingRemoval: FamilyShareMember?
     @State private var isUpdatingMemberID: String?
     @State private var operationMessage: String?
@@ -971,7 +975,7 @@ private struct FamilyOwnedPetSharingView: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background(AppTheme.background)
+        .background(theme.background)
         .navigationTitle("共享成员")
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(
@@ -1005,9 +1009,9 @@ private struct FamilyOwnedPetSharingView: View {
             ? "person.crop.circle.badge.clock"
             : (member.role == .editor ? "person.crop.circle.badge.checkmark" : "person.crop.circle"))
             .font(.title2)
-            .foregroundStyle(AppTheme.accent)
+            .foregroundStyle(theme.accent)
             .frame(width: 42, height: 42)
-            .background(AppTheme.accentSoft, in: Circle())
+            .background(theme.accentSoft, in: Circle())
     }
 
     private func update(_ member: FamilyShareMember, to role: FamilyAccessRole, in sharedPet: FamilySharedPet) {
@@ -1042,11 +1046,14 @@ struct FamilySharedPetDetailView: View {
     let sharedPet: FamilySharedPet
     @Environment(FamilySharingStore.self) private var familyStore
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorTheme) private var theme
     @State private var recordEditor: HealthRecordEditorPresentation?
     @State private var reminderEditor: ReminderEditorPresentation?
     @State private var showsPetEditor = false
     @State private var completingReminderIDs: Set<UUID> = []
     @State private var operationMessage: String?
+    @State private var reminderCompletionMessage: String?
+    @State private var reminderCompletionFeedbackTrigger = 0
     @State private var showsLeaveConfirmation = false
     @State private var isLeavingShare = false
 
@@ -1069,10 +1076,10 @@ struct FamilySharedPetDetailView: View {
                         .font(.title2.bold())
                     Label("家人共享 · \(sharedPet.role.displayName)", systemImage: sharedPet.role.symbol)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(theme.accent)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(AppTheme.accentSoft, in: Capsule())
+                        .background(theme.accentSoft, in: Capsule())
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
@@ -1109,9 +1116,9 @@ struct FamilySharedPetDetailView: View {
                     ForEach(sharedPet.caregivers.filter { $0.status != .removed }) { member in
                         HStack(spacing: 12) {
                             Image(systemName: member.role == .owner ? "crown.fill" : "person.fill")
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(theme.accent)
                                 .frame(width: 36, height: 36)
-                                .background(AppTheme.accentSoft, in: Circle())
+                                .background(theme.accentSoft, in: Circle())
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(member.isCurrentUser
                                     ? "\(L10n.dynamic(member.displayName))（我）"
@@ -1141,9 +1148,9 @@ struct FamilySharedPetDetailView: View {
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: record.kind.symbol)
-                                    .foregroundStyle(AppTheme.accent)
+                                    .foregroundStyle(theme.accent)
                                     .frame(width: 36, height: 36)
-                                    .background(AppTheme.accentSoft, in: Circle())
+                                    .background(theme.accentSoft, in: Circle())
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text(L10n.dynamic(record.title))
                                         .font(.headline)
@@ -1171,7 +1178,7 @@ struct FamilySharedPetDetailView: View {
                                 } label: {
                                     Label("编辑", systemImage: "pencil")
                                 }
-                                .tint(AppTheme.accent)
+                                .tint(theme.accent)
                             }
                         }
                     }
@@ -1193,9 +1200,9 @@ struct FamilySharedPetDetailView: View {
                     ForEach(sharedPet.reminders.sorted { $0.dueAt < $1.dueAt }) { reminder in
                         HStack(spacing: 12) {
                             Image(systemName: reminder.kind.symbol)
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(theme.accent)
                                 .frame(width: 36, height: 36)
-                                .background(AppTheme.accentSoft, in: Circle())
+                                .background(theme.accentSoft, in: Circle())
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(L10n.dynamic(reminder.title))
                                     .font(.headline)
@@ -1272,7 +1279,7 @@ struct FamilySharedPetDetailView: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background(AppTheme.background)
+        .background(theme.background)
         .navigationTitle(sharedPet.pet.name)
         .navigationBarTitleDisplayMode(.inline)
         .refreshable {
@@ -1314,6 +1321,10 @@ struct FamilySharedPetDetailView: View {
         } message: {
             Text(operationMessage ?? "操作已完成。")
         }
+        .overlay(alignment: .top) {
+            TransientSuccessBanner(message: $reminderCompletionMessage)
+        }
+        .sensoryFeedback(.success, trigger: reminderCompletionFeedbackTrigger)
     }
 
     private func complete(_ reminder: ReminderItem, in sharedPet: FamilySharedPet) {
@@ -1322,9 +1333,10 @@ struct FamilySharedPetDetailView: View {
             defer { completingReminderIDs.remove(reminder.id) }
             do {
                 let nextDueAt = try await familyStore.completeReminder(reminder, in: sharedPet)
-                operationMessage = nextDueAt.map {
+                reminderCompletionMessage = nextDueAt.map {
                     String(localized: "本次已记录，下次提醒：\(L10n.date($0, dateStyle: .long, timeStyle: .shortened))。", locale: L10n.locale)
-                } ?? "这条一次性提醒已完成并归档。"
+                } ?? L10n.string("这条一次性提醒已完成并归档。")
+                reminderCompletionFeedbackTrigger += 1
             } catch {
                 operationMessage = error.localizedDescription
             }
@@ -1349,6 +1361,7 @@ struct FamilySharedRecordDetailView: View {
     let sharedPet: FamilySharedPet
     let recordID: UUID
     @Environment(FamilySharingStore.self) private var familyStore
+    @Environment(\.appColorTheme) private var theme
     @State private var attachmentGallery: HealthRecordAttachmentGalleryPresentation?
     @State private var showsEditor = false
 
@@ -1368,9 +1381,9 @@ struct FamilySharedRecordDetailView: View {
                 VStack(spacing: 12) {
                     Image(systemName: record.kind.symbol)
                         .font(.system(size: 32, weight: .semibold))
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(theme.accent)
                         .frame(width: 74, height: 74)
-                        .background(AppTheme.accentSoft, in: Circle())
+                        .background(theme.accentSoft, in: Circle())
                     Text(L10n.dynamic(record.title))
                         .font(.title2.bold())
                         .multilineTextAlignment(.center)
@@ -1419,7 +1432,7 @@ struct FamilySharedRecordDetailView: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background(AppTheme.background)
+        .background(theme.background)
         .navigationTitle("共享记录")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -1455,7 +1468,7 @@ struct FamilySharedRecordDetailView: View {
                 initialAttachmentID: attachment.id
             )
         } label: {
-            AppTheme.surfaceMuted
+            theme.surfaceMuted
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
                     Group {
@@ -1472,7 +1485,7 @@ struct FamilySharedRecordDetailView: View {
                         } else {
                             Image(systemName: attachment.kind == .pdf ? "doc.richtext" : "photo.badge.exclamationmark")
                                 .font(.title2)
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(theme.accent)
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -1497,11 +1510,15 @@ struct FamilySharedRecordDetailView: View {
 
 struct DataPrivacyView: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.appColorTheme) private var theme
     @State private var backupDocument: ZojiBackupDocument?
     @State private var isExportingBackup = false
     @State private var isImportingBackup = false
     @State private var backupMessage: String?
     @State private var backupMessageIsError = false
+    @State private var legalDocument: LegalDocument?
+    @State private var isAMapPrivacyPresented = false
+    @AppStorage(AMapPrivacyConsent.storageKey) private var amapPrivacyStatusRaw = AMapPrivacyConsent.Status.undetermined.rawValue
 
     var body: some View {
         List {
@@ -1561,9 +1578,38 @@ struct DataPrivacyView: View {
                 Text("备份包含宠物、健康记录、提醒以及图片/PDF。恢复采用合并方式：相同数据会更新，当前设备独有的数据不会被删除。请妥善保管备份文件。")
             }
 
+            Section(LegalCopy.text("政策与服务", "Policies and Services")) {
+                Button {
+                    legalDocument = .privacyPolicy
+                } label: {
+                    Label(LegalCopy.text("隐私政策", "Privacy Policy"), systemImage: "hand.raised.fill")
+                }
+
+                Button {
+                    legalDocument = .termsOfUse
+                } label: {
+                    Label(LegalCopy.text("用户协议", "Terms of Use"), systemImage: "doc.text.fill")
+                }
+
+                if AMapPrivacyConsent.Status(rawValue: amapPrivacyStatusRaw) != .undetermined {
+                    Button {
+                        isAMapPrivacyPresented = true
+                    } label: {
+                        HStack {
+                            Label(LegalCopy.text("高德医院搜索", "AMap Hospital Search"), systemImage: "map.fill")
+                            Spacer()
+                            Text(amapPrivacyStatusRaw == AMapPrivacyConsent.Status.agreed.rawValue
+                                 ? LegalCopy.text("已启用", "Enabled")
+                                 : LegalCopy.text("未启用", "Disabled"))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+
         }
         .scrollContentBackground(.hidden)
-        .background(AppTheme.background)
+        .background(theme.background)
         .navigationTitle("数据与隐私")
         .navigationBarTitleDisplayMode(.inline)
         .fileExporter(
@@ -1603,6 +1649,18 @@ struct DataPrivacyView: View {
         } message: {
             Text(backupMessage ?? "")
         }
+        .sheet(item: $legalDocument) { document in
+            LegalDocumentView(document: document)
+        }
+        .sheet(isPresented: $isAMapPrivacyPresented) {
+            AMapPrivacyConsentView {
+                amapPrivacyStatusRaw = AMapPrivacyConsent.Status.agreed.rawValue
+            } onDecline: {
+                amapPrivacyStatusRaw = AMapPrivacyConsent.Status.declined.rawValue
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+        }
     }
 
     private var backupFilename: String {
@@ -1640,9 +1698,9 @@ struct DataPrivacyView: View {
     private func privacyRow(title: String, detail: String, symbol: String) -> some View {
         HStack(alignment: .top, spacing: 13) {
             Image(systemName: symbol)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(theme.accent)
                 .frame(width: 28, height: 28)
-                .background(AppTheme.accentSoft, in: Circle())
+                .background(theme.accentSoft, in: Circle())
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(L10n.dynamic(title))

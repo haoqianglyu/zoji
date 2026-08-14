@@ -27,6 +27,7 @@ struct ZojiApp: App {
                 .environment(store)
                 .environment(familyStore)
                 .environment(\.locale, L10n.locale)
+                .environment(\.appColorTheme, colorTheme)
                 .tint(colorTheme.accent)
                 .preferredColorScheme(appearance.colorScheme)
         }

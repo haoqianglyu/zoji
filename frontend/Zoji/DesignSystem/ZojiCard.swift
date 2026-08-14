@@ -55,12 +55,13 @@ struct PetAvatarPreset: Identifiable, Hashable, Sendable {
 }
 
 struct PetAvatarView: View {
+    @Environment(\.appColorTheme) private var theme
     let avatarData: Data?
     var avatarPresetID: String? = nil
     let fallbackSymbol: String
     let size: CGFloat
-    var background: Color = AppTheme.accentSoft
-    var foreground: Color = AppTheme.accent
+    var background: Color?
+    var foreground: Color?
 
     var body: some View {
         Group {
@@ -74,10 +75,10 @@ struct PetAvatarView: View {
                     .scaledToFill()
             } else {
                 ZStack {
-                    Circle().fill(background)
+                    Circle().fill(background ?? theme.accentSoft)
                     Image(systemName: fallbackSymbol)
                         .font(.system(size: size * 0.44, weight: .semibold))
-                        .foregroundStyle(foreground)
+                        .foregroundStyle(foreground ?? theme.accent)
                 }
             }
         }
@@ -105,13 +106,14 @@ struct PetAvatarView: View {
 }
 
 struct ZojiCard<Content: View>: View {
+    @Environment(\.appColorTheme) private var theme
     @ViewBuilder let content: Content
 
     var body: some View {
         content
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(16)
-            .background(AppTheme.surface)
+            .background(theme.surface)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }

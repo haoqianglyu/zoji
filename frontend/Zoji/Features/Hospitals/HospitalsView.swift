@@ -40,6 +40,7 @@ private enum HospitalResultScope: String, CaseIterable, Identifiable {
 
 struct HospitalsView: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.appColorTheme) private var theme
 
     @State private var model = HospitalsViewModel()
     @State private var locationManager = HospitalLocationManager()
@@ -49,6 +50,8 @@ struct HospitalsView: View {
     @State private var selectedHospitalID: String?
     @State private var selectedHospital: HospitalSummary?
     @State private var hasCenteredOnUser = false
+    @AppStorage(AMapPrivacyConsent.storageKey) private var amapPrivacyStatusRaw = AMapPrivacyConsent.Status.undetermined.rawValue
+    @State private var isAMapPrivacyPresented = false
 
     @State private var currentRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 31.2304, longitude: 121.4737),
@@ -81,7 +84,7 @@ struct HospitalsView: View {
                 resultHeader
                 resultList
             }
-            .background(AppTheme.background)
+            .background(theme.background)
             .navigationTitle("宠物医院")
             .navigationBarTitleDisplayMode(.inline)
             .animation(.easeInOut(duration: 0.2), value: mode)
@@ -113,7 +116,7 @@ struct HospitalsView: View {
                     position = .region(region)
                     hasCenteredOnUser = true
                 }
-                Task { await searchCurrentRegion() }
+                Task { await searchCurrentRegion(allowAMapConsentPrompt: true) }
             }
             .onChange(of: selectedHospitalID) { _, hospitalID in
                 guard let hospitalID else { return }
@@ -127,6 +130,17 @@ struct HospitalsView: View {
                     onToggleFavorite: { model.toggleFavorite($0) }
                 )
                 .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $isAMapPrivacyPresented) {
+                AMapPrivacyConsentView {
+                    amapPrivacyStatusRaw = AMapPrivacyConsent.Status.agreed.rawValue
+                    Task { await searchCurrentRegion() }
+                } onDecline: {
+                    amapPrivacyStatusRaw = AMapPrivacyConsent.Status.declined.rawValue
+                    Task { await searchCurrentRegion() }
+                }
+                .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
             }
         }
@@ -143,7 +157,7 @@ struct HospitalsView: View {
                         .submitLabel(.search)
                         .onSubmit {
                             scope = .nearby
-                            Task { await searchCurrentRegion() }
+                            Task { await searchCurrentRegion(allowAMapConsentPrompt: true) }
                         }
                     if !query.isEmpty {
                         Button {
@@ -158,7 +172,7 @@ struct HospitalsView: View {
                 }
                 .padding(.horizontal, 14)
                 .frame(height: 46)
-                .background(AppTheme.surface)
+                .background(theme.surface)
                 .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
 
                 Button {
@@ -168,11 +182,11 @@ struct HospitalsView: View {
                     Image(systemName: "location.fill")
                         .font(.system(size: 17, weight: .semibold))
                         .frame(width: 46, height: 46)
-                        .background(AppTheme.surface)
+                        .background(theme.surface)
                         .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(theme.accent)
                 .accessibilityLabel("定位到当前位置")
             }
 
@@ -194,9 +208,9 @@ struct HospitalsView: View {
                                 .font(.system(size: 15, weight: .semibold))
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 30)
-                                .foregroundStyle(mode == option ? AppTheme.accent : .secondary)
+                                .foregroundStyle(mode == option ? theme.accent : .secondary)
                                 .background(
-                                    mode == option ? AppTheme.surface : Color.clear,
+                                    mode == option ? theme.surface : Color.clear,
                                     in: RoundedRectangle(cornerRadius: 8, style: .continuous)
                                 )
                         }
@@ -206,7 +220,7 @@ struct HospitalsView: View {
                 }
                 .padding(3)
                 .frame(width: 104)
-                .background(AppTheme.surfaceMuted, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .background(theme.surfaceMuted, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
 
             if let locationMessage = locationManager.message {
@@ -234,7 +248,7 @@ struct HospitalsView: View {
                         longitude: hospital.longitude
                     )
                 )
-                .tint(hospital.isFavorite ? AppTheme.warning : AppTheme.accent)
+                .tint(hospital.isFavorite ? theme.warning : theme.accent)
                 .tag(hospital.id)
             }
         }
@@ -250,7 +264,7 @@ struct HospitalsView: View {
         .overlay(alignment: .bottom) {
             Button {
                 scope = .nearby
-                Task { await searchCurrentRegion() }
+                Task { await searchCurrentRegion(allowAMapConsentPrompt: true) }
             } label: {
                 HStack(spacing: 7) {
                     if model.isSearching {
@@ -278,7 +292,7 @@ struct HospitalsView: View {
             if !displayedHospitals.isEmpty {
                 Text("\(displayedHospitals.count) 家")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(theme.accent)
             }
             Spacer()
         }
@@ -334,11 +348,18 @@ struct HospitalsView: View {
             .padding(.bottom, 24)
         }
         .refreshable {
-            await searchCurrentRegion()
+            await searchCurrentRegion(allowAMapConsentPrompt: true)
         }
     }
 
-    private func searchCurrentRegion() async {
+    private func searchCurrentRegion(allowAMapConsentPrompt: Bool = false) async {
+        if allowAMapConsentPrompt,
+           HospitalProviderPolicy.shouldOfferAMap(at: currentRegion.center),
+           AMapPrivacyConsent.Status(rawValue: amapPrivacyStatusRaw) == .undetermined {
+            isAMapPrivacyPresented = true
+            return
+        }
+
         await model.search(
             query: query,
             region: currentRegion,
@@ -362,6 +383,7 @@ struct HospitalsView: View {
 }
 
 private struct HospitalRow: View {
+    @Environment(\.appColorTheme) private var theme
     let hospital: HospitalSummary
     let onSelect: () -> Void
     let onToggleFavorite: () -> Void
@@ -371,9 +393,9 @@ private struct HospitalRow: View {
             HStack(alignment: .top, spacing: 13) {
                 Image(systemName: "cross.case.fill")
                     .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(theme.accent)
                     .frame(width: 44, height: 44)
-                    .background(AppTheme.accentSoft)
+                    .background(theme.accentSoft)
                     .clipShape(Circle())
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -391,7 +413,7 @@ private struct HospitalRow: View {
                         }
                     }
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(theme.accent)
                 }
 
                 Spacer(minLength: 4)
@@ -399,7 +421,7 @@ private struct HospitalRow: View {
                 Button(action: onToggleFavorite) {
                     Image(systemName: hospital.isFavorite ? "heart.fill" : "heart")
                         .font(.system(size: 19, weight: .semibold))
-                        .foregroundStyle(hospital.isFavorite ? AppTheme.warning : .secondary)
+                        .foregroundStyle(hospital.isFavorite ? theme.warning : .secondary)
                         .frame(width: 38, height: 38)
                         .contentShape(Rectangle())
                 }
@@ -414,6 +436,7 @@ private struct HospitalRow: View {
 
 private struct HospitalDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorTheme) private var theme
 
     let hospital: HospitalSummary
     let onToggleFavorite: (HospitalSummary) -> Void
@@ -434,12 +457,12 @@ private struct HospitalDetailView: View {
                 VStack(spacing: 16) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .fill(AppTheme.accentSoft)
+                            .fill(theme.accentSoft)
                             .frame(height: 112)
                         VStack(spacing: 8) {
                             Image(systemName: "cross.case.fill")
                                 .font(.system(size: 27, weight: .semibold))
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(theme.accent)
                             Text(hospital.name)
                                 .font(.title3.bold())
                                 .multilineTextAlignment(.center)
@@ -486,7 +509,7 @@ private struct HospitalDetailView: View {
                                 .font(.subheadline.weight(.semibold))
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 48)
-                                .background(AppTheme.surface)
+                                .background(theme.surface)
                                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
                     }
@@ -499,7 +522,7 @@ private struct HospitalDetailView: View {
                 }
                 .padding(16)
             }
-            .background(AppTheme.background)
+            .background(theme.background)
             .navigationTitle("医院详情")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -513,7 +536,7 @@ private struct HospitalDetailView: View {
     private func detailLine(symbol: String, title: String, value: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: symbol)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(theme.accent)
                 .frame(width: 22)
             VStack(alignment: .leading, spacing: 3) {
                 Text(L10n.dynamic(title))
@@ -539,11 +562,11 @@ private struct HospitalDetailView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 58)
-            .background(AppTheme.accentSoft)
+            .background(theme.accentSoft)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
-        .foregroundStyle(AppTheme.accent)
+        .foregroundStyle(theme.accent)
     }
 
     private func openDirections() {

@@ -2068,6 +2068,61 @@ final class FamilySharingStore {
         try await applyOptimistic(updated, change: .save(pet, at: updated.location))
     }
 
+    func addWeightEntry(
+        petID: UUID,
+        kilograms: Double,
+        measuredAt: Date,
+        in sharedPet: FamilySharedPet
+    ) async throws {
+        guard sharedPet.pet.id == petID else { throw WeightEntryValidationError.petNotFound }
+        try validateWeightEntry(kilograms: kilograms, measuredAt: measuredAt)
+
+        var pet = currentPet(sharedPet).pet
+        var entries = pet.weightEntries ?? []
+        entries.append(WeightEntry(measuredAt: measuredAt, kilograms: kilograms))
+        pet.weightEntries = entries.sorted { $0.measuredAt < $1.measuredAt }
+        pet.weightKilograms = pet.sortedWeightEntries.last?.kilograms
+        try await updatePet(pet, in: sharedPet)
+    }
+
+    func updateWeightEntry(
+        petID: UUID,
+        entryID: UUID,
+        kilograms: Double,
+        measuredAt: Date,
+        in sharedPet: FamilySharedPet
+    ) async throws {
+        guard sharedPet.pet.id == petID else { throw WeightEntryValidationError.petNotFound }
+        try validateWeightEntry(kilograms: kilograms, measuredAt: measuredAt)
+
+        var pet = currentPet(sharedPet).pet
+        guard var entries = pet.weightEntries,
+              let entryIndex = entries.firstIndex(where: { $0.id == entryID }) else {
+            throw WeightEntryValidationError.entryNotFound
+        }
+        entries[entryIndex].kilograms = kilograms
+        entries[entryIndex].measuredAt = measuredAt
+        pet.weightEntries = entries.sorted { $0.measuredAt < $1.measuredAt }
+        pet.weightKilograms = pet.sortedWeightEntries.last?.kilograms
+        try await updatePet(pet, in: sharedPet)
+    }
+
+    func deleteWeightEntry(
+        petID: UUID,
+        entryID: UUID,
+        in sharedPet: FamilySharedPet
+    ) async throws {
+        guard sharedPet.pet.id == petID else { throw WeightEntryValidationError.petNotFound }
+
+        var pet = currentPet(sharedPet).pet
+        guard pet.weightEntries?.contains(where: { $0.id == entryID }) == true else {
+            throw WeightEntryValidationError.entryNotFound
+        }
+        pet.weightEntries?.removeAll { $0.id == entryID }
+        pet.weightKilograms = pet.sortedWeightEntries.last?.kilograms
+        try await updatePet(pet, in: sharedPet)
+    }
+
     func saveHealthRecord(_ record: HealthRecord, in sharedPet: FamilySharedPet) async throws {
         guard sharedPet.canEdit else { throw FamilySharingError.readOnly }
         var updated = currentPet(sharedPet)
@@ -2246,6 +2301,15 @@ final class FamilySharingStore {
             return sharedPets.first(where: { $0.id == fallback.id }) ?? fallback
         }
         return ownedSharedPets.first(where: { $0.pet.id == fallback.pet.id }) ?? fallback
+    }
+
+    private func validateWeightEntry(kilograms: Double, measuredAt: Date) throws {
+        guard kilograms > 0, kilograms <= 200 else {
+            throw WeightEntryValidationError.weightOutOfRange
+        }
+        guard measuredAt <= Date() else {
+            throw WeightEntryValidationError.dateInFuture
+        }
     }
 
     private func mergeRemotePetsWithPendingChanges(_ remote: [FamilySharedPet]) async -> [FamilySharedPet] {

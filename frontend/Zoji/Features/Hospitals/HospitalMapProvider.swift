@@ -291,7 +291,7 @@ private enum AMapSDKConfiguration {
     }
 
     static func configureAfterConsent() throws {
-        guard AppPrivacyConsent.isGranted else {
+        guard AMapPrivacyConsent.isGranted else {
             throw AMapHospitalError.privacyConsentRequired
         }
         guard let apiKey else {
@@ -592,6 +592,19 @@ final class AMapHospitalProvider: NSObject, HospitalMapProviding, @preconcurrenc
 #endif
 
 @MainActor
+enum HospitalProviderPolicy {
+    static func shouldOfferAMap(at coordinate: CLLocationCoordinate2D) -> Bool {
+        #if targetEnvironment(simulator)
+        false
+        #else
+        guard AMapSDKConfiguration.apiKey != nil else { return false }
+        return coordinate.latitude >= 17.5 && coordinate.latitude <= 54.5 &&
+            coordinate.longitude >= 72 && coordinate.longitude <= 136
+        #endif
+    }
+}
+
+@MainActor
 final class AutomaticHospitalProvider: HospitalMapProviding {
     let source = HospitalDataSource.amap
 
@@ -612,7 +625,8 @@ final class AutomaticHospitalProvider: HospitalMapProviding {
             referenceLocation: referenceLocation
         )
         #else
-        guard shouldPreferAMap(at: region.center), AMapSDKConfiguration.apiKey != nil else {
+        guard HospitalProviderPolicy.shouldOfferAMap(at: region.center),
+              AMapPrivacyConsent.isGranted else {
             return try await mapKitProvider.searchHospitals(
                 query: query,
                 region: region,
@@ -642,12 +656,6 @@ final class AutomaticHospitalProvider: HospitalMapProviding {
         #endif
     }
 
-    #if !targetEnvironment(simulator)
-    private func shouldPreferAMap(at coordinate: CLLocationCoordinate2D) -> Bool {
-        coordinate.latitude >= 17.5 && coordinate.latitude <= 54.5 &&
-            coordinate.longitude >= 72 && coordinate.longitude <= 136
-    }
-    #endif
 }
 
 private extension String {

@@ -3,7 +3,7 @@ import SwiftUI
 
 struct WeightTrendPreviewCard: View {
     let pet: Pet
-    @AppStorage(AppColorTheme.storageKey) private var colorTheme = AppColorTheme.warm
+    @Environment(\.appColorTheme) private var theme
     @AppStorage(AppUnitSystem.storageKey) private var unitSystem = AppUnitSystem.system
 
     private var entries: [WeightEntry] { pet.sortedWeightEntries }
@@ -13,9 +13,9 @@ struct WeightTrendPreviewCard: View {
             HStack(spacing: 14) {
                 Image(systemName: "chart.xyaxis.line")
                     .font(.title2)
-                    .foregroundStyle(colorTheme.accent)
+                    .foregroundStyle(theme.accent)
                     .frame(width: 48, height: 48)
-                    .background(colorTheme.accentSoft, in: RoundedRectangle(cornerRadius: 15))
+                    .background(theme.accentSoft, in: RoundedRectangle(cornerRadius: 15))
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("体重趋势")
@@ -46,7 +46,7 @@ struct WeightTrendPreviewCard: View {
                             y: .value(L10n.string("体重"), RegionalFormat.displayedMass(fromKilograms: entry.kilograms))
                         )
                         .interpolationMethod(.catmullRom)
-                        .foregroundStyle(colorTheme.accent)
+                        .foregroundStyle(theme.accent)
 
                         AreaMark(
                             x: .value(L10n.string("日期"), entry.measuredAt),
@@ -55,7 +55,7 @@ struct WeightTrendPreviewCard: View {
                         .interpolationMethod(.catmullRom)
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [colorTheme.accent.opacity(0.24), colorTheme.accent.opacity(0.02)],
+                                colors: [theme.accent.opacity(0.24), theme.accent.opacity(0.02)],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
@@ -92,17 +92,18 @@ struct WeightTrendPreviewCard: View {
 
     private var deltaColor: Color {
         guard let deltaKilograms else { return .secondary }
-        return abs(deltaKilograms) < 0.000_1 ? .secondary : colorTheme.accent
+        return abs(deltaKilograms) < 0.000_1 ? .secondary : theme.accent
     }
 }
 
 struct WeightTrendView: View {
     @Environment(AppStore.self) private var store
-    @AppStorage(AppColorTheme.storageKey) private var colorTheme = AppColorTheme.warm
+    @Environment(FamilySharingStore.self) private var familyStore
+    @Environment(\.appColorTheme) private var theme
     @AppStorage(AppUnitSystem.storageKey) private var unitSystem = AppUnitSystem.system
 
     let petID: UUID
-    var readOnlyPet: Pet?
+    var sharedPet: FamilySharedPet?
     var canEdit = true
 
     @State private var selectedRange = WeightChartRange.all
@@ -111,7 +112,11 @@ struct WeightTrendView: View {
     @State private var errorMessage: String?
 
     private var pet: Pet? {
-        readOnlyPet ?? store.pets.first { $0.id == petID }
+        if let sharedPet {
+            return familyStore.sharedPets.first(where: { $0.id == sharedPet.id })?.pet
+                ?? sharedPet.pet
+        }
+        return store.pets.first { $0.id == petID }
     }
 
     private var entries: [WeightEntry] { pet?.sortedWeightEntries ?? [] }
@@ -131,7 +136,7 @@ struct WeightTrendView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
-        .background(colorTheme.background)
+        .background(theme.background)
         .navigationTitle("体重趋势")
         .toolbar {
             if canEdit {
@@ -146,7 +151,11 @@ struct WeightTrendView: View {
             }
         }
         .sheet(item: $editor) { presentation in
-            WeightEntryEditorView(petID: petID, entry: presentation.entry)
+            WeightEntryEditorView(
+                petID: petID,
+                entry: presentation.entry,
+                sharedPet: sharedPet
+            )
                 .environment(store)
         }
         .confirmationDialog(
@@ -179,8 +188,8 @@ struct WeightTrendView: View {
                     avatarPresetID: pet?.avatarPresetID,
                     fallbackSymbol: pet?.avatarSymbol ?? "pawprint.fill",
                     size: 58,
-                    background: colorTheme.accentSoft,
-                    foreground: colorTheme.accent
+                    background: theme.accentSoft,
+                    foreground: theme.accent
                 )
 
                 VStack(alignment: .leading, spacing: 5) {
@@ -191,7 +200,7 @@ struct WeightTrendView: View {
                         .foregroundStyle(.secondary)
                     Text(currentWeightText)
                         .font(.title2.bold())
-                        .foregroundStyle(colorTheme.accent)
+                        .foregroundStyle(theme.accent)
                 }
 
                 Spacer()
@@ -243,7 +252,7 @@ struct WeightTrendView: View {
                         .interpolationMethod(.catmullRom)
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [colorTheme.accent.opacity(0.30), colorTheme.accent.opacity(0.02)],
+                                colors: [theme.accent.opacity(0.30), theme.accent.opacity(0.02)],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
@@ -255,14 +264,14 @@ struct WeightTrendView: View {
                         )
                         .interpolationMethod(.catmullRom)
                         .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
-                        .foregroundStyle(colorTheme.accent)
+                        .foregroundStyle(theme.accent)
 
                         PointMark(
                             x: .value(L10n.string("日期"), entry.measuredAt),
                             y: .value(L10n.string("体重"), displayedWeight(entry))
                         )
                         .symbolSize(filteredEntries.count == 1 ? 72 : 34)
-                        .foregroundStyle(colorTheme.accent)
+                        .foregroundStyle(theme.accent)
                     }
                     .chartYScale(domain: chartDomain)
                     .chartXAxis {
@@ -287,7 +296,7 @@ struct WeightTrendView: View {
         VStack(spacing: 10) {
             Image(systemName: "chart.line.uptrend.xyaxis")
                 .font(.system(size: 38))
-                .foregroundStyle(colorTheme.accent.opacity(0.75))
+                .foregroundStyle(theme.accent.opacity(0.75))
             Text("还没有体重记录")
                 .font(.headline)
             Text("定期记录后，这里会显示体重变化曲线。")
@@ -324,9 +333,9 @@ struct WeightTrendView: View {
                     ZojiCard {
                         HStack(spacing: 12) {
                             Image(systemName: "scalemass.fill")
-                                .foregroundStyle(colorTheme.accent)
+                                .foregroundStyle(theme.accent)
                                 .frame(width: 40, height: 40)
-                                .background(colorTheme.accentSoft, in: Circle())
+                                .background(theme.accentSoft, in: Circle())
                             VStack(alignment: .leading, spacing: 3) {
                                 Text("档案中的当前体重")
                                     .font(.subheadline.weight(.semibold))
@@ -358,9 +367,9 @@ struct WeightTrendView: View {
     private func weightEntryRow(_ entry: WeightEntry) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "scalemass.fill")
-                .foregroundStyle(colorTheme.accent)
+                .foregroundStyle(theme.accent)
                 .frame(width: 40, height: 40)
-                .background(colorTheme.accentSoft, in: Circle())
+                .background(theme.accentSoft, in: Circle())
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(RegionalFormat.massString(fromKilograms: entry.kilograms))
@@ -387,7 +396,7 @@ struct WeightTrendView: View {
                 } label: {
                     Image(systemName: "ellipsis.circle")
                         .font(.title3)
-                        .foregroundStyle(colorTheme.accent)
+                        .foregroundStyle(theme.accent)
                 }
                 .accessibilityLabel("管理这条体重记录")
             }
@@ -431,7 +440,15 @@ struct WeightTrendView: View {
         guard let entry = entryPendingDeletion else { return }
         Task {
             do {
-                try await store.deleteWeightEntry(petID: petID, entryID: entry.id)
+                if let sharedPet {
+                    try await familyStore.deleteWeightEntry(
+                        petID: petID,
+                        entryID: entry.id,
+                        in: sharedPet
+                    )
+                } else {
+                    try await store.deleteWeightEntry(petID: petID, entryID: entry.id)
+                }
                 entryPendingDeletion = nil
             } catch {
                 entryPendingDeletion = nil
@@ -476,11 +493,13 @@ private struct WeightEntryEditorPresentation: Identifiable {
 
 private struct WeightEntryEditorView: View {
     @Environment(AppStore.self) private var store
+    @Environment(FamilySharingStore.self) private var familyStore
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(AppColorTheme.storageKey) private var colorTheme = AppColorTheme.warm
+    @Environment(\.appColorTheme) private var theme
 
     let petID: UUID
     let entry: WeightEntry?
+    let sharedPet: FamilySharedPet?
 
     @State private var weight: String
     @State private var measuredAt: Date
@@ -488,9 +507,10 @@ private struct WeightEntryEditorView: View {
     @State private var isSaving = false
     @FocusState private var weightIsFocused: Bool
 
-    init(petID: UUID, entry: WeightEntry?) {
+    init(petID: UUID, entry: WeightEntry?, sharedPet: FamilySharedPet? = nil) {
         self.petID = petID
         self.entry = entry
+        self.sharedPet = sharedPet
         _weight = State(initialValue: entry.map {
             RegionalFormat.massInputString(fromKilograms: $0.kilograms)
         } ?? "")
@@ -521,7 +541,7 @@ private struct WeightEntryEditorView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(colorTheme.background)
+            .background(theme.background)
             .navigationTitle(entry == nil ? "记录体重" : "编辑体重")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -557,7 +577,22 @@ private struct WeightEntryEditorView: View {
         Task {
             defer { isSaving = false }
             do {
-                if let entry {
+                if let entry, let sharedPet {
+                    try await familyStore.updateWeightEntry(
+                        petID: petID,
+                        entryID: entry.id,
+                        kilograms: kilograms,
+                        measuredAt: measuredAt,
+                        in: sharedPet
+                    )
+                } else if let sharedPet {
+                    try await familyStore.addWeightEntry(
+                        petID: petID,
+                        kilograms: kilograms,
+                        measuredAt: measuredAt,
+                        in: sharedPet
+                    )
+                } else if let entry {
                     try await store.updateWeightEntry(
                         petID: petID,
                         entryID: entry.id,

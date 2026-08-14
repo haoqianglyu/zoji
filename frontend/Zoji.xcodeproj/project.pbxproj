@@ -36,6 +36,7 @@
 		B10000000000000000000023 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000023 /* Localizable.xcstrings */; };
 		B10000000000000000000024 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000024 /* InfoPlist.xcstrings */; };
 		B10000000000000000000025 /* WeightTrendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000025 /* WeightTrendView.swift */; };
+		B10000000000000000000026 /* MedicalRecordRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000026 /* MedicalRecordRecognitionService.swift */; };
 		B683FAB085992DFF561438E0 /* Pods_ZojiTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D9C8A869DEDF052FDBAA562 /* Pods_ZojiTests.framework */; };
 /* End PBXBuildFile section */
 
@@ -87,6 +88,7 @@
 		F10000000000000000000023 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		F10000000000000000000024 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		F10000000000000000000025 /* WeightTrendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightTrendView.swift; sourceTree = "<group>"; };
+		F10000000000000000000026 /* MedicalRecordRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicalRecordRecognitionService.swift; sourceTree = "<group>"; };
 		F20000000000000000000001 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		F20000000000000000000002 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		F20000000000000000000003 /* Secrets.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig.example; sourceTree = "<group>"; };
@@ -176,6 +178,7 @@
 		G10000000000000000000004 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				F10000000000000000000026 /* MedicalRecordRecognitionService.swift */,
 				F10000000000000000000020 /* FamilySharingService.swift */,
 				G10000000000000000000005 /* Domain */,
 				G10000000000000000000006 /* Persistence */,
@@ -471,6 +474,7 @@
 				B1000000000000000000000A /* ZojiCard.swift in Sources */,
 				B1000000000000000000000B /* HomeView.swift in Sources */,
 				B10000000000000000000025 /* WeightTrendView.swift in Sources */,
+				B10000000000000000000026 /* MedicalRecordRecognitionService.swift in Sources */,
 				B1000000000000000000000C /* RecordsView.swift in Sources */,
 				B1000000000000000000001A /* HospitalMapProvider.swift in Sources */,
 				B1000000000000000000000D /* HospitalsView.swift in Sources */,

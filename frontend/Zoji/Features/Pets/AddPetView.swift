@@ -6,6 +6,7 @@ struct PetEditorView: View {
     @Environment(AppStore.self) private var store
     @Environment(FamilySharingStore.self) private var familyStore
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorTheme) private var theme
 
     private let pet: Pet?
     private let sharedPet: FamilySharedPet?
@@ -24,6 +25,7 @@ struct PetEditorView: View {
     @State private var isShowingAvatarLibrary = false
     @State private var isLoadingAvatar = false
     @State private var isSaving = false
+    @State private var showsOptionalDetails: Bool
     @State private var errorMessage: String?
     @FocusState private var focusedField: Field?
 
@@ -55,72 +57,50 @@ struct PetEditorView: View {
         _weight = State(initialValue: pet?.weightKilograms.map(RegionalFormat.massInputString) ?? "")
         _avatarData = State(initialValue: pet?.avatarData)
         _avatarPresetID = State(initialValue: pet?.avatarPresetID)
+        _showsOptionalDetails = State(initialValue: pet != nil)
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    avatarEditor
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .listRowBackground(Color.clear)
-                }
+                if isCreatingPet {
+                    Section("先认识一下") {
+                        compactAvatarEditor
+                        nameEditor
+                        speciesEditor
+                    }
 
-                Section("基本资料") {
-                    LabeledContent("名字") {
-                        TextField("例如：团子", text: $name)
-                            .multilineTextAlignment(.trailing)
-                            .textInputAutocapitalization(.never)
-                            .submitLabel(.done)
-                            .focused($focusedField, equals: .name)
-                            .onSubmit { focusedField = nil }
-                            .onChange(of: name) { _, value in
-                                name = String(value.prefix(30))
+                    Section {
+                        DisclosureGroup(isExpanded: $showsOptionalDetails.animation()) {
+                            breedEditor
+                            optionalInformationEditor
+                        } label: {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Label("完善更多资料", systemImage: "slider.horizontal.3")
+                                    .font(.headline)
+                                Text("品种、性别、生日和体重都可以稍后填写")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
                             }
-                    }
-
-                    Picker("宠物类型", selection: $species) {
-                        ForEach(PetSpecies.allCases, id: \.self) { option in
-                            Text(option.displayName).tag(option)
+                            .padding(.vertical, 4)
                         }
                     }
-                    .pickerStyle(.segmented)
-                    .onChange(of: species) { oldSpecies, newSpecies in
-                        handleSpeciesChange(from: oldSpecies, to: newSpecies)
+                } else {
+                    Section {
+                        avatarEditor
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .listRowBackground(Color.clear)
                     }
 
-                    breedEditor
-                }
-
-                Section("更多信息") {
-                    Picker("性别", selection: $sex) {
-                        ForEach(PetSex.allCases, id: \.self) { option in
-                            Text(option.displayName).tag(option)
-                        }
+                    Section("基本资料") {
+                        nameEditor
+                        speciesEditor
+                        breedEditor
                     }
 
-                    Toggle("记录生日", isOn: $hasBirthday.animation())
-
-                    if hasBirthday {
-                        DatePicker(
-                            "生日",
-                            selection: $birthday,
-                            in: ...Date(),
-                            displayedComponents: .date
-                        )
-                    }
-
-                    LabeledContent("体重") {
-                        HStack(spacing: 6) {
-                            TextField("选填", text: $weight)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
-                                .focused($focusedField, equals: .weight)
-                            Text(RegionalFormat.massUnitSymbol)
-                                .foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: 150)
+                    Section("更多信息") {
+                        optionalInformationEditor
                     }
                 }
 
@@ -138,7 +118,7 @@ struct PetEditorView: View {
             .listSectionSpacing(24)
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
-            .background(AppTheme.background)
+            .background(theme.background)
             .background {
                 PetEditorKeyboardDismissTapBridge {
                     focusedField = nil
@@ -178,6 +158,116 @@ struct PetEditorView: View {
         }
     }
 
+    private var isCreatingPet: Bool {
+        pet == nil && sharedPet == nil
+    }
+
+    private var nameEditor: some View {
+        LabeledContent("名字") {
+            TextField("例如：团子", text: $name)
+                .multilineTextAlignment(.trailing)
+                .textInputAutocapitalization(.never)
+                .submitLabel(.done)
+                .focused($focusedField, equals: .name)
+                .onSubmit { focusedField = nil }
+                .onChange(of: name) { _, value in
+                    name = String(value.prefix(30))
+                }
+        }
+    }
+
+    private var speciesEditor: some View {
+        Picker("宠物类型", selection: $species) {
+            ForEach(PetSpecies.allCases, id: \.self) { option in
+                Text(option.displayName).tag(option)
+            }
+        }
+        .pickerStyle(.segmented)
+        .onChange(of: species) { oldSpecies, newSpecies in
+            handleSpeciesChange(from: oldSpecies, to: newSpecies)
+        }
+    }
+
+    @ViewBuilder
+    private var optionalInformationEditor: some View {
+        Picker("性别", selection: $sex) {
+            ForEach(PetSex.allCases, id: \.self) { option in
+                Text(option.displayName).tag(option)
+            }
+        }
+
+        Toggle("记录生日", isOn: $hasBirthday.animation())
+
+        if hasBirthday {
+            DatePicker(
+                "生日",
+                selection: $birthday,
+                in: ...Date(),
+                displayedComponents: .date
+            )
+        }
+
+        LabeledContent("体重") {
+            HStack(spacing: 6) {
+                TextField("选填", text: $weight)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .focused($focusedField, equals: .weight)
+                Text(RegionalFormat.massUnitSymbol)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: 150)
+        }
+    }
+
+    private var compactAvatarEditor: some View {
+        HStack(spacing: 14) {
+            PetAvatarView(
+                avatarData: avatarData,
+                avatarPresetID: avatarPresetID,
+                fallbackSymbol: species.avatarSymbol,
+                size: 62
+            )
+
+            VStack(alignment: .leading, spacing: 7) {
+                Text(hasSelectedAvatar ? "已选择头像" : "头像可稍后添加")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+
+                HStack(spacing: 10) {
+                    Button {
+                        isShowingAvatarLibrary = true
+                    } label: {
+                        Label("头像库", systemImage: "square.grid.2x2.fill")
+                    }
+                    .buttonStyle(.bordered)
+
+                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                        Label("相册", systemImage: "photo.on.rectangle")
+                    }
+                    .buttonStyle(.bordered)
+
+                    if hasSelectedAvatar {
+                        Button(role: .destructive) {
+                            avatarData = nil
+                            avatarPresetID = nil
+                            selectedPhoto = nil
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .buttonStyle(.bordered)
+                        .accessibilityLabel("移除头像")
+                    }
+                }
+                .font(.caption.weight(.semibold))
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, 4)
+        .disabled(isLoadingAvatar || isSaving)
+    }
+
     private var avatarEditor: some View {
         VStack(spacing: 12) {
             ZStack(alignment: .bottomTrailing) {
@@ -194,7 +284,7 @@ struct PetEditorView: View {
 
                 ZStack {
                     Circle()
-                        .fill(AppTheme.accent)
+                        .fill(theme.accent)
                     if isLoadingAvatar {
                         ProgressView()
                             .tint(.white)
@@ -220,7 +310,7 @@ struct PetEditorView: View {
                         .labelStyle(.titleAndIcon)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(AppTheme.accent)
+                .tint(theme.accent)
                 .disabled(isLoadingAvatar || isSaving)
 
                 PhotosPicker(selection: $selectedPhoto, matching: .images) {
@@ -308,6 +398,15 @@ struct PetEditorView: View {
             do {
                 if let pet, let sharedPet {
                     let trimmedBreed = breed.trimmingCharacters(in: .whitespacesAndNewlines)
+                    var weightEntries = pet.weightEntries ?? []
+                    if let weightKilograms,
+                       pet.weightKilograms.map({ abs($0 - weightKilograms) > 0.000_1 }) ?? true {
+                        weightEntries.append(
+                            WeightEntry(measuredAt: Date(), kilograms: weightKilograms)
+                        )
+                    }
+                    weightEntries.sort { $0.measuredAt < $1.measuredAt }
+                    let resolvedWeight = weightKilograms ?? weightEntries.last?.kilograms
                     let updatedPet = Pet(
                         id: pet.id,
                         name: name.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -317,7 +416,8 @@ struct PetEditorView: View {
                         avatarPresetID: avatarPresetID,
                         sex: sex == .unknown ? nil : sex,
                         birthday: hasBirthday ? birthday : nil,
-                        weightKilograms: weightKilograms
+                        weightKilograms: resolvedWeight,
+                        weightEntries: weightEntries
                     )
                     try await familyStore.updatePet(updatedPet, in: sharedPet)
                 } else if let pet {
@@ -465,6 +565,8 @@ struct PetEditorView: View {
 }
 
 private struct PetAvatarLibraryView: View {
+    @Environment(\.appColorTheme) private var theme
+
     private enum SpeciesFilter: String, CaseIterable, Identifiable {
         case all
         case cat
@@ -528,7 +630,7 @@ private struct PetAvatarLibraryView: View {
                 .padding(20)
             }
             .scrollDismissesKeyboard(.interactively)
-            .background(AppTheme.background)
+            .background(theme.background)
             .navigationTitle("默认头像库")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -591,7 +693,7 @@ private struct PetAvatarLibraryView: View {
             }
             .padding(.horizontal, 14)
             .frame(height: 48)
-            .background(AppTheme.surface)
+            .background(theme.surface)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -604,7 +706,7 @@ private struct PetAvatarLibraryView: View {
         VStack(spacing: 12) {
             Image(systemName: "pawprint.fill")
                 .font(.system(size: 34, weight: .semibold))
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(theme.accent)
             Text("没有找到匹配的头像")
                 .font(.headline)
             Text("可以换一个品种名称或简称试试")
@@ -637,7 +739,7 @@ private struct PetAvatarLibraryView: View {
                             )
                             .overlay {
                                 Circle().stroke(
-                                    selectedPresetID == preset.id ? AppTheme.accent : .clear,
+                                    selectedPresetID == preset.id ? theme.accent : .clear,
                                     lineWidth: 4
                                 )
                             }
@@ -652,12 +754,12 @@ private struct PetAvatarLibraryView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(AppTheme.surface)
+                        .background(theme.surface)
                         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                         .overlay {
                             RoundedRectangle(cornerRadius: 22, style: .continuous)
                                 .stroke(
-                                    selectedPresetID == preset.id ? AppTheme.accent : Color.secondary.opacity(0.08),
+                                    selectedPresetID == preset.id ? theme.accent : Color.secondary.opacity(0.08),
                                     lineWidth: selectedPresetID == preset.id ? 2 : 1
                                 )
                         }

@@ -1,15 +1,16 @@
 import SwiftUI
 
 struct HomeView: View {
+    @Environment(\.appColorTheme) private var theme
     @Environment(AppStore.self) private var store
     @Environment(FamilySharingStore.self) private var familyStore
-    @AppStorage(AppColorTheme.storageKey) private var colorTheme = AppColorTheme.warm
     @State private var petEditor: PetEditorPresentation?
     @State private var recordEditor: HealthRecordEditorPresentation?
     @State private var reminderEditor: ReminderEditorPresentation?
     @State private var petPendingDeletion: Pet?
     @State private var completingReminderIDs: Set<UUID> = []
     @State private var reminderCompletionMessage: String?
+    @State private var reminderCompletionFeedbackTrigger = 0
 
     private var selectedSharedPet: FamilySharedPet? { familyStore.selectedSharedPet }
 
@@ -50,9 +51,9 @@ struct HomeView: View {
                 await store.reloadPersistedAndFamilyData(using: familyStore)
                 await familyStore.synchronizePendingChanges()
             }
-            .background(colorTheme.background)
-            .tint(colorTheme.accent)
-            .animation(.easeInOut(duration: 0.22), value: colorTheme)
+            .background(theme.background)
+            .tint(theme.accent)
+            .animation(.easeInOut(duration: 0.22), value: theme)
             .navigationTitle("爪记 Zoji")
             .sheet(item: $petEditor) { presentation in
                 PetEditorView(pet: presentation.pet)
@@ -114,14 +115,10 @@ struct HomeView: View {
             } message: {
                 Text(store.notificationPermissionMessage ?? "提醒仍会保存在 App 中。")
             }
-            .alert("提醒已完成", isPresented: Binding(
-                get: { reminderCompletionMessage != nil },
-                set: { if !$0 { reminderCompletionMessage = nil } }
-            )) {
-                Button("知道了", role: .cancel) { }
-            } message: {
-                Text(reminderCompletionMessage ?? "已更新待办。")
+            .overlay(alignment: .top) {
+                TransientSuccessBanner(message: $reminderCompletionMessage)
             }
+            .sensoryFeedback(.success, trigger: reminderCompletionFeedbackTrigger)
         }
     }
 
@@ -142,13 +139,13 @@ struct HomeView: View {
                                 fallbackSymbol: pet.avatarSymbol,
                                 size: 48,
                                 background: familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id
-                                    ? AppTheme.accent
-                                    : AppTheme.surfaceMuted,
-                                foreground: familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? .white : AppTheme.accent
+                                    ? theme.accent
+                                    : theme.surfaceMuted,
+                                foreground: familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? .white : theme.accent
                             )
                             .overlay {
                                 Circle()
-                                    .stroke(familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? AppTheme.accent : .clear, lineWidth: 2.5)
+                                    .stroke(familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? theme.accent : .clear, lineWidth: 2.5)
                             }
 
                             Text(pet.name)
@@ -174,16 +171,16 @@ struct HomeView: View {
                                 avatarPresetID: sharedPet.pet.avatarPresetID,
                                 fallbackSymbol: sharedPet.pet.avatarSymbol,
                                 size: 48,
-                                background: familyStore.selectedSharedPetID == sharedPet.id ? AppTheme.accent : AppTheme.surfaceMuted,
-                                foreground: familyStore.selectedSharedPetID == sharedPet.id ? .white : AppTheme.accent
+                                background: familyStore.selectedSharedPetID == sharedPet.id ? theme.accent : theme.surfaceMuted,
+                                foreground: familyStore.selectedSharedPetID == sharedPet.id ? .white : theme.accent
                             )
                             .overlay(alignment: .bottomTrailing) {
                                 Image(systemName: "person.2.fill")
                                     .font(.system(size: 8, weight: .bold))
                                     .foregroundStyle(.white)
                                     .frame(width: 18, height: 18)
-                                    .background(AppTheme.accent, in: Circle())
-                                    .overlay { Circle().stroke(AppTheme.surface, lineWidth: 2) }
+                                    .background(theme.accent, in: Circle())
+                                    .overlay { Circle().stroke(theme.surface, lineWidth: 2) }
                             }
                             Text(sharedPet.pet.name)
                                 .font(.caption.weight(familyStore.selectedSharedPetID == sharedPet.id ? .bold : .medium))
@@ -202,12 +199,12 @@ struct HomeView: View {
                     VStack(spacing: 7) {
                         Image(systemName: "plus")
                             .font(.title3.bold())
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(theme.accent)
                             .frame(width: 48, height: 48)
-                            .background(AppTheme.accent.opacity(0.10), in: Circle())
+                            .background(theme.accent.opacity(0.10), in: Circle())
                         Text("添加")
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(theme.accent)
                     }
                 }
                 .buttonStyle(.plain)
@@ -221,7 +218,7 @@ struct HomeView: View {
             FamilySharedPetDetailView(sharedPet: sharedPet)
         } label: {
             ZStack(alignment: .topTrailing) {
-                LinearGradient(colors: [colorTheme.accent, colorTheme.accentDeep], startPoint: .topLeading, endPoint: .bottomTrailing)
+                LinearGradient(colors: [theme.accent, theme.accentDeep], startPoint: .topLeading, endPoint: .bottomTrailing)
                 Circle().fill(.white.opacity(0.08)).frame(width: 180, height: 180).offset(x: 62, y: -72)
                 VStack(alignment: .leading, spacing: 18) {
                     HStack(spacing: 16) {
@@ -231,12 +228,17 @@ struct HomeView: View {
                             fallbackSymbol: sharedPet.pet.avatarSymbol,
                             size: 78,
                             background: .white.opacity(0.94),
-                            foreground: AppTheme.accent
+                            foreground: theme.accent
                         )
                         .overlay { Circle().stroke(.white.opacity(0.8), lineWidth: 3) }
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(sharedPet.pet.name).font(.system(size: 28, weight: .bold, design: .rounded)).lineLimit(1)
-                            Text(petDescription(sharedPet.pet)).font(.subheadline.weight(.medium)).foregroundStyle(.white.opacity(0.82)).lineLimit(1)
+                            Text(sharedPet.pet.name)
+                                .font(.system(.title, design: .rounded, weight: .bold))
+                                .lineLimit(2)
+                            Text(petDescription(sharedPet.pet))
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(.white.opacity(0.82))
+                                .lineLimit(2)
                             Label("家庭共享 · \(sharedPet.role.displayName)", systemImage: sharedPet.role.symbol)
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(.white.opacity(0.9))
@@ -267,8 +269,8 @@ struct HomeView: View {
         } label: {
             ZojiCard {
                 HStack(spacing: 14) {
-                    Image(systemName: "heart.text.clipboard.fill").font(.title2).foregroundStyle(AppTheme.accent)
-                        .frame(width: 48, height: 48).background(AppTheme.accentSoft, in: RoundedRectangle(cornerRadius: 15))
+                    Image(systemName: "heart.text.clipboard.fill").font(.title2).foregroundStyle(theme.accent)
+                        .frame(width: 48, height: 48).background(theme.accentSoft, in: RoundedRectangle(cornerRadius: 15))
                     VStack(alignment: .leading, spacing: 4) {
                         Text(sharedPet.canEdit ? "记录 \(sharedPet.pet.name) 的健康" : "查看 \(sharedPet.pet.name) 的健康")
                             .font(.headline)
@@ -276,7 +278,7 @@ struct HomeView: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Image(systemName: sharedPet.canEdit ? "plus.circle.fill" : "eye.fill").font(.title2).foregroundStyle(AppTheme.accent)
+                    Image(systemName: sharedPet.canEdit ? "plus.circle.fill" : "eye.fill").font(.title2).foregroundStyle(theme.accent)
                 }
             }
         }
@@ -287,8 +289,8 @@ struct HomeView: View {
         NavigationLink {
             WeightTrendView(
                 petID: sharedPet.pet.id,
-                readOnlyPet: sharedPet.pet,
-                canEdit: false
+                sharedPet: sharedPet,
+                canEdit: sharedPet.canEdit
             )
         } label: {
             WeightTrendPreviewCard(pet: sharedPet.pet)
@@ -315,8 +317,8 @@ struct HomeView: View {
                                 HStack(spacing: 12) {
                                     Image(systemName: reminder.kind.symbol)
                                         .frame(width: 38, height: 38)
-                                        .foregroundStyle(AppTheme.accent)
-                                        .background(AppTheme.accentSoft, in: Circle())
+                                        .foregroundStyle(theme.accent)
+                                        .background(theme.accentSoft, in: Circle())
                                     VStack(alignment: .leading, spacing: 3) {
                                         Text(L10n.dynamic(reminder.title)).font(.headline)
                                         Text(L10n.date(reminder.dueAt, dateStyle: .abbreviated, timeStyle: .shortened))
@@ -375,8 +377,10 @@ struct HomeView: View {
             defer { completingReminderIDs.remove(reminder.id) }
             do {
                 let next = try await familyStore.completeReminder(reminder, in: sharedPet)
-                reminderCompletionMessage = next.map { String(localized: "本次已记录，下次提醒：\(L10n.date($0, dateStyle: .long, timeStyle: .shortened))。", locale: L10n.locale) }
-                    ?? "这条一次性提醒已完成并归档。"
+                showReminderCompletion(
+                    next.map { String(localized: "本次已记录，下次提醒：\(L10n.date($0, dateStyle: .long, timeStyle: .shortened))。", locale: L10n.locale) }
+                        ?? L10n.string("这条一次性提醒已完成并归档。")
+                )
             } catch {
                 store.reminderPersistenceMessage = error.localizedDescription
             }
@@ -386,7 +390,7 @@ struct HomeView: View {
     private func petProfileCard(_ pet: Pet) -> some View {
         ZStack(alignment: .topTrailing) {
             LinearGradient(
-                colors: [colorTheme.accent, colorTheme.accentDeep],
+                colors: [theme.accent, theme.accentDeep],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -404,19 +408,19 @@ struct HomeView: View {
                         fallbackSymbol: pet.avatarSymbol,
                         size: 78,
                         background: .white.opacity(0.94),
-                        foreground: AppTheme.accent
+                        foreground: theme.accent
                     )
                     .overlay { Circle().stroke(.white.opacity(0.8), lineWidth: 3) }
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text(pet.name)
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .lineLimit(1)
+                            .font(.system(.title, design: .rounded, weight: .bold))
+                            .lineLimit(2)
 
                         Text(petDescription(pet))
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(.white.opacity(0.82))
-                            .lineLimit(1)
+                            .lineLimit(2)
                     }
 
                     Spacer(minLength: 0)
@@ -456,7 +460,7 @@ struct HomeView: View {
             .accessibilityLabel("管理 \(pet.name) 的资料")
         }
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-        .shadow(color: AppTheme.accent.opacity(0.18), radius: 18, y: 10)
+        .shadow(color: theme.accent.opacity(0.18), radius: 18, y: 10)
     }
 
     private var metricDivider: some View {
@@ -497,9 +501,9 @@ struct HomeView: View {
                 HStack(spacing: 14) {
                     Image(systemName: "heart.text.clipboard.fill")
                         .font(.title2)
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(theme.accent)
                         .frame(width: 48, height: 48)
-                        .background(AppTheme.accentSoft, in: RoundedRectangle(cornerRadius: 15))
+                        .background(theme.accentSoft, in: RoundedRectangle(cornerRadius: 15))
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(store.selectedReminders.isEmpty ? "开始记录 \(pet.name) 的健康" : taskSummaryText(for: pet, count: store.selectedReminders.count))
@@ -514,7 +518,7 @@ struct HomeView: View {
 
                     Image(systemName: "plus.circle.fill")
                         .font(.title2)
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(theme.accent)
                 }
             }
         }
@@ -567,15 +571,15 @@ struct HomeView: View {
                     HStack(spacing: 12) {
                         Image(systemName: reminder.kind.symbol)
                             .frame(width: 38, height: 38)
-                            .foregroundStyle(reminder.isOverdue ? AppTheme.warning : AppTheme.accent)
-                            .background((reminder.isOverdue ? AppTheme.warning : AppTheme.accent).opacity(0.12), in: Circle())
+                            .foregroundStyle(reminder.isOverdue ? theme.warning : theme.accent)
+                            .background((reminder.isOverdue ? theme.warning : theme.accent).opacity(0.12), in: Circle())
 
                         VStack(alignment: .leading, spacing: 3) {
                             Text(L10n.dynamic(reminder.title))
                                 .font(.headline)
                             Text(reminder.isOverdue ? "\(L10n.string("已逾期")) · \(L10n.date(reminder.dueAt, dateStyle: .abbreviated, timeStyle: .shortened))" : L10n.date(reminder.dueAt, dateStyle: .abbreviated, timeStyle: .shortened))
                                 .font(.caption)
-                                .foregroundStyle(reminder.isOverdue ? AppTheme.warning : .secondary)
+                                .foregroundStyle(reminder.isOverdue ? theme.warning : .secondary)
                         }
 
                         Spacer()
@@ -611,14 +615,23 @@ struct HomeView: View {
             do {
                 let nextDueAt = try await store.completeReminder(id: reminder.id)
                 if let nextDueAt {
-                    reminderCompletionMessage = String(localized: "本次已记录，下次提醒：\(L10n.date(nextDueAt, dateStyle: .long, timeStyle: .shortened))。", locale: L10n.locale)
+                    showReminderCompletion(
+                        String(localized: "本次已记录，下次提醒：\(L10n.date(nextDueAt, dateStyle: .long, timeStyle: .shortened))。", locale: L10n.locale)
+                    )
                 } else {
-                    reminderCompletionMessage = L10n.string("这条一次性提醒已完成并归档。")
+                    showReminderCompletion(L10n.string("这条一次性提醒已完成并归档。"))
                 }
             } catch {
                 store.reminderPersistenceMessage = error.localizedDescription
             }
         }
+    }
+
+    private func showReminderCompletion(_ message: String) {
+        withAnimation(.snappy(duration: 0.28)) {
+            reminderCompletionMessage = message
+        }
+        reminderCompletionFeedbackTrigger += 1
     }
 
     private var recentRecordsSection: some View {
@@ -670,9 +683,9 @@ struct HomeView: View {
             HStack(spacing: 14) {
                 Image(systemName: symbol)
                     .font(.title3)
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(theme.accent)
                     .frame(width: 44, height: 44)
-                    .background(AppTheme.accent.opacity(0.10), in: Circle())
+                    .background(theme.accent.opacity(0.10), in: Circle())
                 VStack(alignment: .leading, spacing: 4) {
                     Text(L10n.dynamic(title)).font(.subheadline.bold())
                     Text(L10n.dynamic(message))
@@ -687,7 +700,7 @@ struct HomeView: View {
         HStack(spacing: 12) {
             Image(systemName: record.kind.symbol)
                 .frame(width: 36, height: 36)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(theme.accent)
             VStack(alignment: .leading, spacing: 3) {
                 Text(L10n.dynamic(record.title)).font(.subheadline.weight(.semibold))
                 Text(L10n.date(record.occurredAt, dateStyle: .abbreviated, timeStyle: .omitted))
@@ -708,19 +721,19 @@ struct HomeView: View {
         VStack(spacing: 24) {
             ZStack {
                 Circle()
-                    .fill(AppTheme.accentSoft)
+                    .fill(theme.accentSoft)
                     .frame(width: 132, height: 132)
                 Circle()
-                    .stroke(AppTheme.accent.opacity(0.12), lineWidth: 1)
+                    .stroke(theme.accent.opacity(0.12), lineWidth: 1)
                     .frame(width: 164, height: 164)
                 Image(systemName: "pawprint.fill")
                     .font(.system(size: 58, weight: .semibold))
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(theme.accent)
             }
 
             VStack(spacing: 10) {
                 Text("先认识一下你的伙伴")
-                    .font(.system(size: 27, weight: .bold, design: .rounded))
+                    .font(.system(.title2, design: .rounded, weight: .bold))
                 Text("建立宠物档案后，疫苗、驱虫、体检和就医记录都会整理在它的专属时间线里。")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -736,12 +749,12 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
                     .foregroundStyle(.white)
-                    .background(AppTheme.accent, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .background(theme.accent, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
             .buttonStyle(.plain)
         }
         .padding(26)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
+        .background(theme.surface, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
     }
 
     private func petDescription(_ pet: Pet) -> String {
@@ -795,39 +808,96 @@ private struct PetEditorPresentation: Identifiable {
     let pet: Pet?
 }
 
+struct TransientSuccessBanner: View {
+    @Environment(\.appColorTheme) private var theme
+    @Binding var message: String?
+
+    var body: some View {
+        Group {
+            if let displayedMessage = message {
+                Label(displayedMessage, systemImage: "checkmark.circle.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.leading)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(theme.accentDeep, in: Capsule())
+                    .shadow(color: .black.opacity(0.16), radius: 12, y: 5)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .accessibilityAddTraits(.isStaticText)
+            }
+        }
+        .task(id: message) {
+            guard let currentMessage = message else { return }
+            try? await Task.sleep(for: .seconds(2.6))
+            guard !Task.isCancelled, message == currentMessage else { return }
+            withAnimation(.easeInOut(duration: 0.22)) {
+                message = nil
+            }
+        }
+    }
+}
+
 struct ReminderListView: View {
+    @Environment(\.appColorTheme) private var theme
     @Environment(AppStore.self) private var store
+    @Environment(FamilySharingStore.self) private var familyStore
     @State private var editor: ReminderEditorPresentation?
     @State private var reminderPendingDeletion: ReminderItem?
     @State private var completingReminderIDs: Set<UUID> = []
     @State private var completionMessage: String?
+    @State private var completionFeedbackTrigger = 0
     @State private var showsCarePlanTemplates = false
 
+    private var selectedSharedPet: FamilySharedPet? {
+        familyStore.selectedSharedPet
+    }
+
     private var activeReminders: [ReminderItem] {
-        store.selectedReminders
+        if let selectedSharedPet {
+            return selectedSharedPet.reminders
+                .filter(\.isEnabled)
+                .sorted { $0.dueAt < $1.dueAt }
+        }
+        return store.selectedReminders
+    }
+
+    private var selectedPetID: UUID? {
+        selectedSharedPet?.pet.id ?? store.selectedPetID
+    }
+
+    private var canEditSelectedPet: Bool {
+        selectedSharedPet?.canEdit ?? (store.selectedPet != nil)
+    }
+
+    private var petCount: Int {
+        store.pets.count + familyStore.sharedPets.count
     }
 
     var body: some View {
         @Bindable var store = store
 
         List {
-            if store.pets.count > 1 {
+            if petCount > 1 {
                 Section("宠物") {
                     reminderPetSwitcher
                         .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
                 }
             }
 
-            Section("快捷计划") {
+            if selectedSharedPet == nil {
+                Section("快捷计划") {
                 Button {
                     showsCarePlanTemplates = true
                 } label: {
                     HStack(spacing: 12) {
                         Image(systemName: "wand.and.stars")
                             .font(.headline)
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(theme.accent)
                             .frame(width: 40, height: 40)
-                            .background(AppTheme.accentSoft, in: Circle())
+                            .background(theme.accentSoft, in: Circle())
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("疫苗与驱虫计划模板")
@@ -847,6 +917,7 @@ struct ReminderListView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(store.pets.isEmpty)
+                }
             }
 
             if activeReminders.isEmpty {
@@ -869,21 +940,25 @@ struct ReminderListView: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background(AppTheme.background)
+        .background(theme.background)
         .navigationTitle("健康提醒")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    editor = ReminderEditorPresentation(reminder: nil, petID: store.selectedPetID)
+                    editor = ReminderEditorPresentation(reminder: nil, petID: selectedPetID)
                 } label: {
                     Image(systemName: "plus")
                 }
-                .disabled(store.pets.isEmpty)
+                .disabled(selectedPetID == nil || !canEditSelectedPet)
                 .accessibilityLabel("添加提醒")
             }
         }
         .sheet(item: $editor) { presentation in
-            ReminderEditorView(reminder: presentation.reminder, initialPetID: presentation.petID)
+            ReminderEditorView(
+                reminder: presentation.reminder,
+                initialPetID: presentation.petID,
+                sharedPet: selectedSharedPet
+            )
                 .environment(store)
         }
         .sheet(isPresented: $showsCarePlanTemplates) {
@@ -900,14 +975,7 @@ struct ReminderListView: View {
         ) {
             Button("删除提醒", role: .destructive) {
                 guard let reminder = reminderPendingDeletion else { return }
-                Task {
-                    do {
-                        try await store.deleteReminder(id: reminder.id)
-                    } catch {
-                        store.reminderPersistenceMessage = error.localizedDescription
-                    }
-                    reminderPendingDeletion = nil
-                }
+                deleteReminder(reminder)
             }
             Button("取消", role: .cancel) { reminderPendingDeletion = nil }
         }
@@ -927,14 +995,10 @@ struct ReminderListView: View {
         } message: {
             Text(store.notificationPermissionMessage ?? "提醒仍会保存在 App 中。")
         }
-        .alert("提醒已完成", isPresented: Binding(
-            get: { completionMessage != nil },
-            set: { if !$0 { completionMessage = nil } }
-        )) {
-            Button("知道了", role: .cancel) { }
-        } message: {
-            Text(completionMessage ?? "已更新待办。")
+        .overlay(alignment: .top) {
+            TransientSuccessBanner(message: $completionMessage)
         }
+        .sensoryFeedback(.success, trigger: completionFeedbackTrigger)
     }
 
     @ViewBuilder
@@ -949,10 +1013,10 @@ struct ReminderListView: View {
                         HStack(spacing: 12) {
                             Image(systemName: reminder.kind.symbol)
                                 .font(.headline)
-                                .foregroundStyle(reminder.isOverdue ? AppTheme.warning : AppTheme.accent)
+                                .foregroundStyle(reminder.isOverdue ? theme.warning : theme.accent)
                                 .frame(width: 40, height: 40)
                                 .background(
-                                    (reminder.isOverdue ? AppTheme.warning : AppTheme.accent).opacity(0.12),
+                                    (reminder.isOverdue ? theme.warning : theme.accent).opacity(0.12),
                                     in: Circle()
                                 )
 
@@ -971,7 +1035,7 @@ struct ReminderListView: View {
                                     }
                                 }
                                 .font(.caption)
-                                .foregroundStyle(reminder.isOverdue ? AppTheme.warning : .secondary)
+                                .foregroundStyle(reminder.isOverdue ? theme.warning : .secondary)
                             }
 
                             Spacer()
@@ -979,28 +1043,37 @@ struct ReminderListView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .disabled(!canEditSelectedPet)
 
-                    Button {
-                        completeReminder(reminder)
-                    } label: {
-                        if completingReminderIDs.contains(reminder.id) {
-                            ProgressView()
-                                .controlSize(.small)
-                        } else {
-                            Text(completionLocked ? "已完成" : "完成")
+                    if canEditSelectedPet {
+                        Button {
+                            completeReminder(reminder)
+                        } label: {
+                            if completingReminderIDs.contains(reminder.id) {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Text(completionLocked ? "已完成" : "完成")
+                            }
                         }
+                        .disabled(completingReminderIDs.contains(reminder.id) || completionLocked)
+                        .frame(minWidth: 48)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    } else {
+                        Text(completionLocked ? "已完成" : "待办")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                    .disabled(completingReminderIDs.contains(reminder.id) || completionLocked)
-                    .frame(minWidth: 48)
-                    .fixedSize(horizontal: true, vertical: false)
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
                 }
                 .swipeActions(edge: .trailing) {
-                    Button(role: .destructive) {
-                        reminderPendingDeletion = reminder
-                    } label: {
-                        Label("删除", systemImage: "trash")
+                    if canEditSelectedPet {
+                        Button(role: .destructive) {
+                            reminderPendingDeletion = reminder
+                        } label: {
+                            Label("删除", systemImage: "trash")
+                        }
                     }
                 }
             }
@@ -1013,9 +1086,10 @@ struct ReminderListView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
                 ForEach(store.pets) { pet in
-                    let isSelected = store.selectedPetID == pet.id
+                    let isSelected = familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id
                     Button {
                         withAnimation(.snappy(duration: 0.25)) {
+                            familyStore.selectPrivatePet()
                             store.selectedPetID = pet.id
                         }
                     } label: {
@@ -1025,8 +1099,8 @@ struct ReminderListView: View {
                                 avatarPresetID: pet.avatarPresetID,
                                 fallbackSymbol: pet.avatarSymbol,
                                 size: 32,
-                                background: isSelected ? .white.opacity(0.22) : AppTheme.accentSoft,
-                                foreground: isSelected ? .white : AppTheme.accent
+                                background: isSelected ? .white.opacity(0.22) : theme.accentSoft,
+                                foreground: isSelected ? .white : theme.accent
                             )
                             Text(pet.name)
                                 .font(.subheadline.weight(.semibold))
@@ -1036,12 +1110,51 @@ struct ReminderListView: View {
                         .padding(.vertical, 7)
                         .padding(.horizontal, 10)
                         .background(
-                            isSelected ? AppTheme.accent : AppTheme.surfaceMuted,
+                            isSelected ? theme.accent : theme.surfaceMuted,
                             in: Capsule()
                         )
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("查看 \(pet.name) 的健康提醒")
+                }
+
+                ForEach(familyStore.sharedPets) { sharedPet in
+                    let isSelected = familyStore.selectedSharedPetID == sharedPet.id
+                    Button {
+                        withAnimation(.snappy(duration: 0.25)) {
+                            familyStore.selectedSharedPetID = sharedPet.id
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            PetAvatarView(
+                                avatarData: sharedPet.pet.avatarData,
+                                avatarPresetID: sharedPet.pet.avatarPresetID,
+                                fallbackSymbol: sharedPet.pet.avatarSymbol,
+                                size: 32,
+                                background: isSelected ? .white.opacity(0.22) : theme.accentSoft,
+                                foreground: isSelected ? .white : theme.accent
+                            )
+                            .overlay(alignment: .bottomTrailing) {
+                                Image(systemName: "person.2.fill")
+                                    .font(.system(size: 6, weight: .bold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 13, height: 13)
+                                    .background(theme.accent, in: Circle())
+                            }
+                            Text(sharedPet.pet.name)
+                                .font(.subheadline.weight(.semibold))
+                                .lineLimit(1)
+                        }
+                        .foregroundStyle(isSelected ? .white : .primary)
+                        .padding(.vertical, 7)
+                        .padding(.horizontal, 10)
+                        .background(
+                            isSelected ? theme.accent : theme.surfaceMuted,
+                            in: Capsule()
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("查看 \(sharedPet.pet.name) 的健康提醒")
                 }
             }
         }
@@ -1076,20 +1189,50 @@ struct ReminderListView: View {
         Task {
             defer { completingReminderIDs.remove(reminder.id) }
             do {
-                let nextDueAt = try await store.completeReminder(id: reminder.id)
-                if let nextDueAt {
-                    completionMessage = String(localized: "本次已记录，下次提醒：\(L10n.date(nextDueAt, dateStyle: .long, timeStyle: .shortened))。", locale: L10n.locale)
+                let nextDueAt: Date?
+                if let selectedSharedPet {
+                    nextDueAt = try await familyStore.completeReminder(reminder, in: selectedSharedPet)
                 } else {
-                    completionMessage = L10n.string("这条一次性提醒已完成并归档。")
+                    nextDueAt = try await store.completeReminder(id: reminder.id)
+                }
+                if let nextDueAt {
+                    showCompletion(
+                        String(localized: "本次已记录，下次提醒：\(L10n.date(nextDueAt, dateStyle: .long, timeStyle: .shortened))。", locale: L10n.locale)
+                    )
+                } else {
+                    showCompletion(L10n.string("这条一次性提醒已完成并归档。"))
                 }
             } catch {
                 store.reminderPersistenceMessage = error.localizedDescription
             }
         }
     }
+
+    private func deleteReminder(_ reminder: ReminderItem) {
+        Task {
+            defer { reminderPendingDeletion = nil }
+            do {
+                if let selectedSharedPet {
+                    try await familyStore.deleteReminder(reminder, in: selectedSharedPet)
+                } else {
+                    try await store.deleteReminder(id: reminder.id)
+                }
+            } catch {
+                store.reminderPersistenceMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func showCompletion(_ message: String) {
+        withAnimation(.snappy(duration: 0.28)) {
+            completionMessage = message
+        }
+        completionFeedbackTrigger += 1
+    }
 }
 
 private struct CarePlanTemplatePickerView: View {
+    @Environment(\.appColorTheme) private var theme
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
@@ -1177,7 +1320,7 @@ private struct CarePlanTemplatePickerView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(AppTheme.background)
+            .background(theme.background)
             .navigationTitle(selectedTemplate == nil ? "照护计划模板" : "确认计划")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -1237,9 +1380,9 @@ private struct CarePlanTemplatePickerView: View {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: template.symbol)
                     .font(.headline)
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(theme.accent)
                     .frame(width: 42, height: 42)
-                    .background(AppTheme.accentSoft, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                    .background(theme.accentSoft, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 5) {
                     Text(template.localizedTitle)
@@ -1250,10 +1393,10 @@ private struct CarePlanTemplatePickerView: View {
                        CarePlanTemplateCatalog.isRecommended(template, for: selectedPet) {
                         Text("推荐")
                             .font(.caption2.weight(.semibold))
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(theme.accent)
                             .padding(.horizontal, 7)
                             .padding(.vertical, 3)
-                            .background(AppTheme.accentSoft, in: Capsule())
+                            .background(theme.accentSoft, in: Capsule())
                     }
                     Text(template.localizedSummary)
                         .font(.caption)
@@ -1261,7 +1404,7 @@ private struct CarePlanTemplatePickerView: View {
                         .fixedSize(horizontal: false, vertical: true)
                     Text("包含 \(template.steps.count) 项")
                         .font(.caption2)
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(theme.accent)
                 }
 
                 Spacer(minLength: 4)
@@ -1281,7 +1424,7 @@ private struct CarePlanTemplatePickerView: View {
         Section {
             Label(template.localizedTitle, systemImage: template.symbol)
                 .font(.headline)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(theme.accent)
             Text(template.localizedSummary)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
@@ -1324,7 +1467,7 @@ private struct CarePlanTemplatePickerView: View {
                         .foregroundStyle(.secondary)
                     }
                 }
-                .tint(AppTheme.accent)
+                .tint(theme.accent)
             }
         }
 
@@ -1369,6 +1512,7 @@ private struct CarePlanTemplatePickerView: View {
 }
 
 private struct CarePlanPetSelectionView: View {
+    @Environment(\.appColorTheme) private var theme
     @Environment(\.dismiss) private var dismiss
     let pets: [Pet]
     @Binding var selection: UUID?
@@ -1393,7 +1537,7 @@ private struct CarePlanPetSelectionView: View {
                         Spacer()
                         if selection == pet.id {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(theme.accent)
                         }
                     }
                     .contentShape(Rectangle())
@@ -1401,7 +1545,7 @@ private struct CarePlanPetSelectionView: View {
                 .buttonStyle(.plain)
             }
             .scrollContentBackground(.hidden)
-            .background(AppTheme.background)
+            .background(theme.background)
             .navigationTitle("选择宠物")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -1414,6 +1558,7 @@ private struct CarePlanPetSelectionView: View {
 }
 
 struct ReminderEditorView: View {
+    @Environment(\.appColorTheme) private var theme
     @Environment(AppStore.self) private var store
     @Environment(FamilySharingStore.self) private var familyStore
     @Environment(\.dismiss) private var dismiss
@@ -1531,7 +1676,7 @@ struct ReminderEditorView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(AppTheme.background)
+            .background(theme.background)
             .navigationTitle(reminder == nil ? "添加提醒" : "编辑提醒")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

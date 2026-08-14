@@ -46,6 +46,13 @@ enum AppColorTheme: String, CaseIterable, Identifiable {
     var background: Color { dynamicColor(light: lightBackground, dark: darkBackground) }
     var surface: Color { dynamicColor(light: lightSurface, dark: darkSurface) }
     var surfaceMuted: Color { dynamicColor(light: lightSurfaceMuted, dark: darkSurfaceMuted) }
+    var warning: Color {
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(red: 0.94, green: 0.45, blue: 0.42, alpha: 1)
+                : UIColor(red: 0.74, green: 0.27, blue: 0.26, alpha: 1)
+        })
+    }
 
     private var lightAccent: UIColor {
         switch self {
@@ -210,6 +217,18 @@ enum AppColorTheme: String, CaseIterable, Identifiable {
     }
 }
 
+private struct AppColorThemeEnvironmentKey: EnvironmentKey {
+    static let defaultValue = UserDefaults.standard.string(forKey: AppColorTheme.storageKey)
+        .flatMap(AppColorTheme.init(rawValue:)) ?? .warm
+}
+
+extension EnvironmentValues {
+    var appColorTheme: AppColorTheme {
+        get { self[AppColorThemeEnvironmentKey.self] }
+        set { self[AppColorThemeEnvironmentKey.self] = newValue }
+    }
+}
+
 enum AppAppearance: String, CaseIterable, Identifiable {
     case system
     case light
@@ -242,23 +261,4 @@ enum AppAppearance: String, CaseIterable, Identifiable {
         case .dark: .dark
         }
     }
-}
-
-enum AppTheme {
-    private static var selectedColorTheme: AppColorTheme {
-        UserDefaults.standard.string(forKey: AppColorTheme.storageKey)
-            .flatMap(AppColorTheme.init(rawValue:)) ?? .warm
-    }
-
-    static var accent: Color { selectedColorTheme.accent }
-    static var accentDeep: Color { selectedColorTheme.accentDeep }
-    static var accentSoft: Color { selectedColorTheme.accentSoft }
-    static let warning = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.94, green: 0.45, blue: 0.42, alpha: 1)
-            : UIColor(red: 0.74, green: 0.27, blue: 0.26, alpha: 1)
-    })
-    static var background: Color { selectedColorTheme.background }
-    static var surface: Color { selectedColorTheme.surface }
-    static var surfaceMuted: Color { selectedColorTheme.surfaceMuted }
 }

@@ -4,6 +4,7 @@ import UIKit
 
 struct ProfileView: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.appColorTheme) private var theme
     @AppStorage(AppAppearance.storageKey) private var appearance = AppAppearance.system
     @AppStorage(AppColorTheme.storageKey) private var colorTheme = AppColorTheme.warm
     @AppStorage(AppUnitSystem.storageKey) private var unitSystem = AppUnitSystem.system
@@ -19,7 +20,7 @@ struct ProfileView: View {
                     HStack(spacing: 14) {
                         Image(systemName: "icloud.and.arrow.up.fill")
                             .font(.system(size: 48))
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(theme.accent)
                         VStack(alignment: .leading, spacing: 4) {
                             Text("本地优先存储").font(.headline)
                             Text("无需注册爪记账号")
@@ -97,7 +98,7 @@ struct ProfileView: View {
                             Spacer()
                             Text(L10n.currentLanguageDisplayName)
                                 .font(.subheadline)
-                                .foregroundStyle(colorTheme.accent)
+                                .foregroundStyle(theme.accent)
                             Image(systemName: "arrow.up.forward.app")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.secondary)
@@ -114,11 +115,11 @@ struct ProfileView: View {
                             Spacer()
                             HStack(spacing: 6) {
                                 Circle()
-                                    .fill(colorTheme.accent)
+                                    .fill(theme.accent)
                                     .frame(width: 11, height: 11)
                                 Text(colorTheme.displayName)
                                     .font(.subheadline)
-                                    .foregroundStyle(colorTheme.accent)
+                                    .foregroundStyle(theme.accent)
                             }
                             Image(systemName: "chevron.right")
                                 .font(.caption.weight(.semibold))
@@ -146,12 +147,10 @@ struct ProfileView: View {
                             Spacer()
                             Text(appearance.displayName)
                                 .font(.subheadline)
-                                .foregroundStyle(colorTheme.accent)
+                                .foregroundStyle(theme.accent)
                         }
                         .contentShape(Rectangle())
                     }
-                    .id(colorTheme)
-
                     Button {
                         isUnitPickerPresented = true
                     } label: {
@@ -160,7 +159,7 @@ struct ProfileView: View {
                             Spacer()
                             Text(unitSystem.displayName)
                                 .font(.subheadline)
-                                .foregroundStyle(colorTheme.accent)
+                                .foregroundStyle(theme.accent)
                             Image(systemName: "chevron.right")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.secondary)
@@ -204,9 +203,9 @@ struct ProfileView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(AppTheme.background)
-            .tint(colorTheme.accent)
-            .animation(.easeInOut(duration: 0.22), value: colorTheme)
+            .background(theme.background)
+            .tint(theme.accent)
+            .animation(.easeInOut(duration: 0.22), value: theme)
             .navigationTitle("我的")
             .sheet(isPresented: $isThemePickerPresented) {
                 ColorThemePickerSheet(selection: $colorTheme)
@@ -257,6 +256,7 @@ struct ProfileView: View {
 private struct UnitSystemPickerSheet: View {
     @Binding var selection: AppUnitSystem
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorTheme) private var theme
 
     var body: some View {
         NavigationStack {
@@ -269,9 +269,9 @@ private struct UnitSystemPickerSheet: View {
                         HStack(spacing: 14) {
                             Image(systemName: option.symbol)
                                 .font(.body.weight(.semibold))
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(theme.accent)
                                 .frame(width: 40, height: 40)
-                                .background(AppTheme.accentSoft, in: Circle())
+                                .background(theme.accentSoft, in: Circle())
 
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(option.displayName)
@@ -287,7 +287,7 @@ private struct UnitSystemPickerSheet: View {
                             if selection == option {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.title3)
-                                    .foregroundStyle(AppTheme.accent)
+                                    .foregroundStyle(theme.accent)
                             } else {
                                 Image(systemName: "circle")
                                     .font(.title3)
@@ -297,14 +297,14 @@ private struct UnitSystemPickerSheet: View {
                         .padding(.horizontal, 16)
                         .frame(maxWidth: .infinity, minHeight: 70)
                         .background(
-                            selection == option ? AppTheme.accentSoft : AppTheme.surface,
+                            selection == option ? theme.accentSoft : theme.surface,
                             in: RoundedRectangle(cornerRadius: 18, style: .continuous)
                         )
                         .overlay {
                             RoundedRectangle(cornerRadius: 18, style: .continuous)
                                 .stroke(
                                     selection == option
-                                        ? AppTheme.accent.opacity(0.45)
+                                        ? theme.accent.opacity(0.45)
                                         : Color.secondary.opacity(0.10)
                                 )
                         }
@@ -315,7 +315,7 @@ private struct UnitSystemPickerSheet: View {
                 Spacer(minLength: 0)
             }
             .padding(20)
-            .background(AppTheme.background)
+            .background(theme.background)
             .navigationTitle("单位")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -332,6 +332,7 @@ private struct UnitSystemPickerSheet: View {
 private struct ColorThemePickerSheet: View {
     @Binding var selection: AppColorTheme
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorTheme) private var currentTheme
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -371,7 +372,7 @@ private struct ColorThemePickerSheet: View {
                             .padding(.horizontal, 13)
                             .frame(maxWidth: .infinity, minHeight: 58)
                             .background(
-                                selection == theme ? theme.accentSoft : AppTheme.surface,
+                                selection == theme ? theme.accentSoft : currentTheme.surface,
                                 in: RoundedRectangle(cornerRadius: 16, style: .continuous)
                             )
                             .overlay {
@@ -385,7 +386,7 @@ private struct ColorThemePickerSheet: View {
                 }
                 .padding(20)
             }
-            .background(AppTheme.background)
+            .background(currentTheme.background)
             .navigationTitle("配色主题")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -401,6 +402,7 @@ private struct ColorThemePickerSheet: View {
 }
 
 private struct ProfileSettingLabel: View {
+    @Environment(\.appColorTheme) private var theme
     private let title: LocalizedStringKey
     private let systemImage: String
 
@@ -415,7 +417,7 @@ private struct ProfileSettingLabel: View {
                 .foregroundStyle(.primary)
         } icon: {
             Image(systemName: systemImage)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(theme.accent)
         }
     }
 }
@@ -472,6 +474,7 @@ private enum ICloudStorageStatus {
 
 private struct PetManagementView: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.appColorTheme) private var theme
     @State private var isAddingPet = false
     @State private var editingPet: Pet?
     @State private var petPendingDeletion: Pet?
@@ -510,10 +513,10 @@ private struct PetManagementView: View {
                                         if store.selectedPetID == pet.id {
                                             Text("当前")
                                                 .font(.caption2.bold())
-                                                .foregroundStyle(AppTheme.accent)
+                                                .foregroundStyle(theme.accent)
                                                 .padding(.horizontal, 7)
                                                 .padding(.vertical, 3)
-                                                .background(AppTheme.accent.opacity(0.10), in: Capsule())
+                                                .background(theme.accent.opacity(0.10), in: Capsule())
                                         }
                                     }
                                     Text([pet.localizedBreed, pet.species.displayName].compactMap { $0 }.joined(separator: " · "))
@@ -533,7 +536,7 @@ private struct PetManagementView: View {
                                 petPendingDeletion = pet
                             }
                             Button("编辑") { editingPet = pet }
-                                .tint(AppTheme.accent)
+                                .tint(theme.accent)
                         }
                     }
                 } footer: {
