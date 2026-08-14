@@ -147,11 +147,11 @@ struct ProfileView: View {
                             Spacer()
                             Text(appearance.displayName)
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(theme.accent)
                         }
-                        .foregroundStyle(.primary)
                         .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                     Button {
                         isUnitPickerPresented = true
                     } label: {
