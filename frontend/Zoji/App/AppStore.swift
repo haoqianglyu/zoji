@@ -62,6 +62,36 @@ final class AppStore {
             .sorted { $0.occurredAt > $1.occurredAt }
     }
 
+    func selectedPet(using familyStore: FamilySharingStore) -> SelectedPet? {
+        if let sharedPet = familyStore.selectedSharedPet {
+            return .shared(sharedPet)
+        }
+        guard let selectedPet else { return nil }
+        return localSelection(for: selectedPet)
+    }
+
+    func selectablePets(using familyStore: FamilySharingStore) -> [SelectedPet] {
+        pets.map { localSelection(for: $0) } + familyStore.sharedPets.map { .shared($0) }
+    }
+
+    func select(_ selection: SelectedPet, using familyStore: FamilySharingStore) {
+        switch selection {
+        case .local(let pet, _, _):
+            selectedPetID = pet.id
+            familyStore.selectPrivatePet()
+        case .shared(let sharedPet):
+            familyStore.selectedSharedPetID = sharedPet.id
+        }
+    }
+
+    private func localSelection(for pet: Pet) -> SelectedPet {
+        .local(
+            pet: pet,
+            records: records.filter { $0.petID == pet.id },
+            reminders: reminders.filter { $0.petID == pet.id }
+        )
+    }
+
     func rescheduleNotificationsForCurrentLanguage() async {
         for reminder in reminders where reminder.isEnabled {
             let petName = pets.first(where: { $0.id == reminder.petID })?.name ?? L10n.string("宠物")

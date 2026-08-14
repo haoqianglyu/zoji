@@ -1,5 +1,131 @@
 import SwiftUI
 
+struct SelectedPetSwitcher: View {
+    enum Style: Equatable {
+        case avatar
+        case capsule
+    }
+
+    enum Purpose {
+        case selection
+        case records
+        case reminders
+
+        func accessibilityLabel(for selection: SelectedPet) -> String {
+            switch self {
+            case .selection:
+                return selection.isShared
+                    ? String(localized: "切换到家人共享的 \(selection.pet.name)", locale: L10n.locale)
+                    : String(localized: "切换到 \(selection.pet.name)", locale: L10n.locale)
+            case .records:
+                return String(localized: "查看 \(selection.pet.name) 的健康记录", locale: L10n.locale)
+            case .reminders:
+                return String(localized: "查看 \(selection.pet.name) 的健康提醒", locale: L10n.locale)
+            }
+        }
+    }
+
+    @Environment(\.appColorTheme) private var theme
+    let pets: [SelectedPet]
+    let selectedID: SelectedPet.ID?
+    let style: Style
+    let purpose: Purpose
+    let onSelect: (SelectedPet) -> Void
+    var onAdd: (() -> Void)? = nil
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: style == .avatar ? 12 : 10) {
+                ForEach(pets) { selection in
+                    Button {
+                        onSelect(selection)
+                    } label: {
+                        switch style {
+                        case .avatar:
+                            avatarLabel(selection)
+                        case .capsule:
+                            capsuleLabel(selection)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(purpose.accessibilityLabel(for: selection))
+                    .accessibilityValue(selection.id == selectedID ? L10n.string("当前") : "")
+                }
+
+                if let onAdd, style == .avatar {
+                    Button(action: onAdd) {
+                        VStack(spacing: 7) {
+                            Image(systemName: "plus")
+                                .font(.title3.bold())
+                                .foregroundStyle(theme.accent)
+                                .frame(width: 48, height: 48)
+                                .background(theme.accent.opacity(0.10), in: Circle())
+                            Text("添加")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(theme.accent)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("添加宠物")
+                }
+            }
+            .padding(.horizontal, style == .avatar ? 2 : 0)
+        }
+    }
+
+    private func avatarLabel(_ selection: SelectedPet) -> some View {
+        let isSelected = selection.id == selectedID
+        return VStack(spacing: 7) {
+            avatar(selection, size: 48, isSelected: isSelected)
+                .overlay {
+                    Circle()
+                        .stroke(isSelected ? theme.accent : .clear, lineWidth: 2.5)
+                }
+
+            Text(selection.pet.name)
+                .font(.caption.weight(isSelected ? .bold : .medium))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .frame(maxWidth: 62)
+        }
+    }
+
+    private func capsuleLabel(_ selection: SelectedPet) -> some View {
+        let isSelected = selection.id == selectedID
+        return HStack(spacing: 8) {
+            avatar(selection, size: 32, isSelected: isSelected)
+            Text(selection.pet.name)
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+        }
+        .foregroundStyle(isSelected ? .white : .primary)
+        .padding(.vertical, 7)
+        .padding(.horizontal, 10)
+        .background(isSelected ? theme.accent : theme.surfaceMuted, in: Capsule())
+    }
+
+    private func avatar(_ selection: SelectedPet, size: CGFloat, isSelected: Bool) -> some View {
+        PetAvatarView(
+            avatarData: selection.pet.avatarData,
+            avatarPresetID: selection.pet.avatarPresetID,
+            fallbackSymbol: selection.pet.avatarSymbol,
+            size: size,
+            background: isSelected ? (style == .avatar ? theme.accent : .white.opacity(0.22)) : theme.accentSoft,
+            foreground: isSelected ? .white : theme.accent
+        )
+        .overlay(alignment: .bottomTrailing) {
+            if selection.isShared {
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: style == .avatar ? 8 : 6, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: style == .avatar ? 18 : 13, height: style == .avatar ? 18 : 13)
+                    .background(theme.accent, in: Circle())
+                    .overlay { Circle().stroke(theme.surface, lineWidth: style == .avatar ? 2 : 1) }
+            }
+        }
+    }
+}
+
 struct HomeView: View {
     @Environment(\.appColorTheme) private var theme
     @Environment(AppStore.self) private var store
@@ -12,32 +138,22 @@ struct HomeView: View {
     @State private var reminderCompletionMessage: String?
     @State private var reminderCompletionFeedbackTrigger = 0
 
-    private var selectedSharedPet: FamilySharedPet? { familyStore.selectedSharedPet }
+    private var selectedPet: SelectedPet? { store.selectedPet(using: familyStore) }
+    private var selectablePets: [SelectedPet] { store.selectablePets(using: familyStore) }
 
     var body: some View {
         @Bindable var store = store
 
         NavigationStack {
             ScrollView {
-                if let sharedPet = selectedSharedPet {
+                if let selectedPet {
                     LazyVStack(spacing: 20) {
                         combinedPetSwitcher
-                        sharedPetProfileCard(sharedPet)
-                        sharedWeightTrendCard(sharedPet)
-                        sharedCareSummary(sharedPet)
-                        sharedRemindersSection(sharedPet)
-                        sharedRecentRecordsSection(sharedPet)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                } else if let pet = store.selectedPet {
-                    LazyVStack(spacing: 20) {
-                        combinedPetSwitcher
-                        petProfileCard(pet)
-                        weightTrendCard(pet)
-                        careSummary(for: pet)
-                        remindersSection
-                        recentRecordsSection
+                        petProfileCard(selectedPet)
+                        weightTrendCard(selectedPet)
+                        careSummary(for: selectedPet)
+                        remindersSection(for: selectedPet)
+                        recentRecordsSection(for: selectedPet)
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
@@ -63,7 +179,7 @@ struct HomeView: View {
                 HealthRecordEditorView(
                     record: presentation.record,
                     initialPetID: presentation.petID,
-                    sharedPet: familyStore.selectedSharedPet
+                    sharedPet: presentation.sharedPet
                 )
                     .environment(store)
             }
@@ -71,7 +187,7 @@ struct HomeView: View {
                 ReminderEditorView(
                     reminder: presentation.reminder,
                     initialPetID: presentation.petID,
-                    sharedPet: familyStore.selectedSharedPet
+                    sharedPet: presentation.sharedPet
                 )
                     .environment(store)
             }
@@ -123,272 +239,37 @@ struct HomeView: View {
     }
 
     private var combinedPetSwitcher: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                ForEach(store.pets) { pet in
-                    Button {
-                        withAnimation(.snappy(duration: 0.28)) {
-                            familyStore.selectPrivatePet()
-                            store.selectedPetID = pet.id
-                        }
-                    } label: {
-                        VStack(spacing: 7) {
-                            PetAvatarView(
-                                avatarData: pet.avatarData,
-                                avatarPresetID: pet.avatarPresetID,
-                                fallbackSymbol: pet.avatarSymbol,
-                                size: 48,
-                                background: familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id
-                                    ? theme.accent
-                                    : theme.surfaceMuted,
-                                foreground: familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? .white : theme.accent
-                            )
-                            .overlay {
-                                Circle()
-                                    .stroke(familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? theme.accent : .clear, lineWidth: 2.5)
-                            }
-
-                            Text(pet.name)
-                                .font(.caption.weight(familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? .bold : .medium))
-                                .foregroundStyle(.primary)
-                                .lineLimit(1)
-                                .frame(maxWidth: 62)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("切换到 \(pet.name)")
+        SelectedPetSwitcher(
+            pets: selectablePets,
+            selectedID: selectedPet?.id,
+            style: .avatar,
+            purpose: .selection,
+            onSelect: { selection in
+                withAnimation(.snappy(duration: 0.28)) {
+                    store.select(selection, using: familyStore)
                 }
+            },
+            onAdd: { petEditor = PetEditorPresentation(pet: nil) }
+        )
+    }
 
-                ForEach(familyStore.sharedPets) { sharedPet in
-                    Button {
-                        withAnimation(.snappy(duration: 0.28)) {
-                            familyStore.selectedSharedPetID = sharedPet.id
-                        }
-                    } label: {
-                        VStack(spacing: 7) {
-                            PetAvatarView(
-                                avatarData: sharedPet.pet.avatarData,
-                                avatarPresetID: sharedPet.pet.avatarPresetID,
-                                fallbackSymbol: sharedPet.pet.avatarSymbol,
-                                size: 48,
-                                background: familyStore.selectedSharedPetID == sharedPet.id ? theme.accent : theme.surfaceMuted,
-                                foreground: familyStore.selectedSharedPetID == sharedPet.id ? .white : theme.accent
-                            )
-                            .overlay(alignment: .bottomTrailing) {
-                                Image(systemName: "person.2.fill")
-                                    .font(.system(size: 8, weight: .bold))
-                                    .foregroundStyle(.white)
-                                    .frame(width: 18, height: 18)
-                                    .background(theme.accent, in: Circle())
-                                    .overlay { Circle().stroke(theme.surface, lineWidth: 2) }
-                            }
-                            Text(sharedPet.pet.name)
-                                .font(.caption.weight(familyStore.selectedSharedPetID == sharedPet.id ? .bold : .medium))
-                                .foregroundStyle(.primary)
-                                .lineLimit(1)
-                                .frame(maxWidth: 62)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("切换到家人共享的 \(sharedPet.pet.name)")
-                }
-
-                Button {
-                    petEditor = PetEditorPresentation(pet: nil)
-                } label: {
-                    VStack(spacing: 7) {
-                        Image(systemName: "plus")
-                            .font(.title3.bold())
-                            .foregroundStyle(theme.accent)
-                            .frame(width: 48, height: 48)
-                            .background(theme.accent.opacity(0.10), in: Circle())
-                        Text("添加")
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(theme.accent)
-                    }
-                }
-                .buttonStyle(.plain)
+    @ViewBuilder
+    private func petProfileCard(_ selection: SelectedPet) -> some View {
+        if let sharedPet = selection.sharedPet {
+            NavigationLink {
+                FamilySharedPetDetailView(sharedPet: sharedPet)
+            } label: {
+                petProfileCardContent(selection, showsChevron: true)
             }
-            .padding(.horizontal, 2)
+            .buttonStyle(.plain)
+        } else {
+            petProfileCardContent(selection, showsChevron: false)
         }
     }
 
-    private func sharedPetProfileCard(_ sharedPet: FamilySharedPet) -> some View {
-        NavigationLink {
-            FamilySharedPetDetailView(sharedPet: sharedPet)
-        } label: {
-            ZStack(alignment: .topTrailing) {
-                LinearGradient(colors: [theme.accent, theme.accentDeep], startPoint: .topLeading, endPoint: .bottomTrailing)
-                Circle().fill(.white.opacity(0.08)).frame(width: 180, height: 180).offset(x: 62, y: -72)
-                VStack(alignment: .leading, spacing: 18) {
-                    HStack(spacing: 16) {
-                        PetAvatarView(
-                            avatarData: sharedPet.pet.avatarData,
-                            avatarPresetID: sharedPet.pet.avatarPresetID,
-                            fallbackSymbol: sharedPet.pet.avatarSymbol,
-                            size: 78,
-                            background: .white.opacity(0.94),
-                            foreground: theme.accent
-                        )
-                        .overlay { Circle().stroke(.white.opacity(0.8), lineWidth: 3) }
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(sharedPet.pet.name)
-                                .font(.system(.title, design: .rounded, weight: .bold))
-                                .lineLimit(2)
-                            Text(petDescription(sharedPet.pet))
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(.white.opacity(0.82))
-                                .lineLimit(2)
-                            Label("家庭共享 · \(sharedPet.role.displayName)", systemImage: sharedPet.role.symbol)
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(.white.opacity(0.9))
-                        }
-                        Spacer(minLength: 0)
-                    }
-                    HStack(spacing: 0) {
-                        profileMetric(title: "年龄", value: ageText(for: sharedPet.pet))
-                        metricDivider
-                        profileMetric(title: "体重", value: weightText(for: sharedPet.pet))
-                        metricDivider
-                        profileMetric(title: "健康记录", value: recordCountText(sharedPet.records.count))
-                    }
-                }
-                .padding(22)
-                .foregroundStyle(.white)
-                Image(systemName: "chevron.right").foregroundStyle(.white.opacity(0.8)).padding(20)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func sharedCareSummary(_ sharedPet: FamilySharedPet) -> some View {
-        Button {
-            guard sharedPet.canEdit else { return }
-            recordEditor = HealthRecordEditorPresentation(record: nil, petID: sharedPet.pet.id)
-        } label: {
-            ZojiCard {
-                HStack(spacing: 14) {
-                    Image(systemName: "heart.text.clipboard.fill").font(.title2).foregroundStyle(theme.accent)
-                        .frame(width: 48, height: 48).background(theme.accentSoft, in: RoundedRectangle(cornerRadius: 15))
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(sharedPet.canEdit ? "记录 \(sharedPet.pet.name) 的健康" : "查看 \(sharedPet.pet.name) 的健康")
-                            .font(.headline)
-                        Text(sharedPet.canEdit ? "修改会同步给共享成员。" : "拥有者授予的是仅查看权限。")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Image(systemName: sharedPet.canEdit ? "plus.circle.fill" : "eye.fill").font(.title2).foregroundStyle(theme.accent)
-                }
-            }
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func sharedWeightTrendCard(_ sharedPet: FamilySharedPet) -> some View {
-        NavigationLink {
-            WeightTrendView(
-                petID: sharedPet.pet.id,
-                sharedPet: sharedPet,
-                canEdit: sharedPet.canEdit
-            )
-        } label: {
-            WeightTrendPreviewCard(pet: sharedPet.pet)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func sharedRemindersSection(_ sharedPet: FamilySharedPet) -> some View {
-        VStack(spacing: 10) {
-            sectionHeader(title: "近期待办", subtitle: "家庭共享")
-            let reminders = sharedPet.reminders.filter(\.isEnabled).sorted { $0.dueAt < $1.dueAt }
-            if reminders.isEmpty {
-                emptyContentCard(title: "暂时没有待办", message: "可在共享档案详情中添加提醒。", symbol: "bell.badge")
-            } else {
-                ForEach(reminders.prefix(3)) { reminder in
-                    ZojiCard {
-                        HStack(spacing: 12) {
-                            Button {
-                                reminderEditor = ReminderEditorPresentation(
-                                    reminder: reminder,
-                                    petID: sharedPet.pet.id
-                                )
-                            } label: {
-                                HStack(spacing: 12) {
-                                    Image(systemName: reminder.kind.symbol)
-                                        .frame(width: 38, height: 38)
-                                        .foregroundStyle(theme.accent)
-                                        .background(theme.accentSoft, in: Circle())
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        Text(L10n.dynamic(reminder.title)).font(.headline)
-                                        Text(L10n.date(reminder.dueAt, dateStyle: .abbreviated, timeStyle: .shortened))
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    Spacer()
-                                }
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("查看提醒详情：\(reminder.title)")
-
-                            if sharedPet.canEdit {
-                                Button(reminder.isCompletionLocked() ? "本期已完成" : "完成") {
-                                    completeSharedReminder(reminder, in: sharedPet)
-                                }
-                                .disabled(completingReminderIDs.contains(reminder.id) || reminder.isCompletionLocked())
-                                .buttonStyle(.bordered).controlSize(.small)
-                            } else {
-                                Image(systemName: "chevron.right")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.tertiary)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private func sharedRecentRecordsSection(_ sharedPet: FamilySharedPet) -> some View {
-        VStack(spacing: 10) {
-            sectionHeader(title: "最近记录", subtitle: "共享时间线")
-            if sharedPet.records.isEmpty {
-                emptyContentCard(title: "还没有健康记录", message: "可在共享档案中添加第一条记录。", symbol: "list.bullet.clipboard")
-            } else {
-                ZojiCard {
-                    VStack(spacing: 0) {
-                        ForEach(Array(sharedPet.records.sorted { $0.occurredAt > $1.occurredAt }.prefix(3).enumerated()), id: \.element.id) { index, record in
-                            NavigationLink {
-                                FamilySharedRecordDetailView(sharedPet: sharedPet, recordID: record.id)
-                            } label: { recordRow(record) }
-                            .buttonStyle(.plain)
-                            if index < min(sharedPet.records.count, 3) - 1 { Divider().padding(.leading, 50) }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private func completeSharedReminder(_ reminder: ReminderItem, in sharedPet: FamilySharedPet) {
-        completingReminderIDs.insert(reminder.id)
-        Task {
-            defer { completingReminderIDs.remove(reminder.id) }
-            do {
-                let next = try await familyStore.completeReminder(reminder, in: sharedPet)
-                showReminderCompletion(
-                    next.map { String(localized: "本次已记录，下次提醒：\(L10n.date($0, dateStyle: .long, timeStyle: .shortened))。", locale: L10n.locale) }
-                        ?? L10n.string("这条一次性提醒已完成并归档。")
-                )
-            } catch {
-                store.reminderPersistenceMessage = error.localizedDescription
-            }
-        }
-    }
-
-    private func petProfileCard(_ pet: Pet) -> some View {
-        ZStack(alignment: .topTrailing) {
+    private func petProfileCardContent(_ selection: SelectedPet, showsChevron: Bool) -> some View {
+        let pet = selection.pet
+        return ZStack(alignment: .topTrailing) {
             LinearGradient(
                 colors: [theme.accent, theme.accentDeep],
                 startPoint: .topLeading,
@@ -421,6 +302,13 @@ struct HomeView: View {
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(.white.opacity(0.82))
                             .lineLimit(2)
+
+                        if let sharingLabel = selection.sharingLabel,
+                           let sharedPet = selection.sharedPet {
+                            Label(sharingLabel, systemImage: sharedPet.role.symbol)
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.white.opacity(0.9))
+                        }
                     }
 
                     Spacer(minLength: 0)
@@ -431,33 +319,39 @@ struct HomeView: View {
                     metricDivider
                     profileMetric(title: "体重", value: weightText(for: pet))
                     metricDivider
-                    profileMetric(title: "健康记录", value: recordCountText(store.selectedRecords.count))
+                    profileMetric(title: "健康记录", value: recordCountText(selection.records.count))
                 }
             }
             .padding(22)
             .foregroundStyle(.white)
 
-            Menu {
-                Button {
-                    petEditor = PetEditorPresentation(pet: pet)
-                } label: {
-                    Label("编辑资料", systemImage: "pencil")
-                }
+            if showsChevron {
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.white.opacity(0.8))
+                    .padding(20)
+            } else {
+                Menu {
+                    Button {
+                        petEditor = PetEditorPresentation(pet: pet)
+                    } label: {
+                        Label("编辑资料", systemImage: "pencil")
+                    }
 
-                Button(role: .destructive) {
-                    petPendingDeletion = pet
+                    Button(role: .destructive) {
+                        petPendingDeletion = pet
+                    } label: {
+                        Label("删除宠物", systemImage: "trash")
+                    }
                 } label: {
-                    Label("删除宠物", systemImage: "trash")
+                    Image(systemName: "ellipsis")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .frame(width: 38, height: 38)
+                        .background(.white.opacity(0.14), in: Circle())
                 }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .frame(width: 38, height: 38)
-                    .background(.white.opacity(0.14), in: Circle())
+                .padding(16)
+                .accessibilityLabel("管理 \(pet.name) 的资料")
             }
-            .padding(16)
-            .accessibilityLabel("管理 \(pet.name) 的资料")
         }
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .shadow(color: theme.accent.opacity(0.18), radius: 18, y: 10)
@@ -469,14 +363,18 @@ struct HomeView: View {
             .frame(width: 1, height: 32)
     }
 
-    private func weightTrendCard(_ pet: Pet) -> some View {
+    private func weightTrendCard(_ selection: SelectedPet) -> some View {
         NavigationLink {
-            WeightTrendView(petID: pet.id)
+            WeightTrendView(
+                petID: selection.pet.id,
+                sharedPet: selection.sharedPet,
+                canEdit: selection.canEdit
+            )
         } label: {
-            WeightTrendPreviewCard(pet: pet)
+            WeightTrendPreviewCard(pet: selection.pet)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("查看 \(pet.name) 的体重趋势")
+        .accessibilityLabel("查看 \(selection.pet.name) 的体重趋势")
     }
 
     private func profileMetric(title: String, value: String) -> some View {
@@ -493,40 +391,79 @@ struct HomeView: View {
         .padding(.leading, 12)
     }
 
-    private func careSummary(for pet: Pet) -> some View {
-        Button {
-            recordEditor = HealthRecordEditorPresentation(record: nil, petID: pet.id)
-        } label: {
-            ZojiCard {
-                HStack(spacing: 14) {
-                    Image(systemName: "heart.text.clipboard.fill")
-                        .font(.title2)
-                        .foregroundStyle(theme.accent)
-                        .frame(width: 48, height: 48)
-                        .background(theme.accentSoft, in: RoundedRectangle(cornerRadius: 15))
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(store.selectedReminders.isEmpty ? "开始记录 \(pet.name) 的健康" : taskSummaryText(for: pet, count: store.selectedReminders.count))
-                            .font(.headline)
-                        Text(store.selectedReminders.isEmpty ? "保存疫苗、驱虫、体检或就医经历，建立专属健康时间线。" : "按时完成照护事项，让每一次健康变化都有迹可循。")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineSpacing(2)
-                    }
-
-                    Spacer(minLength: 4)
-
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(theme.accent)
-                }
+    @ViewBuilder
+    private func careSummary(for selection: SelectedPet) -> some View {
+        if let sharedPet = selection.sharedPet, !selection.canEdit {
+            NavigationLink {
+                FamilySharedPetDetailView(sharedPet: sharedPet)
+            } label: {
+                careSummaryCard(for: selection)
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("查看 \(selection.pet.name) 的健康记录")
+        } else {
+            Button {
+                recordEditor = HealthRecordEditorPresentation(
+                    record: nil,
+                    petID: selection.pet.id,
+                    sharedPet: selection.sharedPet
+                )
+            } label: {
+                careSummaryCard(for: selection)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("为 \(selection.pet.name) 添加健康记录")
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("为 \(pet.name) 添加健康记录")
     }
 
-    private var remindersSection: some View {
+    private func careSummaryCard(for selection: SelectedPet) -> some View {
+        ZojiCard {
+            HStack(spacing: 14) {
+                Image(systemName: "heart.text.clipboard.fill")
+                    .font(.title2)
+                    .foregroundStyle(theme.accent)
+                    .frame(width: 48, height: 48)
+                    .background(theme.accentSoft, in: RoundedRectangle(cornerRadius: 15))
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(careSummaryTitle(for: selection))
+                        .font(.headline)
+                    Text(careSummaryDetail(for: selection))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineSpacing(2)
+                }
+
+                Spacer(minLength: 4)
+
+                Image(systemName: selection.canEdit ? "plus.circle.fill" : "eye.fill")
+                    .font(.title2)
+                    .foregroundStyle(theme.accent)
+            }
+        }
+    }
+
+    private func careSummaryTitle(for selection: SelectedPet) -> String {
+        if !selection.canEdit {
+            return String(localized: "查看 \(selection.pet.name) 的健康", locale: L10n.locale)
+        }
+        return selection.reminders.isEmpty
+            ? String(localized: "开始记录 \(selection.pet.name) 的健康", locale: L10n.locale)
+            : taskSummaryText(for: selection.pet, count: selection.reminders.count)
+    }
+
+    private func careSummaryDetail(for selection: SelectedPet) -> String {
+        if selection.isShared {
+            return selection.canEdit
+                ? L10n.string("修改会同步给共享成员。")
+                : L10n.string("拥有者授予的是仅查看权限。")
+        }
+        return selection.reminders.isEmpty
+            ? L10n.string("保存疫苗、驱虫、体检或就医经历，建立专属健康时间线。")
+            : L10n.string("按时完成照护事项，让每一次健康变化都有迹可循。")
+    }
+
+    private func remindersSection(for selection: SelectedPet) -> some View {
         VStack(spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text("近期待办")
@@ -539,9 +476,14 @@ struct HomeView: View {
             }
             .padding(.horizontal, 2)
 
-            if store.selectedReminders.isEmpty {
+            if selection.reminders.isEmpty {
                 Button {
-                    reminderEditor = ReminderEditorPresentation(reminder: nil, petID: store.selectedPetID)
+                    guard selection.canEdit else { return }
+                    reminderEditor = ReminderEditorPresentation(
+                        reminder: nil,
+                        petID: selection.pet.id,
+                        sharedPet: selection.sharedPet
+                    )
                 } label: {
                     emptyContentCard(
                         title: "暂时没有待办",
@@ -550,22 +492,24 @@ struct HomeView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .disabled(!selection.canEdit)
             } else {
-                ForEach(store.selectedReminders.prefix(3)) { reminder in
-                    reminderCard(reminder)
+                ForEach(selection.reminders.prefix(3)) { reminder in
+                    reminderCard(reminder, for: selection)
                 }
             }
         }
     }
 
-    private func reminderCard(_ reminder: ReminderItem) -> some View {
+    private func reminderCard(_ reminder: ReminderItem, for selection: SelectedPet) -> some View {
         let completionLocked = reminder.isCompletionLocked()
         return ZojiCard {
             HStack(spacing: 12) {
                 Button {
                     reminderEditor = ReminderEditorPresentation(
                         reminder: reminder,
-                        petID: reminder.petID
+                        petID: reminder.petID,
+                        sharedPet: selection.sharedPet
                     )
                 } label: {
                     HStack(spacing: 12) {
@@ -587,33 +531,45 @@ struct HomeView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .disabled(!selection.canEdit)
                 .accessibilityLabel("查看提醒详情：\(reminder.title)")
 
-                Button {
-                    completeReminder(reminder)
-                } label: {
-                    if completingReminderIDs.contains(reminder.id) {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Text(completionLocked ? "本期已完成" : "完成")
+                if selection.canEdit {
+                    Button {
+                        completeReminder(reminder, for: selection)
+                    } label: {
+                        if completingReminderIDs.contains(reminder.id) {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Text(completionLocked ? "本期已完成" : "完成")
+                        }
                     }
-                }
                     .disabled(completingReminderIDs.contains(reminder.id) || completionLocked)
                     .frame(minWidth: 48)
                     .buttonStyle(.bordered)
                     .controlSize(.small)
+                } else {
+                    Image(systemName: "eye.fill")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(theme.accent)
+                }
             }
         }
     }
 
-    private func completeReminder(_ reminder: ReminderItem) {
+    private func completeReminder(_ reminder: ReminderItem, for selection: SelectedPet) {
         guard !reminder.isCompletionLocked() else { return }
         completingReminderIDs.insert(reminder.id)
         Task {
             defer { completingReminderIDs.remove(reminder.id) }
             do {
-                let nextDueAt = try await store.completeReminder(id: reminder.id)
+                let nextDueAt: Date?
+                if let sharedPet = selection.sharedPet {
+                    nextDueAt = try await familyStore.completeReminder(reminder, in: sharedPet)
+                } else {
+                    nextDueAt = try await store.completeReminder(id: reminder.id)
+                }
                 if let nextDueAt {
                     showReminderCompletion(
                         String(localized: "本次已记录，下次提醒：\(L10n.date(nextDueAt, dateStyle: .long, timeStyle: .shortened))。", locale: L10n.locale)
@@ -634,11 +590,11 @@ struct HomeView: View {
         reminderCompletionFeedbackTrigger += 1
     }
 
-    private var recentRecordsSection: some View {
+    private func recentRecordsSection(for selection: SelectedPet) -> some View {
         VStack(spacing: 10) {
-            sectionHeader(title: "最近记录")
+            sectionHeader(title: "最近记录", subtitle: selection.isShared ? "共享时间线" : nil)
 
-            if store.selectedRecords.isEmpty {
+            if selection.records.isEmpty {
                 emptyContentCard(
                     title: "还没有健康记录",
                     message: "点击上方健康卡片，添加第一条疫苗、驱虫、体检或就医记录。",
@@ -647,20 +603,29 @@ struct HomeView: View {
             } else {
                 ZojiCard {
                     VStack(spacing: 0) {
-                        ForEach(Array(store.selectedRecords.prefix(3).enumerated()), id: \.element.id) { index, record in
+                        ForEach(Array(selection.records.prefix(3).enumerated()), id: \.element.id) { index, record in
                             NavigationLink {
-                                HealthRecordDetailView(recordID: record.id)
+                                recordDetailDestination(record, for: selection)
                             } label: {
                                 recordRow(record)
                             }
                             .buttonStyle(.plain)
-                            if index < min(store.selectedRecords.count, 3) - 1 {
+                            if index < min(selection.records.count, 3) - 1 {
                                 Divider().padding(.leading, 50)
                             }
                         }
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func recordDetailDestination(_ record: HealthRecord, for selection: SelectedPet) -> some View {
+        if let sharedPet = selection.sharedPet {
+            FamilySharedRecordDetailView(sharedPet: sharedPet, recordID: record.id)
+        } else {
+            HealthRecordDetailView(recordID: record.id)
         }
     }
 
@@ -851,43 +816,22 @@ struct ReminderListView: View {
     @State private var completionFeedbackTrigger = 0
     @State private var showsCarePlanTemplates = false
 
-    private var selectedSharedPet: FamilySharedPet? {
-        familyStore.selectedSharedPet
-    }
-
-    private var activeReminders: [ReminderItem] {
-        if let selectedSharedPet {
-            return selectedSharedPet.reminders
-                .filter(\.isEnabled)
-                .sorted { $0.dueAt < $1.dueAt }
-        }
-        return store.selectedReminders
-    }
-
-    private var selectedPetID: UUID? {
-        selectedSharedPet?.pet.id ?? store.selectedPetID
-    }
-
-    private var canEditSelectedPet: Bool {
-        selectedSharedPet?.canEdit ?? (store.selectedPet != nil)
-    }
-
-    private var petCount: Int {
-        store.pets.count + familyStore.sharedPets.count
-    }
+    private var selectedPet: SelectedPet? { store.selectedPet(using: familyStore) }
+    private var selectablePets: [SelectedPet] { store.selectablePets(using: familyStore) }
+    private var activeReminders: [ReminderItem] { selectedPet?.reminders ?? [] }
 
     var body: some View {
         @Bindable var store = store
 
         List {
-            if petCount > 1 {
+            if selectablePets.count > 1 {
                 Section("宠物") {
                     reminderPetSwitcher
                         .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
                 }
             }
 
-            if selectedSharedPet == nil {
+            if selectedPet?.isShared == false {
                 Section("快捷计划") {
                 Button {
                     showsCarePlanTemplates = true
@@ -945,11 +889,15 @@ struct ReminderListView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    editor = ReminderEditorPresentation(reminder: nil, petID: selectedPetID)
+                    editor = ReminderEditorPresentation(
+                        reminder: nil,
+                        petID: selectedPet?.pet.id,
+                        sharedPet: selectedPet?.sharedPet
+                    )
                 } label: {
                     Image(systemName: "plus")
                 }
-                .disabled(selectedPetID == nil || !canEditSelectedPet)
+                .disabled(selectedPet == nil || selectedPet?.canEdit == false)
                 .accessibilityLabel("添加提醒")
             }
         }
@@ -957,7 +905,7 @@ struct ReminderListView: View {
             ReminderEditorView(
                 reminder: presentation.reminder,
                 initialPetID: presentation.petID,
-                sharedPet: selectedSharedPet
+                sharedPet: presentation.sharedPet
             )
                 .environment(store)
         }
@@ -1008,7 +956,11 @@ struct ReminderListView: View {
                 let completionLocked = reminder.isCompletionLocked()
                 HStack(spacing: 12) {
                     Button {
-                        editor = ReminderEditorPresentation(reminder: reminder, petID: reminder.petID)
+                        editor = ReminderEditorPresentation(
+                            reminder: reminder,
+                            petID: reminder.petID,
+                            sharedPet: selectedPet?.sharedPet
+                        )
                     } label: {
                         HStack(spacing: 12) {
                             Image(systemName: reminder.kind.symbol)
@@ -1043,9 +995,9 @@ struct ReminderListView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .disabled(!canEditSelectedPet)
+                    .disabled(selectedPet?.canEdit == false)
 
-                    if canEditSelectedPet {
+                    if selectedPet?.canEdit == true {
                         Button {
                             completeReminder(reminder)
                         } label: {
@@ -1068,7 +1020,7 @@ struct ReminderListView: View {
                     }
                 }
                 .swipeActions(edge: .trailing) {
-                    if canEditSelectedPet {
+                    if selectedPet?.canEdit == true {
                         Button(role: .destructive) {
                             reminderPendingDeletion = reminder
                         } label: {
@@ -1083,81 +1035,17 @@ struct ReminderListView: View {
     }
 
     private var reminderPetSwitcher: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(store.pets) { pet in
-                    let isSelected = familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id
-                    Button {
-                        withAnimation(.snappy(duration: 0.25)) {
-                            familyStore.selectPrivatePet()
-                            store.selectedPetID = pet.id
-                        }
-                    } label: {
-                        HStack(spacing: 8) {
-                            PetAvatarView(
-                                avatarData: pet.avatarData,
-                                avatarPresetID: pet.avatarPresetID,
-                                fallbackSymbol: pet.avatarSymbol,
-                                size: 32,
-                                background: isSelected ? .white.opacity(0.22) : theme.accentSoft,
-                                foreground: isSelected ? .white : theme.accent
-                            )
-                            Text(pet.name)
-                                .font(.subheadline.weight(.semibold))
-                                .lineLimit(1)
-                        }
-                        .foregroundStyle(isSelected ? .white : .primary)
-                        .padding(.vertical, 7)
-                        .padding(.horizontal, 10)
-                        .background(
-                            isSelected ? theme.accent : theme.surfaceMuted,
-                            in: Capsule()
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("查看 \(pet.name) 的健康提醒")
-                }
-
-                ForEach(familyStore.sharedPets) { sharedPet in
-                    let isSelected = familyStore.selectedSharedPetID == sharedPet.id
-                    Button {
-                        withAnimation(.snappy(duration: 0.25)) {
-                            familyStore.selectedSharedPetID = sharedPet.id
-                        }
-                    } label: {
-                        HStack(spacing: 8) {
-                            PetAvatarView(
-                                avatarData: sharedPet.pet.avatarData,
-                                avatarPresetID: sharedPet.pet.avatarPresetID,
-                                fallbackSymbol: sharedPet.pet.avatarSymbol,
-                                size: 32,
-                                background: isSelected ? .white.opacity(0.22) : theme.accentSoft,
-                                foreground: isSelected ? .white : theme.accent
-                            )
-                            .overlay(alignment: .bottomTrailing) {
-                                Image(systemName: "person.2.fill")
-                                    .font(.system(size: 6, weight: .bold))
-                                    .foregroundStyle(.white)
-                                    .frame(width: 13, height: 13)
-                                    .background(theme.accent, in: Circle())
-                            }
-                            Text(sharedPet.pet.name)
-                                .font(.subheadline.weight(.semibold))
-                                .lineLimit(1)
-                        }
-                        .foregroundStyle(isSelected ? .white : .primary)
-                        .padding(.vertical, 7)
-                        .padding(.horizontal, 10)
-                        .background(
-                            isSelected ? theme.accent : theme.surfaceMuted,
-                            in: Capsule()
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("查看 \(sharedPet.pet.name) 的健康提醒")
+        SelectedPetSwitcher(
+            pets: selectablePets,
+            selectedID: selectedPet?.id,
+            style: .capsule,
+            purpose: .reminders,
+            onSelect: { selection in
+                withAnimation(.snappy(duration: 0.25)) {
+                    store.select(selection, using: familyStore)
                 }
             }
-        }
+        )
     }
 
     private func reminderDateText(_ date: Date) -> String {
@@ -1190,8 +1078,8 @@ struct ReminderListView: View {
             defer { completingReminderIDs.remove(reminder.id) }
             do {
                 let nextDueAt: Date?
-                if let selectedSharedPet {
-                    nextDueAt = try await familyStore.completeReminder(reminder, in: selectedSharedPet)
+                if let sharedPet = selectedPet?.sharedPet {
+                    nextDueAt = try await familyStore.completeReminder(reminder, in: sharedPet)
                 } else {
                     nextDueAt = try await store.completeReminder(id: reminder.id)
                 }
@@ -1212,8 +1100,8 @@ struct ReminderListView: View {
         Task {
             defer { reminderPendingDeletion = nil }
             do {
-                if let selectedSharedPet {
-                    try await familyStore.deleteReminder(reminder, in: selectedSharedPet)
+                if let sharedPet = selectedPet?.sharedPet {
+                    try await familyStore.deleteReminder(reminder, in: sharedPet)
                 } else {
                     try await store.deleteReminder(id: reminder.id)
                 }
@@ -1777,6 +1665,13 @@ struct ReminderEditorPresentation: Identifiable {
     let id = UUID()
     let reminder: ReminderItem?
     let petID: UUID?
+    let sharedPet: FamilySharedPet?
+
+    init(reminder: ReminderItem?, petID: UUID?, sharedPet: FamilySharedPet? = nil) {
+        self.reminder = reminder
+        self.petID = petID
+        self.sharedPet = sharedPet
+    }
 }
 
 enum ReminderRepeatOption: String, CaseIterable, Identifiable {

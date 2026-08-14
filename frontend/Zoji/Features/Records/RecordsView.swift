@@ -12,10 +12,9 @@ struct RecordsView: View {
     @State private var editor: HealthRecordEditorPresentation?
     @State private var recordPendingDeletion: HealthRecord?
 
-    private var selectedRecords: [HealthRecord] {
-        familyStore.selectedSharedPet?.records.sorted { $0.occurredAt > $1.occurredAt }
-            ?? store.selectedRecords
-    }
+    private var selectedPet: SelectedPet? { store.selectedPet(using: familyStore) }
+    private var selectablePets: [SelectedPet] { store.selectablePets(using: familyStore) }
+    private var selectedRecords: [HealthRecord] { selectedPet?.records ?? [] }
 
     private var filteredRecords: [HealthRecord] {
         guard !query.isEmpty else { return selectedRecords }
@@ -76,10 +75,14 @@ struct RecordsView: View {
                                 Text(query.isEmpty ? "从第一次疫苗、驱虫或体检开始，建立专属健康时间线。" : "换个关键词搜索标题、类型或医院。")
                             } actions: {
                                 if query.isEmpty,
-                                   let petID = familyStore.selectedSharedPet?.pet.id ?? store.selectedPetID,
-                                   familyStore.selectedSharedPet?.canEdit != false {
+                                   let selectedPet,
+                                   selectedPet.canEdit {
                                     Button("添加第一条记录") {
-                                        editor = HealthRecordEditorPresentation(record: nil, petID: petID)
+                                        editor = HealthRecordEditorPresentation(
+                                            record: nil,
+                                            petID: selectedPet.pet.id,
+                                            sharedPet: selectedPet.sharedPet
+                                        )
                                     }
                                     .buttonStyle(.borderedProminent)
                                 }
@@ -92,7 +95,7 @@ struct RecordsView: View {
                             Section {
                                 ForEach(section.records) { record in
                                     NavigationLink {
-                                        if let sharedPet = familyStore.selectedSharedPet {
+                                        if let sharedPet = selectedPet?.sharedPet {
                                             FamilySharedRecordDetailView(sharedPet: sharedPet, recordID: record.id)
                                         } else {
                                             HealthRecordDetailView(recordID: record.id)
@@ -101,7 +104,7 @@ struct RecordsView: View {
                                         HealthRecordTimelineRow(record: record)
                                     }
                                     .swipeActions(edge: .trailing) {
-                                        if familyStore.selectedSharedPet?.canEdit != false {
+                                        if selectedPet?.canEdit == true {
                                             Button(role: .destructive) {
                                                 recordPendingDeletion = record
                                             } label: {
@@ -109,7 +112,11 @@ struct RecordsView: View {
                                             }
 
                                             Button {
-                                                editor = HealthRecordEditorPresentation(record: record, petID: record.petID)
+                                                editor = HealthRecordEditorPresentation(
+                                                    record: record,
+                                                    petID: record.petID,
+                                                    sharedPet: selectedPet?.sharedPet
+                                                )
                                             } label: {
                                                 Label("编辑", systemImage: "pencil")
                                             }
@@ -143,13 +150,17 @@ struct RecordsView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        guard let petID = familyStore.selectedSharedPet?.pet.id ?? store.selectedPetID else { return }
-                        editor = HealthRecordEditorPresentation(record: nil, petID: petID)
+                        guard let selectedPet else { return }
+                        editor = HealthRecordEditorPresentation(
+                            record: nil,
+                            petID: selectedPet.pet.id,
+                            sharedPet: selectedPet.sharedPet
+                        )
                     } label: {
                         Image(systemName: "plus")
                             .fontWeight(.semibold)
                     }
-                    .disabled((familyStore.selectedSharedPet?.pet.id ?? store.selectedPetID) == nil || familyStore.selectedSharedPet?.canEdit == false)
+                    .disabled(selectedPet == nil || selectedPet?.canEdit == false)
                     .accessibilityLabel("新增健康记录")
                 }
             }
@@ -157,7 +168,7 @@ struct RecordsView: View {
                 HealthRecordEditorView(
                     record: presentation.record,
                     initialPetID: presentation.petID,
-                    sharedPet: familyStore.selectedSharedPet
+                    sharedPet: presentation.sharedPet
                 )
                     .environment(store)
             }
@@ -175,7 +186,7 @@ struct RecordsView: View {
                 }
                 Button("取消", role: .cancel) { recordPendingDeletion = nil }
             } message: {
-                Text("删除后，该记录会从 \(familyStore.selectedSharedPet?.pet.name ?? store.selectedPet?.name ?? "宠物") 的健康时间线中移除。")
+                Text("删除后，该记录会从 \(selectedPet?.pet.name ?? "宠物") 的健康时间线中移除。")
             }
             .alert("健康记录操作失败", isPresented: Binding(
                 get: { store.recordPersistenceMessage != nil },
@@ -189,69 +200,24 @@ struct RecordsView: View {
     }
 
     private var petSwitcher: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(store.pets) { pet in
-                    Button {
-                        withAnimation(.snappy(duration: 0.25)) {
-                            store.selectedPetID = pet.id
-                            familyStore.selectPrivatePet()
-                        }
-                    } label: {
-                        HStack(spacing: 8) {
-                            PetAvatarView(
-                                avatarData: pet.avatarData,
-                                avatarPresetID: pet.avatarPresetID,
-                                fallbackSymbol: pet.avatarSymbol,
-                                size: 32,
-                                background: familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? .white.opacity(0.22) : theme.accentSoft,
-                                foreground: familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? .white : theme.accent
-                            )
-                            Text(pet.name)
-                                .font(.subheadline.weight(.semibold))
-                                .lineLimit(1)
-                        }
-                        .foregroundStyle(familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? .white : .primary)
-                        .padding(.vertical, 7)
-                        .padding(.horizontal, 10)
-                        .background(familyStore.selectedSharedPetID == nil && store.selectedPetID == pet.id ? theme.accent : theme.surfaceMuted, in: Capsule())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("查看 \(pet.name) 的健康记录")
-                }
-                ForEach(familyStore.sharedPets) { sharedPet in
-                    Button {
-                        withAnimation(.snappy(duration: 0.25)) {
-                            familyStore.selectedSharedPetID = sharedPet.id
-                        }
-                    } label: {
-                        HStack(spacing: 8) {
-                            PetAvatarView(
-                                avatarData: sharedPet.pet.avatarData,
-                                avatarPresetID: sharedPet.pet.avatarPresetID,
-                                fallbackSymbol: sharedPet.pet.avatarSymbol,
-                                size: 32,
-                                background: familyStore.selectedSharedPetID == sharedPet.id ? .white.opacity(0.22) : theme.accentSoft,
-                                foreground: familyStore.selectedSharedPetID == sharedPet.id ? .white : theme.accent
-                            )
-                            Text(sharedPet.pet.name).font(.subheadline.weight(.semibold)).lineLimit(1)
-                            Image(systemName: "person.2.fill").font(.caption2)
-                        }
-                        .foregroundStyle(familyStore.selectedSharedPetID == sharedPet.id ? .white : .primary)
-                        .padding(.vertical, 7).padding(.horizontal, 10)
-                        .background(familyStore.selectedSharedPetID == sharedPet.id ? theme.accent : theme.surfaceMuted, in: Capsule())
-                    }
-                    .buttonStyle(.plain)
+        SelectedPetSwitcher(
+            pets: selectablePets,
+            selectedID: selectedPet?.id,
+            style: .capsule,
+            purpose: .records,
+            onSelect: { selection in
+                withAnimation(.snappy(duration: 0.25)) {
+                    store.select(selection, using: familyStore)
                 }
             }
-        }
+        )
     }
 
     private func deleteRecord(_ record: HealthRecord) {
         Task {
             defer { recordPendingDeletion = nil }
             do {
-                if let sharedPet = familyStore.selectedSharedPet {
+                if let sharedPet = selectedPet?.sharedPet {
                     try await familyStore.deleteHealthRecord(record, in: sharedPet)
                 } else {
                     try await store.deleteHealthRecord(id: record.id)
@@ -386,6 +352,13 @@ struct HealthRecordEditorPresentation: Identifiable {
     let id = UUID()
     let record: HealthRecord?
     let petID: UUID
+    let sharedPet: FamilySharedPet?
+
+    init(record: HealthRecord?, petID: UUID, sharedPet: FamilySharedPet? = nil) {
+        self.record = record
+        self.petID = petID
+        self.sharedPet = sharedPet
+    }
 }
 
 struct HealthRecordEditorView: View {

@@ -215,6 +215,81 @@ struct FamilySharedPet: Codable, Identifiable, Hashable, Sendable {
     var caregivers: [FamilyShareMember] { members ?? [] }
 }
 
+/// A UI-facing pet selection that presents private and family-shared pets
+/// through one read and permission model. Persistence remains intentionally
+/// separate: private writes still go through `AppStore`, while shared writes
+/// continue to use `FamilySharingStore` and their CloudKit share location.
+enum SelectedPet: Identifiable {
+    enum ID: Hashable {
+        case local(UUID)
+        case shared(String)
+    }
+
+    case local(pet: Pet, records: [HealthRecord], reminders: [ReminderItem])
+    case shared(FamilySharedPet)
+
+    var id: ID {
+        switch self {
+        case .local(let pet, _, _): .local(pet.id)
+        case .shared(let sharedPet): .shared(sharedPet.id)
+        }
+    }
+
+    var pet: Pet {
+        switch self {
+        case .local(let pet, _, _): pet
+        case .shared(let sharedPet): sharedPet.pet
+        }
+    }
+
+    var records: [HealthRecord] {
+        let records = switch self {
+        case .local(_, let records, _): records
+        case .shared(let sharedPet): sharedPet.records
+        }
+        return records.sorted { $0.occurredAt > $1.occurredAt }
+    }
+
+    var reminders: [ReminderItem] {
+        let reminders = switch self {
+        case .local(_, _, let reminders): reminders
+        case .shared(let sharedPet): sharedPet.reminders
+        }
+        return reminders
+            .filter(\.isEnabled)
+            .sorted { $0.dueAt < $1.dueAt }
+    }
+
+    var canEdit: Bool {
+        switch self {
+        case .local: true
+        case .shared(let sharedPet): sharedPet.canEdit
+        }
+    }
+
+    var isShared: Bool {
+        switch self {
+        case .local: false
+        case .shared: true
+        }
+    }
+
+    var sharedPet: FamilySharedPet? {
+        switch self {
+        case .local: nil
+        case .shared(let sharedPet): sharedPet
+        }
+    }
+
+    var sharingLabel: String? {
+        guard let sharedPet else { return nil }
+        return String(
+            localized: "家庭共享 · \(sharedPet.role.displayName)",
+            locale: L10n.locale
+        )
+    }
+}
+
 struct FamilyReminderCompletion: Sendable {
     let reminder: ReminderItem
     let record: HealthRecord
