@@ -70,4 +70,4 @@ AMAP_API_KEY = 你的高德iOSKey
 
 CloudKit 同步需要有效的 Apple Developer Program 资格及相应 capability。未配置 CloudKit 的开发构建会继续使用本地 SwiftData。
 
-当前 CloudKit container：`iCloud.com.haoqianglyu.zoji.dev`。
+当前 CloudKit container：`iCloud.com.haoqianglyu.zoji`。
