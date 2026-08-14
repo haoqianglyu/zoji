@@ -4131,7 +4131,14 @@
       }
     },
     "查看 %@ 的健康提醒" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View %@'s Health Reminders"
+          }
+        }
+      }
     },
     "查看 %@ 的健康记录" : {
       "localizations" : {

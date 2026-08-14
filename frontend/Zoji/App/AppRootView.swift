@@ -249,7 +249,7 @@ private struct PrivacyConsentView: View {
                 .foregroundStyle(AppTheme.accent)
                 .frame(width: 30)
             VStack(alignment: .leading, spacing: 5) {
-                Text(title)
+                Text(L10n.dynamic(title))
                     .font(.headline)
                 Text(L10n.dynamic(detail))
                     .font(.subheadline)
