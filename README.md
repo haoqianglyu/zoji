@@ -1,28 +1,73 @@
 # 爪记 Zoji
 
-爪记是一款面向宠物主人的 iPhone 健康记录与就医辅助 App，采用“本地优先 + 私有 iCloud 同步”架构。
+爪记是一款面向宠物主人的 iPhone 健康管理与就医辅助 App。它可以集中管理宠物档案、体重变化、健康记录、附件和提醒，并帮助用户查找附近的宠物医院。
 
-## 当前架构
+## 主要功能
 
-- `frontend/`：正在使用的 iOS 17+ SwiftUI App，包含宠物档案、健康记录、图片/PDF 附件、提醒和医院地图。
-- `docs/`：产品与历史设计资料；当前数据架构以 `docs/architecture.md` 为准。
+- 管理多只宠物的资料、头像、生日、品种、性别和体重
+- 记录疫苗、驱虫、用药、就诊及自定义健康事件
+- 查看体重趋势和健康时间线
+- 创建周期提醒及疫苗、驱虫快捷计划
+- 添加图片和 PDF 附件，并在设备端识别病历文字
+- 查找、收藏附近的宠物医院
+- 按宠物邀请家人共同查看或维护资料
+- 支持中英文、主题色、深浅色外观和自定义单位
 
-App 不需要 Zoji 账号、手机号验证码、微信登录、ECS、OSS 或 PostgreSQL。用户操作先保存到本机 SwiftData；具备 CloudKit capability 的构建会由系统同步到用户自己的私有 iCloud 空间。没有登录 iCloud或网络不可用时，App 仍可本地使用。
+## 技术与数据
 
-## 运行 iOS App
+- iOS 17+
+- SwiftUI
+- SwiftData
+- CloudKit 私有数据库
+- UserNotifications
+- MapKit；中国境内真机可使用高德地图搜索 SDK
 
-1. 用 Xcode 打开 `frontend/Zoji.xcworkspace`。
-2. 选择 iPhone 模拟器或已连接的 iPhone。
-3. 点击运行（▶）或按 `⌘R`。
+数据采用本地优先方式：操作会先保存到设备，启用 iCloud 后由系统同步到用户自己的私有 iCloud 空间。没有网络时仍可使用本地数据。
 
-当前 Xcode 使用免费的 `Personal Team`，它不支持 iCloud capability，因此 Debug 开发版仅使用本地存储。加入每年 99 美元的 Apple Developer Program 后即可启用并测试 CloudKit。Release 配置已预留 CloudKit container：`iCloud.com.haoqianglyu.zoji.dev`。
+## 项目结构
 
-## 开发原则
+- `frontend/`：iOS App、Xcode 工程、资源和测试
+- `docs/`：产品与架构文档
+- `.github/workflows/ci.yml`：iOS 自动构建检查
 
-- 数据写入先在本机成功，再由系统自动进行 iCloud 同步。
-- 用户私有数据不写入公共 CloudKit 数据库。
-- View 不直接访问 SwiftData `ModelContext`，统一通过 Repository/Store。
-- 提醒规则同步；通知授权和已调度通知由每台设备本地管理。
-- 图片和 PDF 应限制大小并允许压缩，避免过度占用用户 iCloud 空间。
-- 疫苗周期仅作为可编辑建议，不能表达成医疗结论。
-- 高德 Key 等本机密钥不得提交仓库。
+## 本地运行
+
+1. 安装 Xcode 和 CocoaPods。
+2. 在 `frontend` 目录执行 `pod install`。
+3. 用 Xcode 打开 `frontend/Zoji.xcworkspace`。
+4. 选择 iPhone 模拟器或已连接的 iPhone，点击运行（▶）。
+
+也可以在命令行验证模拟器构建：
+
+```bash
+cd frontend
+xcodebuild \
+  -workspace Zoji.xcworkspace \
+  -scheme Zoji \
+  -configuration Debug \
+  -destination 'generic/platform=iOS Simulator' \
+  CODE_SIGNING_ALLOWED=NO \
+  build
+```
+
+## 本机配置
+
+如需在中国境内真机使用高德医院搜索，将示例配置复制为本机配置：
+
+```bash
+cp frontend/Config/Secrets.xcconfig.example frontend/Config/Secrets.xcconfig
+```
+
+然后填写高德 iOS Key：
+
+```xcconfig
+AMAP_API_KEY = 你的高德iOSKey
+```
+
+`Secrets.xcconfig` 已被 Git 忽略，不会提交到仓库。Key 需绑定 Bundle ID `com.haoqianglyu.zoji`。
+
+## iCloud
+
+CloudKit 同步需要有效的 Apple Developer Program 资格及相应 capability。未配置 CloudKit 的开发构建会继续使用本地 SwiftData。
+
+当前 CloudKit container：`iCloud.com.haoqianglyu.zoji.dev`。

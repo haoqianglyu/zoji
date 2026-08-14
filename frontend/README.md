@@ -2,7 +2,7 @@
 
 `Zoji.xcworkspace` 是 iOS 17+ SwiftUI 工作区。接入 CocoaPods 后始终打开 workspace，不要单独打开 `Zoji.xcodeproj`。
 
-Zoji 采用本地优先架构：宠物档案、健康记录、附件和提醒先写入 SwiftData；启用 CloudKit 的正式构建会自动同步到用户的私有 iCloud 数据库。App 不再提供手机号、微信或自建账号登录，也不会访问 Zoji 自建后端。
+Zoji 采用本地优先架构：宠物档案、健康记录、附件和提醒先写入 SwiftData；启用 CloudKit 的正式构建会自动同步到用户的私有 iCloud 数据库。
 
 目录职责：
 
