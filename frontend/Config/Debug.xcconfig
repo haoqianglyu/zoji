@@ -5,4 +5,5 @@
 EXCLUDED_ARCHS[sdk=iphonesimulator*] =
 OTHER_LDFLAGS[sdk=iphonesimulator*] =
 AMAP_API_KEY =
+APS_ENVIRONMENT = development
 #include? "Secrets.xcconfig"
