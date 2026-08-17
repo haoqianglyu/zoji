@@ -611,7 +611,9 @@ struct LegalDocumentView: View {
                 }
 
                 Section(LegalCopy.text("联系我们", "Contact")) {
-                    Link("zoji.app.support@gmail.com", destination: URL(string: "mailto:zoji.app.support@gmail.com")!)
+                    Link(destination: URL(string: "mailto:zoji.app.support@gmail.com")!) {
+                        Text(verbatim: "zoji.app.support@gmail.com")
+                    }
                 }
             }
             .scrollContentBackground(.hidden)

@@ -681,11 +681,11 @@ private struct PetManagementView: View {
     }
 
     private var statusChangeTitle: String {
-        guard let statusChange else { return "更改宠物状态" }
+        guard let statusChange else { return L10n.string("更改宠物状态") }
         switch statusChange.status {
-        case .active: return "恢复 \(statusChange.pet.name)？"
-        case .archived: return "归档 \(statusChange.pet.name)？"
-        case .memorial: return "将 \(statusChange.pet.name) 设为纪念？"
+        case .active: return L10n.string("恢复 \(statusChange.pet.name)？")
+        case .archived: return L10n.string("归档 \(statusChange.pet.name)？")
+        case .memorial: return L10n.string("将 \(statusChange.pet.name) 设为纪念？")
         }
     }
 
