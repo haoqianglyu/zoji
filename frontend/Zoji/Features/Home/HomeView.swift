@@ -71,6 +71,7 @@ struct SelectedPetSwitcher: View {
                 }
             }
             .padding(.horizontal, style == .avatar ? 2 : 0)
+            .padding(.vertical, style == .avatar ? 2 : 0)
         }
     }
 
@@ -80,7 +81,7 @@ struct SelectedPetSwitcher: View {
             avatar(selection, size: 48, isSelected: isSelected)
                 .overlay {
                     Circle()
-                        .stroke(isSelected ? theme.accent : .clear, lineWidth: 2.5)
+                        .strokeBorder(isSelected ? theme.accent : .clear, lineWidth: 2.5)
                 }
 
             Text(selection.pet.name)
@@ -130,6 +131,8 @@ struct SelectedPetSwitcher: View {
 }
 
 struct HomeView: View {
+    private static let scrollTopAnchor = "home-scroll-top"
+
     @Environment(\.appColorTheme) private var theme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(AppStore.self) private var store
@@ -150,46 +153,62 @@ struct HomeView: View {
         @Bindable var store = store
 
         NavigationStack {
-            ScrollView {
-                if let selectedPet {
-                    LazyVStack(spacing: 20) {
-                        if store.initialCloudRestorePhase.isVisible {
-                            initialCloudRestoreBanner
-                                .transition(.move(edge: .top).combined(with: .opacity))
+            ScrollViewReader { scrollProxy in
+                ScrollView {
+                    Color.clear
+                        .frame(height: 1)
+                        .id(Self.scrollTopAnchor)
+                        .accessibilityHidden(true)
+
+                    if let selectedPet {
+                        LazyVStack(spacing: 20) {
+                            if store.initialCloudRestorePhase.isVisible {
+                                initialCloudRestoreBanner
+                                    .transition(.move(edge: .top).combined(with: .opacity))
+                            }
+                            combinedPetSwitcher
+                            if selectablePets.count > 1 {
+                                crossPetReminderCard
+                            }
+                            petProfileCard(selectedPet)
+                            weightTrendCard(selectedPet)
+                            careSummary(for: selectedPet)
+                            remindersSection(for: selectedPet)
+                            recentRecordsSection(for: selectedPet)
                         }
-                        combinedPetSwitcher
-                        if selectablePets.count > 1 {
-                            crossPetReminderCard
-                        }
-                        petProfileCard(selectedPet)
-                        weightTrendCard(selectedPet)
-                        careSummary(for: selectedPet)
-                        remindersSection(for: selectedPet)
-                        recentRecordsSection(for: selectedPet)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                } else if store.initialCloudRestorePhase.isVisible {
-                    initialCloudRestoreBanner
                         .padding(.horizontal, 16)
-                        .padding(.top, 24)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                } else {
-                    emptyPetState
-                        .padding(20)
-                        .padding(.top, 54)
+                        .padding(.vertical, 12)
+                    } else if store.initialCloudRestorePhase.isVisible {
+                        initialCloudRestoreBanner
+                            .padding(.horizontal, 16)
+                            .padding(.top, 24)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    } else {
+                        emptyPetState
+                            .padding(20)
+                            .padding(.top, 54)
+                    }
                 }
+                .refreshable {
+                    await store.reloadPersistedAndFamilyData(using: familyStore)
+                    // UIRefreshControl restores its own inset first. Once that motion
+                    // is almost complete, smoothly settle any stale overscroll left by
+                    // the large navigation title instead of snapping it into place.
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(300))
+                        withAnimation(.spring(response: 0.38, dampingFraction: 0.88)) {
+                            scrollProxy.scrollTo(Self.scrollTopAnchor, anchor: .top)
+                        }
+                    }
+                    // The reload path already starts pending uploads in the background.
+                    // Waiting for the entire outbox here can leave the refresh control
+                    // pinned when CloudKit is slow or temporarily unavailable.
+                }
+                .background(theme.background)
+                .tint(theme.accent)
+                .animation(.easeInOut(duration: 0.22), value: theme)
+                .animation(.easeInOut(duration: 0.25), value: store.initialCloudRestorePhase)
             }
-            .refreshable {
-                await store.reloadPersistedAndFamilyData(using: familyStore)
-                // The reload path already starts pending uploads in the background.
-                // Waiting for the entire outbox here can leave the refresh control
-                // pinned when CloudKit is slow or temporarily unavailable.
-            }
-            .background(theme.background)
-            .tint(theme.accent)
-            .animation(.easeInOut(duration: 0.22), value: theme)
-            .animation(.easeInOut(duration: 0.25), value: store.initialCloudRestorePhase)
             .navigationTitle("爪记 Zoji")
             .sheet(item: $petEditor) { presentation in
                 PetEditorView(pet: presentation.pet)

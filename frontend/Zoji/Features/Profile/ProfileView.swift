@@ -592,6 +592,10 @@ private struct PetManagementView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(theme.background)
+        .tint(theme.accent)
+        .animation(.easeInOut(duration: 0.22), value: theme)
     }
 
     private func petRow(_ pet: Pet, isActive: Bool) -> some View {
@@ -678,6 +682,7 @@ private struct PetManagementView: View {
                 }
             }
         }
+        .listRowBackground(theme.surface)
     }
 
     private var statusChangeTitle: String {

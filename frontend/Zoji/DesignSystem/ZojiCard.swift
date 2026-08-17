@@ -88,11 +88,11 @@ struct PetAvatarView: View {
             if avatarData == nil,
                PetAvatarPreset.find(avatarPresetID) != nil {
                 Circle()
-                    .stroke(
+                    .strokeBorder(
                         LinearGradient(
                             colors: [
-                                Color(red: 0.64, green: 0.84, blue: 0.69),
-                                Color(red: 0.70, green: 0.88, blue: 0.73)
+                                theme.accent.opacity(0.56),
+                                theme.accent.opacity(0.30)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
