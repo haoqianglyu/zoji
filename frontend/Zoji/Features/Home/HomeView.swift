@@ -182,7 +182,9 @@ struct HomeView: View {
             }
             .refreshable {
                 await store.reloadPersistedAndFamilyData(using: familyStore)
-                await familyStore.synchronizePendingChanges()
+                // The reload path already starts pending uploads in the background.
+                // Waiting for the entire outbox here can leave the refresh control
+                // pinned when CloudKit is slow or temporarily unavailable.
             }
             .background(theme.background)
             .tint(theme.accent)
