@@ -28,6 +28,8 @@
     <string>public.app-category.lifestyle</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>用于查找附近的宠物医院并计算距离。</string>
     <key>UIBackgroundModes</key>
