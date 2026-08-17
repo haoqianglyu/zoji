@@ -295,7 +295,7 @@ private struct FamilyShareLoadingOverlay: View {
 }
 
 enum AppPrivacyConsent {
-    static let storageKey = "zoji.privacy-consent.v3"
+    static let storageKey = "zoji.privacy-consent.v4"
 
     static var isGranted: Bool {
         UserDefaults.standard.bool(forKey: storageKey)
@@ -309,7 +309,7 @@ enum AMapPrivacyConsent {
         case declined = 2
     }
 
-    static let storageKey = "zoji.amap-privacy-consent.v2"
+    static let storageKey = "zoji.amap-privacy-consent.v3"
 
     static var status: Status {
         Status(rawValue: UserDefaults.standard.integer(forKey: storageKey)) ?? .undetermined
@@ -495,6 +495,13 @@ struct AMapPrivacyConsentView: View {
                             )
                         )
                         amapDisclosureRow(
+                            symbol: "chart.bar.fill",
+                            text: LegalCopy.text(
+                                "高德基础与搜索 SDK 还可能按其隐私政策处理不与身份关联的用户标识和产品交互信息，用于服务分析。",
+                                "The AMap Foundation and Search SDKs may also process user identifiers that are not linked to your identity and product-interaction data for service analytics, as described in AMap's privacy policy."
+                            )
+                        )
+                        amapDisclosureRow(
                             symbol: "hand.raised.fill",
                             text: LegalCopy.text(
                                 "你可以暂不启用；爪记会改用 Apple 地图，但中国大陆的医院结果可能较少。",
@@ -661,8 +668,8 @@ struct LegalDocumentView: View {
             (
                 LegalCopy.text("位置与地图服务", "Location and Map Services"),
                 LegalCopy.text(
-                    "只有在你使用医院功能并授权定位时，附近位置范围才会用于搜索。中国大陆可在另行征得同意后使用高德地图搜索；其他地区使用 Apple 地图。生活记录中的地点由你手动填写，不读取设备定位，也不会发送给地图服务。地图服务会按各自政策处理查询，爪记不会把宠物、生活记录或健康数据发送给地图服务。",
-                    "Your approximate location is used only when you search for nearby veterinary hospitals and grant location access. In mainland China, AMap Search may be used after separate consent; Apple Maps is used elsewhere. Locations in life entries are entered manually, do not read device location, and are not sent to map providers. Each map provider processes queries under its own policy. Zoji does not send pet, life-entry, or health data to map providers."
+                    "只有在你使用医院功能并授权定位时，附近位置范围才会用于搜索。中国大陆可在另行征得同意后使用由北京高德图强科技有限公司提供的高德基础与搜索 SDK；搜索关键词和附近位置范围会用于返回医院信息，SDK 还可能按高德隐私政策处理不与身份关联的用户标识和产品交互信息，用于服务分析。其他地区使用 Apple 地图。生活记录中的地点由你手动填写，不读取设备定位，也不会发送给地图服务。爪记不会把宠物、生活记录或健康数据发送给地图服务，也不会使用上述信息进行跨 App 跟踪。",
+                    "Your nearby search location is used only when you search for veterinary hospitals and grant location access. In mainland China, the AMap Foundation and Search SDKs provided by Beijing AutoNavi Tuxiang Technology Co., Ltd. may be used after separate consent. Search terms and the nearby map area are used to return hospital information; under AMap's privacy policy, the SDKs may also process user identifiers that are not linked to your identity and product-interaction data for service analytics. Apple Maps is used elsewhere. Locations in life entries are entered manually, do not read device location, and are not sent to map providers. Zoji does not send pet, life-entry, or health data to map providers or use this information for cross-app tracking."
                 )
             ),
             (

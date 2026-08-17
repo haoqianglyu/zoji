@@ -1,28 +1,41 @@
-# 部署与 Apple 配置清单
+# 发布与 Apple 配置清单
 
-## Apple Developer（T03 前完成）
+## Apple Developer
 
-- 确定正式 Bundle Identifier，替换 `com.example.zoji`。
-- 为 App ID 开启 Sign in with Apple capability。
-- 记录 Team ID、Key ID、Service ID（如 Web 回调需要）和回调地址。
-- Apple 私钥只放密钥管理服务，不提交仓库，也不打包进 App。
-- 在 App 内实现退出、账号删除和 Apple 凭证撤销后的恢复流程。
+- App ID 使用 `com.haoqianglyu.zoji`，启用 iCloud/CloudKit 和 Push Notifications。
+- iCloud container 使用 `iCloud.com.haoqianglyu.zoji`，确认开发与发布描述文件都包含该容器。
+- 高德 iOS Key 只写入未提交的 `frontend/Config/Secrets.xcconfig`，并确认 Key 的 Bundle ID 限制与正式 App 一致。
+- Archive 前确认版本号与 build number 已递增，发布签名中的 `aps-environment` 为 production。
 
-## 后端环境
+## CloudKit
 
-- 为 development、staging、production 分别创建 PostgreSQL、私有 R2 桶和密钥。
-- 配置 TLS、短时签名 URL、结构化日志、健康检查和错误监控。
-- 在 staging 运行 `prisma migrate deploy` 并演练备份恢复后再迁移生产。
-- 日志禁止包含生活或健康记录正文、访问令牌、Apple token 和完整附件 URL。
+- 在两台真机上初始化并核对 Development schema，包括 SwiftData 自动生成的类型和 `ZojiFamily*` 家庭共享类型。
+- 在 CloudKit Console 将完整 schema 部署到 Production；部署前确认没有误命名的 record type 或 field，因为生产字段不能删除或改名。
+- 使用两个不同 Apple ID 验证 Owner、Editor、Viewer、停止共享、成员退出、离线修改恢复和附件同步。
+- 验证拥有者删除宠物后，家人端不再保留共享僵尸数据。
 
-## 发布前
+## 隐私与合规
 
-- iOS Release 与后端 production build 通过。
-- 数据库迁移、权限隔离、双设备同步、离线恢复和附件失败重试通过。
-- 通知允许/拒绝/后续开启、定位允许/拒绝、无结果和弱网均有可恢复界面。
-- App Privacy、权限描述、隐私政策和商店截图与真实功能一致。
+- 每次 `pod install` 后确认高德 Foundation No-IDFA 与 Search framework 内都有 `PrivacyInfo.xcprivacy`。
+- Archive 后生成 Privacy Report，确认包含 App 与高德 SDK 的 required-reason API 声明。
+- App Store Connect 的 App Privacy 至少与当前清单一致：精确位置用于 App 功能；不与身份关联的用户标识和产品交互用于高德服务分析；不用于跟踪。
+- App 内高德授权、隐私政策、App Store Privacy 与高德官方隐私清单保持一致。
 - 将本仓库 `docs/` 中的法律文案同步到 `haoqianglyu/haoqianglyu.github.io` 的 `/zoji/` 目录，并确认以下页面无需登录即可访问：
   - `https://haoqianglyu.github.io/zoji/privacy-policy.html`
   - `https://haoqianglyu.github.io/zoji/terms-of-use.html`
-- 用无痕浏览器和 `curl -I` 验证以上 URL 返回 `200`，TLS 证书有效且没有重定向循环；验证通过前不要提交到 App Store Connect。
-- 在 App Store Connect 的 App Privacy 中填写公开的隐私政策 URL；政策内容须与 App 内版本及 Privacy Manifest 保持一致。
+- 用无痕浏览器和 `curl -I` 验证以上 URL 返回 `200`，TLS 有效且没有重定向循环。
+
+## 真机回归
+
+- 中文和英文各走一遍冷启动、首次隐私同意、归档、纪念、恢复、记录生活、健康记录和提醒完成流程。
+- 通知分别验证允许、拒绝、从设置重新开启、逾期再次提醒，以及点按通知进入对应提醒。
+- 医院页验证定位允许/拒绝、Apple 地图、高德同意/拒绝、空结果、弱网、拨号和收藏同步。
+- 使用辅助功能大字号验证首页宠物卡、宠物切换器、记录列表和确认弹窗没有截断或重叠。
+- 确认日志没有生活或健康记录正文、访问令牌、高德 Key 或附件内容。
+
+## TestFlight 与商店资料
+
+- Release 构建、完整单元测试和 Archive validation 全部通过后再上传 TestFlight。
+- 支持邮箱使用 `zoji.app.support@gmail.com`，并验证能正常收发。
+- Support URL、Privacy Policy URL、版本说明、商店截图和功能描述与当前版本一致。
+- TestFlight 至少完成一次全新安装和一次覆盖升级；覆盖升级要保留本地数据、iCloud 数据、家庭共享和通知状态。

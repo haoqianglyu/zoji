@@ -1,6 +1,6 @@
 #if !targetEnvironment(simulator)
-import AMapFoundationKit
-import AMapSearchKit
+@preconcurrency import AMapFoundationKit
+@preconcurrency import AMapSearchKit
 #endif
 @preconcurrency import CoreLocation
 import Foundation
@@ -326,6 +326,37 @@ private enum AMapSDKConfiguration {
     }
 }
 
+private struct AMapPOISnapshot: Sendable {
+    let uid: String?
+    let name: String?
+    let typecode: String?
+    let type: String?
+    let address: String?
+    let city: String?
+    let district: String?
+    let latitude: Double?
+    let longitude: Double?
+    let distance: Int
+    let telephone: String?
+    let website: String?
+
+    @MainActor
+    init(_ poi: AMapPOI) {
+        uid = poi.uid
+        name = poi.name
+        typecode = poi.typecode
+        type = poi.type
+        address = poi.address
+        city = poi.city
+        district = poi.district
+        latitude = poi.location.map { Double($0.latitude) }
+        longitude = poi.location.map { Double($0.longitude) }
+        distance = Int(poi.distance)
+        telephone = poi.tel
+        website = poi.website
+    }
+}
+
 @MainActor
 final class AMapHospitalProvider: NSObject, HospitalMapProviding, @preconcurrency AMapSearchDelegate {
     let source = HospitalDataSource.amap
@@ -335,7 +366,7 @@ final class AMapHospitalProvider: NSObject, HospitalMapProviding, @preconcurrenc
         category: "AMapHospitalSearch"
     )
     private var searchAPI: AMapSearchAPI?
-    private var continuation: CheckedContinuation<[AMapPOI], Error>?
+    private var continuation: CheckedContinuation<[AMapPOISnapshot], Error>?
 
     func searchHospitals(
         query: String,
@@ -429,7 +460,7 @@ final class AMapHospitalProvider: NSObject, HospitalMapProviding, @preconcurrenc
         center: CLLocationCoordinate2D,
         radius: Int,
         searchAPI: AMapSearchAPI
-    ) async throws -> [AMapPOI] {
+    ) async throws -> [AMapPOISnapshot] {
         cancelPendingSearch()
 
         let request = AMapPOIAroundSearchRequest()
@@ -461,7 +492,7 @@ final class AMapHospitalProvider: NSObject, HospitalMapProviding, @preconcurrenc
         keywords: String,
         referencePoint: CLLocationCoordinate2D,
         searchAPI: AMapSearchAPI
-    ) async throws -> [AMapPOI] {
+    ) async throws -> [AMapPOISnapshot] {
         cancelPendingSearch()
 
         let request = AMapPOIKeywordsSearchRequest()
@@ -490,7 +521,7 @@ final class AMapHospitalProvider: NSObject, HospitalMapProviding, @preconcurrenc
     }
 
     private func addHospitals(
-        from pois: [AMapPOI],
+        from pois: [AMapPOISnapshot],
         referenceLocation: CLLocation,
         to resultsByID: inout [String: HospitalSummary]
     ) {
@@ -516,14 +547,14 @@ final class AMapHospitalProvider: NSObject, HospitalMapProviding, @preconcurrenc
     }
 
     private func makeHospital(
-        from poi: AMapPOI,
+        from poi: AMapPOISnapshot,
         referenceLocation: CLLocation
     ) -> HospitalSummary? {
-        guard let location = poi.location else { return nil }
+        guard let latitude = poi.latitude, let longitude = poi.longitude else { return nil }
         let name = normalized(poi.name) ?? L10n.string("宠物医院")
         let coordinate = CLLocationCoordinate2D(
-            latitude: CLLocationDegrees(location.latitude),
-            longitude: CLLocationDegrees(location.longitude)
+            latitude: latitude,
+            longitude: longitude
         )
         let address = formattedAddress(for: poi)
         let computedDistance = referenceLocation.distance(from: CLLocation(
@@ -540,20 +571,20 @@ final class AMapHospitalProvider: NSObject, HospitalMapProviding, @preconcurrenc
             latitude: coordinate.latitude,
             longitude: coordinate.longitude,
             distanceMeters: max(0, Int(distance.rounded())),
-            phoneNumber: normalized(poi.tel),
+            phoneNumber: normalized(poi.telephone),
             websiteURL: normalized(poi.website),
             isFavorite: false
         )
     }
 
-    private func isVeterinaryPOI(_ poi: AMapPOI) -> Bool {
+    private func isVeterinaryPOI(_ poi: AMapPOISnapshot) -> Bool {
         if let typecode = normalized(poi.typecode), typecode.hasPrefix("0907") {
             return true
         }
         return HospitalPOICategory.appearsVeterinary(poi.type, poi.name, poi.address)
     }
 
-    private func formattedAddress(for poi: AMapPOI) -> String {
+    private func formattedAddress(for poi: AMapPOISnapshot) -> String {
         if let address = normalized(poi.address) {
             let region = [normalized(poi.city), normalized(poi.district)]
                 .compactMap { $0 }
@@ -590,7 +621,8 @@ final class AMapHospitalProvider: NSObject, HospitalMapProviding, @preconcurrenc
     ) {
         let continuation = continuation
         self.continuation = nil
-        continuation?.resume(returning: response?.pois ?? [])
+        let snapshots = (response?.pois ?? []).map(AMapPOISnapshot.init)
+        continuation?.resume(returning: snapshots)
     }
 
     func aMapSearchRequest(_ request: Any!, didFailWithError error: Error!) {
@@ -787,6 +819,18 @@ struct HospitalFavoriteStore {
     }
 }
 
+private final class NotificationObservation: @unchecked Sendable {
+    private let token: NSObjectProtocol
+
+    init(_ token: NSObjectProtocol) {
+        self.token = token
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(token)
+    }
+}
+
 @MainActor
 @Observable
 final class HospitalsViewModel {
@@ -799,7 +843,7 @@ final class HospitalsViewModel {
     @ObservationIgnored private let provider: any HospitalMapProviding
     @ObservationIgnored private let favoriteStore: HospitalFavoriteStore
     @ObservationIgnored private var searchGeneration = 0
-    @ObservationIgnored private var favoriteStoreObserver: NSObjectProtocol?
+    @ObservationIgnored private var favoriteStoreObserver: NotificationObservation?
     @ObservationIgnored private var isActivated = false
     private var currentSource: HospitalDataSource
 
@@ -817,7 +861,7 @@ final class HospitalsViewModel {
         guard !isActivated else { return }
         isActivated = true
         favorites = favoriteStore.load()
-        favoriteStoreObserver = NotificationCenter.default.addObserver(
+        let observer = NotificationCenter.default.addObserver(
             forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
             object: NSUbiquitousKeyValueStore.default,
             queue: .main
@@ -826,12 +870,7 @@ final class HospitalsViewModel {
                 self?.reloadFavorites()
             }
         }
-    }
-
-    deinit {
-        if let favoriteStoreObserver {
-            NotificationCenter.default.removeObserver(favoriteStoreObserver)
-        }
+        favoriteStoreObserver = NotificationObservation(observer)
     }
 
     var sourceName: String { currentSource.displayName }
