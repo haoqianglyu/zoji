@@ -84,7 +84,7 @@ struct RootTabView: View {
             $0.pet.id == route.petID && $0.reminders.contains(where: { $0.id == route.reminderID })
         }) {
             store.select(.shared(sharedPet), using: familyStore)
-        } else if let pet = store.pets.first(where: { $0.id == route.petID }) {
+        } else if let pet = store.activePets.first(where: { $0.id == route.petID }) {
             store.select(.local(
                 pet: pet,
                 records: store.records.filter { $0.petID == pet.id },

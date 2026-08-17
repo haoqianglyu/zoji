@@ -85,7 +85,8 @@ actor SwiftDataPetRepository: PetRepository {
                 sex: entity.sexRawValue.flatMap { PetSex(rawValue: $0) },
                 birthday: entity.birthday,
                 weightKilograms: entity.weightKilograms,
-                weightEntries: decodeWeightEntries(entity.weightHistoryData)
+                weightEntries: decodeWeightEntries(entity.weightHistoryData),
+                profileStatus: entity.profileStatusRawValue.flatMap(PetProfileStatus.init(rawValue:))
             )
         }
     }
@@ -106,6 +107,7 @@ actor SwiftDataPetRepository: PetRepository {
             entity.birthday = pet.birthday
             entity.weightKilograms = pet.weightKilograms
             entity.weightHistoryData = encodeWeightEntries(pet.weightEntries)
+            entity.profileStatusRawValue = pet.profileStatus?.rawValue
             entity.updatedAt = Date()
             entity.syncStateRawValue = "pending"
         } else {
@@ -122,6 +124,7 @@ actor SwiftDataPetRepository: PetRepository {
             entity.birthday = pet.birthday
             entity.weightKilograms = pet.weightKilograms
             entity.weightHistoryData = encodeWeightEntries(pet.weightEntries)
+            entity.profileStatusRawValue = pet.profileStatus?.rawValue
             modelContext.insert(entity)
         }
 

@@ -481,8 +481,80 @@ private struct PetManagementView: View {
     @State private var isAddingPet = false
     @State private var editingPet: Pet?
     @State private var petPendingDeletion: Pet?
+    @State private var statusChange: PetStatusChange?
 
     var body: some View {
+        petList
+            .navigationTitle("宠物档案")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        isAddingPet = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel("添加宠物")
+                }
+            }
+            .sheet(isPresented: $isAddingPet) {
+                PetEditorView()
+                    .environment(store)
+            }
+            .sheet(item: $editingPet) { pet in
+                PetEditorView(pet: pet)
+                    .environment(store)
+            }
+            .confirmationDialog(
+                statusChangeTitle,
+                isPresented: Binding(
+                    get: { statusChange != nil },
+                    set: { if !$0 { statusChange = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                if let statusChange {
+                    Button(statusChange.status.displayName) {
+                        apply(statusChange)
+                    }
+                }
+                Button("取消", role: .cancel) { statusChange = nil }
+            } message: {
+                Text(statusChangeMessage)
+            }
+            .confirmationDialog(
+                "删除 \(petPendingDeletion?.name ?? "这份宠物档案")？",
+                isPresented: Binding(
+                    get: { petPendingDeletion != nil },
+                    set: { if !$0 { petPendingDeletion = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                Button("删除宠物档案", role: .destructive) {
+                    guard let pet = petPendingDeletion else { return }
+                    Task {
+                        do {
+                            try await store.deletePet(id: pet.id)
+                        } catch {
+                            store.petPersistenceMessage = error.localizedDescription
+                        }
+                        petPendingDeletion = nil
+                    }
+                }
+                Button("取消", role: .cancel) { petPendingDeletion = nil }
+            } message: {
+                Text("该宠物的记录和提醒会被删除；如果已开启家庭共享，也会撤销家人访问并删除共享云端副本。")
+            }
+            .alert("宠物资料操作失败", isPresented: Binding(
+                get: { store.petPersistenceMessage != nil },
+                set: { if !$0 { store.petPersistenceMessage = nil } }
+            )) {
+                Button("知道了", role: .cancel) { }
+            } message: {
+                Text(store.petPersistenceMessage ?? "请稍后再试。")
+            }
+    }
+
+    private var petList: some View {
         List {
             if store.pets.isEmpty {
                 ContentUnavailableView {
@@ -495,107 +567,136 @@ private struct PetManagementView: View {
                 }
                 .listRowBackground(Color.clear)
             } else {
-                Section {
-                    ForEach(store.pets) { pet in
-                        Button {
-                            store.select(.local(pet: pet, records: [], reminders: []), using: familyStore)
-                            editingPet = pet
-                        } label: {
-                            HStack(spacing: 14) {
-                                PetAvatarView(
-                                    avatarData: pet.avatarData,
-                                    avatarPresetID: pet.avatarPresetID,
-                                    fallbackSymbol: pet.avatarSymbol,
-                                    size: 44
-                                )
-
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack(spacing: 6) {
-                                        Text(pet.name)
-                                            .font(.headline)
-                                        if store.selectedPetID == pet.id {
-                                            Text("当前")
-                                                .font(.caption2.bold())
-                                                .foregroundStyle(theme.accent)
-                                                .padding(.horizontal, 7)
-                                                .padding(.vertical, 3)
-                                                .background(theme.accent.opacity(0.10), in: Capsule())
-                                        }
-                                    }
-                                    Text([pet.localizedBreed, pet.species.displayName].compactMap { $0 }.joined(separator: " · "))
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.tertiary)
-                            }
+                if !store.activePets.isEmpty {
+                    Section {
+                        ForEach(store.activePets) { pet in
+                            petRow(pet, isActive: true)
                         }
-                        .buttonStyle(.plain)
-                        .swipeActions(edge: .trailing) {
-                            Button("删除", role: .destructive) {
-                                petPendingDeletion = pet
-                            }
-                            Button("编辑") { editingPet = pet }
-                                .tint(theme.accent)
+                    } header: {
+                        Text("日常档案")
+                    } footer: {
+                        Text("日常档案会出现在首页、记录和提醒的宠物切换器中。")
+                    }
+                }
+
+                if !store.inactivePets.isEmpty {
+                    Section {
+                        ForEach(store.inactivePets) { pet in
+                            petRow(pet, isActive: false)
                         }
+                    } header: {
+                        Text("归档与纪念")
+                    } footer: {
+                        Text("资料会完整保留，提醒和系统通知已暂停；恢复后可继续日常管理。")
                     }
-                } footer: {
-                    Text("点击宠物可以编辑资料；首页可切换当前查看的宠物。")
                 }
             }
-        }
-        .navigationTitle("宠物档案")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    isAddingPet = true
-                } label: {
-                    Image(systemName: "plus")
-                }
-                .accessibilityLabel("添加宠物")
-            }
-        }
-        .sheet(isPresented: $isAddingPet) {
-            PetEditorView()
-                .environment(store)
-        }
-        .sheet(item: $editingPet) { pet in
-            PetEditorView(pet: pet)
-                .environment(store)
-        }
-        .confirmationDialog(
-            "删除 \(petPendingDeletion?.name ?? "这份宠物档案")？",
-            isPresented: Binding(
-                get: { petPendingDeletion != nil },
-                set: { if !$0 { petPendingDeletion = nil } }
-            ),
-            titleVisibility: .visible
-        ) {
-            Button("删除宠物档案", role: .destructive) {
-                guard let pet = petPendingDeletion else { return }
-                Task {
-                    do {
-                        try await store.deletePet(id: pet.id)
-                    } catch {
-                        store.petPersistenceMessage = error.localizedDescription
-                    }
-                    petPendingDeletion = nil
-                }
-            }
-            Button("取消", role: .cancel) { petPendingDeletion = nil }
-        } message: {
-            Text("该宠物的记录和提醒会被删除；如果已开启家庭共享，也会撤销家人访问并删除共享云端副本。")
-        }
-        .alert("宠物资料操作失败", isPresented: Binding(
-            get: { store.petPersistenceMessage != nil },
-            set: { if !$0 { store.petPersistenceMessage = nil } }
-        )) {
-            Button("知道了", role: .cancel) { }
-        } message: {
-            Text(store.petPersistenceMessage ?? "请稍后再试。")
         }
     }
+
+    private func petRow(_ pet: Pet, isActive: Bool) -> some View {
+        Button {
+            if isActive {
+                store.select(.local(pet: pet, records: [], reminders: []), using: familyStore)
+            }
+            editingPet = pet
+        } label: {
+            HStack(spacing: 14) {
+                PetAvatarView(
+                    avatarData: pet.avatarData,
+                    avatarPresetID: pet.avatarPresetID,
+                    fallbackSymbol: pet.avatarSymbol,
+                    size: 44
+                )
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text(pet.name)
+                            .font(.headline)
+                        if isActive, store.selectedPetID == pet.id {
+                            Text("当前")
+                                .font(.caption2.bold())
+                                .foregroundStyle(theme.accent)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 3)
+                                .background(theme.accent.opacity(0.10), in: Capsule())
+                        } else if !isActive {
+                            Label(pet.resolvedProfileStatus.displayName, systemImage: pet.resolvedProfileStatus.symbol)
+                                .font(.caption2.bold())
+                                .foregroundStyle(pet.resolvedProfileStatus == .memorial ? Color.pink : theme.accent.opacity(0.78))
+                        }
+                    }
+                    Text([pet.localizedBreed, pet.species.displayName].compactMap { $0 }.joined(separator: " · "))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.bold())
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .buttonStyle(.plain)
+        .swipeActions(edge: .trailing) {
+            Button("删除", role: .destructive) {
+                petPendingDeletion = pet
+            }
+            if isActive {
+                Button("归档") { statusChange = PetStatusChange(pet: pet, status: .archived) }
+                    .tint(.orange)
+            } else {
+                Button("恢复") { statusChange = PetStatusChange(pet: pet, status: .active) }
+                    .tint(theme.accent)
+            }
+        }
+        .contextMenu {
+            Button("编辑资料") { editingPet = pet }
+            if isActive {
+                Button("归档", systemImage: "archivebox") {
+                    statusChange = PetStatusChange(pet: pet, status: .archived)
+                }
+                Button("设为纪念", systemImage: "heart") {
+                    statusChange = PetStatusChange(pet: pet, status: .memorial)
+                }
+            } else {
+                Button("恢复为日常档案", systemImage: "arrow.uturn.backward") {
+                    statusChange = PetStatusChange(pet: pet, status: .active)
+                }
+            }
+        }
+    }
+
+    private var statusChangeTitle: String {
+        guard let statusChange else { return "更改宠物状态" }
+        switch statusChange.status {
+        case .active: return "恢复 \(statusChange.pet.name)？"
+        case .archived: return "归档 \(statusChange.pet.name)？"
+        case .memorial: return "将 \(statusChange.pet.name) 设为纪念？"
+        }
+    }
+
+    private var statusChangeMessage: String {
+        guard let statusChange else { return "" }
+        return statusChange.status == .active
+            ? L10n.string("恢复后会重新出现在日常页面，并为仍启用的提醒安排系统通知。")
+            : L10n.string("健康记录、体重、照片和费用都会保留，但该宠物会退出日常页面，所有系统提醒暂停。")
+    }
+
+    private func apply(_ change: PetStatusChange) {
+        Task {
+            do {
+                try await store.setPetProfileStatus(id: change.pet.id, status: change.status)
+            } catch {
+                store.petPersistenceMessage = error.localizedDescription
+            }
+            statusChange = nil
+        }
+    }
+}
+
+private struct PetStatusChange: Identifiable {
+    let pet: Pet
+    let status: PetProfileStatus
+    var id: String { "\(pet.id.uuidString)-\(status.rawValue)" }
 }

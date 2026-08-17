@@ -18,7 +18,7 @@ struct SelectedPetSwitcher: View {
                     ? String(localized: "切换到家人共享的 \(selection.pet.name)", locale: L10n.locale)
                     : String(localized: "切换到 \(selection.pet.name)", locale: L10n.locale)
             case .records:
-                return String(localized: "查看 \(selection.pet.name) 的健康记录", locale: L10n.locale)
+                return String(localized: "查看 \(selection.pet.name) 的记录", locale: L10n.locale)
             case .reminders:
                 return String(localized: "查看 \(selection.pet.name) 的健康提醒", locale: L10n.locale)
             }
@@ -138,6 +138,7 @@ struct HomeView: View {
     @State private var recordEditor: HealthRecordEditorPresentation?
     @State private var reminderEditor: ReminderEditorPresentation?
     @State private var petPendingDeletion: Pet?
+    @State private var profileStatusChange: HomePetStatusChange?
     @State private var completingReminderIDs: Set<UUID> = []
     @State private var reminderCompletionMessage: String?
     @State private var reminderCompletionFeedbackTrigger = 0
@@ -157,6 +158,9 @@ struct HomeView: View {
                                 .transition(.move(edge: .top).combined(with: .opacity))
                         }
                         combinedPetSwitcher
+                        if selectablePets.count > 1 {
+                            crossPetReminderCard
+                        }
                         petProfileCard(selectedPet)
                         weightTrendCard(selectedPet)
                         careSummary(for: selectedPet)
@@ -204,6 +208,27 @@ struct HomeView: View {
                     sharedPet: presentation.sharedPet
                 )
                     .environment(store)
+            }
+            .confirmationDialog(
+                profileStatusChange.map { change in
+                    change.status == .memorial
+                        ? "将 \(change.pet.name) 设为纪念？"
+                        : "归档 \(change.pet.name)？"
+                } ?? "更改宠物状态",
+                isPresented: Binding(
+                    get: { profileStatusChange != nil },
+                    set: { if !$0 { profileStatusChange = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                if let change = profileStatusChange {
+                    Button(change.status.displayName) {
+                        changeProfileStatus(change)
+                    }
+                }
+                Button("取消", role: .cancel) { profileStatusChange = nil }
+            } message: {
+                Text("健康记录、体重、照片和费用都会保留，但该宠物会退出日常页面，所有系统提醒暂停。")
             }
             .confirmationDialog(
                 "删除 \(petPendingDeletion?.name ?? "这份宠物档案")？",
@@ -332,6 +357,55 @@ struct HomeView: View {
         )
     }
 
+    private var crossPetReminderCard: some View {
+        let entries = CrossPetReminderEntry.visibleEntries(from: selectablePets)
+        let overdueCount = entries.filter { $0.reminder.isOverdue }.count
+        let upcomingCount = entries.count - overdueCount
+
+        return NavigationLink {
+            CrossPetReminderOverviewView()
+        } label: {
+            ZojiCard {
+                HStack(spacing: 14) {
+                    Image(systemName: "calendar.badge.clock")
+                        .font(.title2)
+                        .foregroundStyle(theme.accent)
+                        .frame(width: 48, height: 48)
+                        .background(theme.accentSoft, in: RoundedRectangle(cornerRadius: 15))
+
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("全部宠物待办")
+                            .font(.headline)
+                        if entries.isEmpty {
+                            Text("未来 7 天暂无安排")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            HStack(spacing: 10) {
+                                if overdueCount > 0 {
+                                    Label("逾期 \(overdueCount)", systemImage: "exclamationmark.circle.fill")
+                                        .foregroundStyle(.red)
+                                }
+                                if upcomingCount > 0 {
+                                    Label("7 天内 \(upcomingCount)", systemImage: "calendar")
+                                        .foregroundStyle(theme.accent)
+                                }
+                            }
+                            .font(.caption.weight(.semibold))
+                        }
+                    }
+
+                    Spacer(minLength: 4)
+                    Image(systemName: "chevron.right")
+                        .font(.caption.bold())
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("查看全部宠物未来 7 天和已逾期提醒")
+    }
+
     @ViewBuilder
     private func petProfileCard(_ selection: SelectedPet) -> some View {
         if let sharedPet = selection.sharedPet {
@@ -379,7 +453,7 @@ struct HomeView: View {
                     VStack(spacing: 10) {
                         profileMetricRow(title: "年龄", value: ageText(for: pet))
                         profileMetricRow(title: "体重", value: weightText(for: pet))
-                        profileMetricRow(title: "健康记录", value: recordCountText(selection.records.count))
+                        profileMetricRow(title: "记录", value: recordCountText(selection.records.count))
                     }
                 } else {
                     HStack(spacing: 0) {
@@ -387,7 +461,7 @@ struct HomeView: View {
                         metricDivider
                         profileMetric(title: "体重", value: weightText(for: pet))
                         metricDivider
-                        profileMetric(title: "健康记录", value: recordCountText(selection.records.count))
+                        profileMetric(title: "记录", value: recordCountText(selection.records.count))
                     }
                 }
             }
@@ -404,6 +478,18 @@ struct HomeView: View {
                         petEditor = PetEditorPresentation(pet: pet)
                     } label: {
                         Label("编辑资料", systemImage: "pencil")
+                    }
+
+                    Button {
+                        profileStatusChange = HomePetStatusChange(pet: pet, status: .archived)
+                    } label: {
+                        Label("归档宠物", systemImage: "archivebox")
+                    }
+
+                    Button {
+                        profileStatusChange = HomePetStatusChange(pet: pet, status: .memorial)
+                    } label: {
+                        Label("设为纪念", systemImage: "heart")
                     }
 
                     Button(role: .destructive) {
@@ -715,8 +801,8 @@ struct HomeView: View {
 
             if selection.records.isEmpty {
                 emptyContentCard(
-                    title: "还没有健康记录",
-                    message: "点击上方健康卡片，添加第一条疫苗、驱虫、体检或就医记录。",
+                    title: "还没有记录",
+                    message: "到记录页保存生活照片，或添加疫苗、驱虫、体检和就医信息。",
                     symbol: "list.bullet.clipboard"
                 )
             } else {
@@ -810,15 +896,17 @@ struct HomeView: View {
                 Circle()
                     .stroke(theme.accent.opacity(0.12), lineWidth: 1)
                     .frame(width: 164, height: 164)
-                Image(systemName: "pawprint.fill")
+                Image(systemName: store.inactivePets.isEmpty ? "pawprint.fill" : "archivebox.fill")
                     .font(.system(size: 58, weight: .semibold))
                     .foregroundStyle(theme.accent)
             }
 
             VStack(spacing: 10) {
-                Text("先认识一下你的伙伴")
+                Text(store.inactivePets.isEmpty ? "先认识一下你的伙伴" : "日常档案已清空")
                     .font(.system(.title2, design: .rounded, weight: .bold))
-                Text("建立宠物档案后，疫苗、驱虫、体检和就医记录都会整理在它的专属时间线里。")
+                Text(store.inactivePets.isEmpty
+                     ? "建立宠物档案后，疫苗、驱虫、体检和就医记录都会整理在它的专属时间线里。"
+                     : "归档与纪念资料仍被完整保留，可到“我的 → 宠物档案”中查看或恢复。")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -882,6 +970,189 @@ struct HomeView: View {
                 try await store.deletePet(id: pet.id)
             } catch {
                 store.petPersistenceMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func changeProfileStatus(_ change: HomePetStatusChange) {
+        Task {
+            defer { profileStatusChange = nil }
+            do {
+                try await store.setPetProfileStatus(id: change.pet.id, status: change.status)
+            } catch {
+                store.petPersistenceMessage = error.localizedDescription
+            }
+        }
+    }
+}
+
+private struct HomePetStatusChange: Identifiable {
+    let pet: Pet
+    let status: PetProfileStatus
+    var id: String { "\(pet.id.uuidString)-\(status.rawValue)" }
+}
+
+struct CrossPetReminderEntry: Identifiable {
+    let selection: SelectedPet
+    let reminder: ReminderItem
+
+    var id: String { "\(selection.id)-\(reminder.id.uuidString)" }
+
+    static func visibleEntries(
+        from selections: [SelectedPet],
+        now: Date = Date(),
+        calendar: Calendar = .autoupdatingCurrent
+    ) -> [Self] {
+        let upperBound = calendar.date(byAdding: .day, value: 7, to: now) ?? now
+        return selections
+            .flatMap { selection in
+                selection.reminders.compactMap { reminder in
+                    guard reminder.isEnabled,
+                          reminder.dueAt <= upperBound,
+                          !reminder.isCompletionLocked(at: now, calendar: calendar) else {
+                        return nil
+                    }
+                    return Self(selection: selection, reminder: reminder)
+                }
+            }
+            .sorted { lhs, rhs in
+                if lhs.reminder.isOverdue != rhs.reminder.isOverdue {
+                    return lhs.reminder.isOverdue
+                }
+                return lhs.reminder.dueAt < rhs.reminder.dueAt
+            }
+    }
+}
+
+private struct CrossPetReminderOverviewView: View {
+    @Environment(\.appColorTheme) private var theme
+    @Environment(AppStore.self) private var store
+    @Environment(FamilySharingStore.self) private var familyStore
+    @State private var completingIDs: Set<UUID> = []
+    @State private var operationMessage: String?
+    @State private var errorMessage: String?
+
+    private var entries: [CrossPetReminderEntry] {
+        CrossPetReminderEntry.visibleEntries(from: store.selectablePets(using: familyStore))
+    }
+
+    private var overdue: [CrossPetReminderEntry] {
+        entries.filter { $0.reminder.isOverdue }
+    }
+
+    private var upcoming: [CrossPetReminderEntry] {
+        entries.filter { !$0.reminder.isOverdue }
+    }
+
+    var body: some View {
+        List {
+            if entries.isEmpty {
+                ContentUnavailableView(
+                    "未来 7 天暂无待办",
+                    systemImage: "checkmark.circle",
+                    description: Text("所有日常宠物目前都没有逾期或即将到期的提醒。")
+                )
+                .frame(maxWidth: .infinity)
+                .listRowBackground(Color.clear)
+            } else {
+                if !overdue.isEmpty {
+                    Section("已逾期") {
+                        ForEach(overdue) { entry in
+                            reminderRow(entry)
+                        }
+                    }
+                }
+                if !upcoming.isEmpty {
+                    Section("未来 7 天") {
+                        ForEach(upcoming) { entry in
+                            reminderRow(entry)
+                        }
+                    }
+                }
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .background(theme.background)
+        .navigationTitle("全部宠物待办")
+        .navigationBarTitleDisplayMode(.inline)
+        .refreshable {
+            await store.reloadPersistedAndFamilyData(using: familyStore)
+            await familyStore.synchronizePendingChanges()
+        }
+        .overlay(alignment: .top) {
+            TransientSuccessBanner(message: $operationMessage)
+        }
+        .alert("无法完成提醒", isPresented: Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button("知道了", role: .cancel) { }
+        } message: {
+            Text(errorMessage ?? "请稍后重试。")
+        }
+    }
+
+    private func reminderRow(_ entry: CrossPetReminderEntry) -> some View {
+        HStack(spacing: 12) {
+            PetAvatarView(
+                avatarData: entry.selection.pet.avatarData,
+                avatarPresetID: entry.selection.pet.avatarPresetID,
+                fallbackSymbol: entry.selection.pet.avatarSymbol,
+                size: 42
+            )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(L10n.dynamic(entry.reminder.title))
+                    .font(.subheadline.weight(.semibold))
+                HStack(spacing: 5) {
+                    Text(entry.selection.pet.name)
+                    Text("·")
+                    Text(L10n.date(entry.reminder.dueAt, dateStyle: .abbreviated, timeStyle: .shortened))
+                }
+                .font(.caption)
+                .foregroundStyle(entry.reminder.isOverdue ? .red : .secondary)
+            }
+
+            Spacer(minLength: 6)
+
+            if entry.selection.canEdit {
+                Button {
+                    complete(entry)
+                } label: {
+                    if completingIDs.contains(entry.reminder.id) {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Text("完成")
+                    }
+                }
+                .buttonStyle(.bordered)
+                .disabled(completingIDs.contains(entry.reminder.id))
+            } else {
+                Image(systemName: "eye")
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel("仅查看")
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func complete(_ entry: CrossPetReminderEntry) {
+        completingIDs.insert(entry.reminder.id)
+        Task {
+            defer { completingIDs.remove(entry.reminder.id) }
+            do {
+                let nextDueAt: Date?
+                if let sharedPet = entry.selection.sharedPet {
+                    nextDueAt = try await familyStore.completeReminder(entry.reminder, in: sharedPet)
+                } else {
+                    nextDueAt = try await store.completeReminder(id: entry.reminder.id)
+                }
+                operationMessage = nextDueAt.map {
+                    String(localized: "已完成，下次提醒：\(L10n.date($0, dateStyle: .abbreviated, timeStyle: .shortened))", locale: L10n.locale)
+                } ?? L10n.string("这条一次性提醒已完成，可在健康时间线中查看记录。")
+            } catch {
+                errorMessage = error.localizedDescription
             }
         }
     }
@@ -984,7 +1255,7 @@ struct ReminderListView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .disabled(store.pets.isEmpty)
+                .disabled(store.activePets.isEmpty)
                 }
             }
 
@@ -1394,7 +1665,7 @@ private struct CarePlanTemplatePickerView: View {
                 selectedStepIDs = []
             }
             .sheet(isPresented: $showsPetSelection) {
-                CarePlanPetSelectionView(pets: store.pets, selection: $petID)
+                CarePlanPetSelectionView(pets: store.activePets, selection: $petID)
                     .presentationDetents([.medium, .large])
                     .presentationDragIndicator(.visible)
             }
@@ -1651,7 +1922,7 @@ struct ReminderEditorView: View {
                         }
                     } else {
                         Picker("宠物", selection: $petID) {
-                            ForEach(store.pets) { pet in
+                            ForEach(store.activePets) { pet in
                                 Text(pet.name).tag(Optional(pet.id))
                             }
                         }
@@ -1660,7 +1931,7 @@ struct ReminderEditorView: View {
 
                 Section("提醒内容") {
                     Picker("类型", selection: $kind) {
-                        ForEach(RecordKind.allCases, id: \.self) { kind in
+                        ForEach(RecordKind.healthCases, id: \.self) { kind in
                             Label(kind.displayName, systemImage: kind.symbol).tag(kind)
                         }
                     }

@@ -419,7 +419,8 @@ struct PetEditorView: View {
                         sex: sex == .unknown ? nil : sex,
                         birthday: hasBirthday ? birthday : nil,
                         weightKilograms: resolvedWeight,
-                        weightEntries: weightEntries
+                        weightEntries: weightEntries,
+                        profileStatus: pet.profileStatus
                     )
                     try await familyStore.updatePet(updatedPet, in: sharedPet)
                 } else if let pet {

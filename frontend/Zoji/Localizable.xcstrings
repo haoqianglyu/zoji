@@ -278,6 +278,16 @@
         }
       }
     },
+    "7 天内 %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Within 7 days: %lld"
+          }
+        }
+      }
+    },
     "20" : {
       "localizations" : {
         "en" : {
@@ -578,6 +588,16 @@
         }
       }
     },
+    "今天和宠物发生了什么？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What did you and your pet do today?"
+          }
+        }
+      }
+    },
     "今天该为 %@ 安排：%@" : {
       "localizations" : {
         "en" : {
@@ -600,6 +620,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Changes are still waiting to sync. Connect to the internet and finish syncing before continuing."
+          }
+        }
+      }
+    },
+    "从一次散步、一张照片或一句话开始，保存和宠物相处的日常。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start with a walk, a photo, or a few words and keep the everyday moments you share."
           }
         }
       }
@@ -865,6 +895,16 @@
         }
       }
     },
+    "健康" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Health"
+          }
+        }
+      }
+    },
     "健康周期模板仅用于提高录入效率，请以接种凭证、产品说明或兽医建议为准。" : {
       "localizations" : {
         "en" : {
@@ -897,11 +937,22 @@
       }
     },
     "健康记录" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Health Records"
+          }
+        }
+      }
+    },
+    "健康记录、体重、照片和费用都会保留，但该宠物会退出日常页面，所有系统提醒暂停。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Health records, weight history, photos, and expenses will be kept. This pet will leave daily views and all system reminders will be paused."
           }
         }
       }
@@ -918,6 +969,7 @@
       }
     },
     "健康记录操作失败" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -983,6 +1035,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "All"
+          }
+        }
+      }
+    },
+    "全部宠物待办" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All Pets' Tasks"
           }
         }
       }
@@ -1176,6 +1238,16 @@
         }
       }
     },
+    "最多 9 张；照片会在本机压缩后保存和同步。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to 9 photos. Photos are compressed on this device before they are saved and synced."
+          }
+        }
+      }
+    },
     "最近变化" : {
       "localizations" : {
         "en" : {
@@ -1193,6 +1265,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recent Records"
+          }
+        }
+      }
+    },
+    "写点内容或至少添加一张照片。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add some text or at least one photo."
           }
         }
       }
@@ -1299,6 +1381,7 @@
       }
     },
     "删除健康记录" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1308,8 +1391,15 @@
         }
       }
     },
-    "删除后，该记录会从 %@ 的健康时间线中移除；由它创建的后续提醒也会一并删除。" : {
-
+    "删除后，该记录会从 %@ 的时间线中移除；如果它关联了提醒，提醒也会一并删除。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This record will be removed from %@'s timeline. Any linked reminder will also be deleted."
+          }
+        }
+      }
     },
     "删除宠物" : {
       "localizations" : {
@@ -1377,6 +1467,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Delete This Record"
+          }
+        }
+      }
+    },
+    "到记录页保存生活照片，或添加疫苗、驱虫、体检和就医信息。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Records to save everyday photos or add vaccinations, deworming, checkups, and vet visits."
           }
         }
       }
@@ -1554,6 +1655,16 @@
         }
       }
     },
+    "发生时间" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time"
+          }
+        }
+      }
+    },
     "发送邀请前选择权限" : {
       "localizations" : {
         "en" : {
@@ -1661,6 +1772,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Only invited members who accept can access the selected pet. The owner can revoke access."
+          }
+        }
+      }
+    },
+    "可以只写一句话，也可以只分享照片。仅你和有权限的家庭成员可见。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write a sentence or share only photos. Only you and family members with access can see it."
           }
         }
       }
@@ -1916,6 +2037,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Address Unavailable"
+          }
+        }
+      }
+    },
+    "地点" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location"
+          }
+        }
+      }
+    },
+    "地点（选填）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location (Optional)"
           }
         }
       }
@@ -2427,6 +2568,16 @@
         }
       }
     },
+    "将 %@ 设为纪念？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark %@ as a memorial?"
+          }
+        }
+      }
+    },
     "将撤回对 %lld 只宠物的访问；宠物资料和其他成员不受影响。" : {
       "localizations" : {
         "en" : {
@@ -2456,6 +2607,9 @@
           }
         }
       }
+    },
+    "已完成，下次提醒：%@" : {
+
     },
     "已将“%@”设为%@。" : {
       "localizations" : {
@@ -2515,6 +2669,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Shared with Family"
+          }
+        }
+      }
+    },
+    "已归档" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archived"
           }
         }
       }
@@ -2970,6 +3134,56 @@
         }
       }
     },
+    "归档" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive"
+          }
+        }
+      }
+    },
+    "归档 %@？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive %@?"
+          }
+        }
+      }
+    },
+    "归档与纪念" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archived & Memorial"
+          }
+        }
+      }
+    },
+    "归档与纪念资料仍被完整保留，可到“我的 → 宠物档案”中查看或恢复。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archived and memorial profiles are still safely kept. View or restore them from Profile → Pet Profiles."
+          }
+        }
+      }
+    },
+    "归档宠物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive Pet"
+          }
+        }
+      }
+    },
     "当前" : {
       "localizations" : {
         "en" : {
@@ -3132,6 +3346,47 @@
         }
       }
     },
+    "恢复" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore"
+          }
+        }
+      }
+    },
+    "恢复 %@？" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore %@?"
+          }
+        }
+      }
+    },
+    "恢复为日常档案" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore to Active Profiles"
+          }
+        }
+      }
+    },
+    "恢复后会重新出现在日常页面，并为仍启用的提醒安排系统通知。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Once restored, this pet will return to daily views and notifications will be scheduled for reminders that are still enabled."
+          }
+        }
+      }
+    },
     "成员权限" : {
       "localizations" : {
         "en" : {
@@ -3180,6 +3435,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Profile"
+          }
+        }
+      }
+    },
+    "所有日常宠物目前都没有逾期或即将到期的提醒。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None of your active pets have overdue or upcoming reminders right now."
           }
         }
       }
@@ -3318,7 +3583,18 @@
         }
       }
     },
+    "换个关键词搜索文字、类型或地点。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try a different keyword, type, or location."
+          }
+        }
+      }
+    },
     "换个关键词搜索标题、类型或医院。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3575,6 +3851,16 @@
         }
       }
     },
+    "搜索文字、类型或地点" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search notes, type, or location"
+          }
+        }
+      }
+    },
     "搜索此区域" : {
       "localizations" : {
         "en" : {
@@ -3596,6 +3882,7 @@
       }
     },
     "搜索记录、类型或医院" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3737,6 +4024,16 @@
         }
       }
     },
+    "散步、玩耍、旅行或成长瞬间" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Walks, playtime, trips, and growing-up moments"
+          }
+        }
+      }
+    },
     "数据与同步" : {
       "localizations" : {
         "en" : {
@@ -3842,6 +4139,7 @@
       }
     },
     "新增健康记录" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3882,6 +4180,16 @@
         }
       }
     },
+    "新增记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Record"
+          }
+        }
+      }
+    },
     "无毛猫" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3913,6 +4221,16 @@
         }
       }
     },
+    "无法保存生活记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't Save Life Entry"
+          }
+        }
+      }
+    },
     "无法准备邀请" : {
       "localizations" : {
         "en" : {
@@ -3940,6 +4258,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unable to Create Plan"
+          }
+        }
+      }
+    },
+    "无法完成提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't Complete Reminder"
           }
         }
       }
@@ -4035,6 +4363,36 @@
         }
       }
     },
+    "日常档案" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active Profiles"
+          }
+        }
+      }
+    },
+    "日常档案会出现在首页、记录和提醒的宠物切换器中。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active profiles appear in the pet switcher on Home, Records, and Reminders."
+          }
+        }
+      }
+    },
+    "日常档案已清空" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Active Pet Profiles"
+          }
+        }
+      }
+    },
     "日期" : {
       "localizations" : {
         "en" : {
@@ -4051,6 +4409,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Time"
+          }
+        }
+      }
+    },
+    "时间与地点" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time & Location"
           }
         }
       }
@@ -4086,6 +4454,7 @@
       }
     },
     "暂无健康记录" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4101,6 +4470,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No Reminders"
+          }
+        }
+      }
+    },
+    "暂无记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No records yet"
           }
         }
       }
@@ -4228,6 +4607,16 @@
         }
       }
     },
+    "更改宠物状态" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change Pet Status"
+          }
+        }
+      }
+    },
     "有 %lld 个 PDF 未添加：%@" : {
       "localizations" : {
         "en" : {
@@ -4284,6 +4673,16 @@
         }
       }
     },
+    "有 %lld 张照片未能添加，请换一张重试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld photos couldn't be added. Try choosing different photos."
+          }
+        }
+      }
+    },
     "有 %lld 项修改尚未同步" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4302,6 +4701,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pending sync: %lld"
+          }
+        }
+      }
+    },
+    "未来 7 天" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next 7 Days"
+          }
+        }
+      }
+    },
+    "未来 7 天暂无安排" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No plans in the next 7 days"
+          }
+        }
+      }
+    },
+    "未来 7 天暂无待办" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Tasks in the Next 7 Days"
           }
         }
       }
@@ -4457,6 +4886,16 @@
         }
       }
     },
+    "查看 %@ 的记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View %@'s records"
+          }
+        }
+      }
+    },
     "查看 PDF" : {
       "localizations" : {
         "en" : {
@@ -4477,6 +4916,16 @@
         }
       }
     },
+    "查看全部宠物未来 7 天和已逾期提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View all pets' overdue reminders and reminders due in the next 7 days"
+          }
+        }
+      }
+    },
     "查看医院网站" : {
       "localizations" : {
         "en" : {
@@ -4493,6 +4942,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "View reminder details: %@"
+          }
+        }
+      }
+    },
+    "查看照片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View Photo"
           }
         }
       }
@@ -4707,6 +5166,16 @@
         }
       }
     },
+    "正在处理照片…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processing Photos…"
+          }
+        }
+      }
+    },
     "正在处理附件…" : {
       "localizations" : {
         "en" : {
@@ -4817,6 +5286,16 @@
         }
       }
     },
+    "正常" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active"
+          }
+        }
+      }
+    },
     "此操作会将记录从健康时间线中移除；由它创建的后续提醒也会一并删除。" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4824,6 +5303,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This removes the record from the health timeline and also deletes any follow-up reminder created from it."
+          }
+        }
+      }
+    },
+    "此操作会将记录从时间线中移除；如果它关联了提醒，提醒也会一并删除。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This will remove the record from the timeline. Any linked reminder will also be deleted."
           }
         }
       }
@@ -5162,6 +5651,16 @@
         }
       }
     },
+    "添加今天的照片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Today's Photos"
+          }
+        }
+      }
+    },
     "添加体重记录" : {
       "localizations" : {
         "en" : {
@@ -5316,6 +5815,7 @@
       }
     },
     "点击宠物可以编辑资料；首页可切换当前查看的宠物。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5331,6 +5831,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Care Plan Templates"
+          }
+        }
+      }
+    },
+    "照片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photos"
           }
         }
       }
@@ -5543,6 +6053,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Birthday cannot be later than today."
+          }
+        }
+      }
+    },
+    "生活" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Life"
+          }
+        }
+      }
+    },
+    "生活记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Life Entry"
           }
         }
       }
@@ -5764,6 +6294,16 @@
         }
       }
     },
+    "移除照片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Photo"
+          }
+        }
+      }
+    },
     "移除附件" : {
       "localizations" : {
         "en" : {
@@ -5957,6 +6497,16 @@
         }
       }
     },
+    "纪念" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memorial"
+          }
+        }
+      }
+    },
     "统计年份" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6047,6 +6597,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Edit Reminder"
+          }
+        }
+      }
+    },
+    "编辑生活记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Life Entry"
           }
         }
       }
@@ -6343,6 +6903,26 @@
         }
       }
     },
+    "记录今天" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capture Today"
+          }
+        }
+      }
+    },
+    "记录今天的美好瞬间" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capture a favorite moment from today"
+          }
+        }
+      }
+    },
     "记录会先安全保存在这台设备，开启 iCloud 后自动同步。" : {
       "localizations" : {
         "en" : {
@@ -6369,6 +6949,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Log weight to see its trend"
+          }
+        }
+      }
+    },
+    "记录信息" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entry Info"
           }
         }
       }
@@ -6413,6 +7003,26 @@
         }
       }
     },
+    "记录操作失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't Update Record"
+          }
+        }
+      }
+    },
+    "记录日常瞬间，也保留疫苗、驱虫和就医等健康信息。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capture everyday moments alongside vaccinations, deworming, vet visits, and other health details."
+          }
+        }
+      }
+    },
     "记录日期不能晚于今天。" : {
       "localizations" : {
         "en" : {
@@ -6433,6 +7043,16 @@
         }
       }
     },
+    "记录生活" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Life Entry"
+          }
+        }
+      }
+    },
     "记录第一次称重" : {
       "localizations" : {
         "en" : {
@@ -6443,12 +7063,32 @@
         }
       }
     },
+    "记录范围" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Type"
+          }
+        }
+      }
+    },
     "记录详情" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Record Details"
+          }
+        }
+      }
+    },
+    "设为纪念" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark as Memorial"
           }
         }
       }
@@ -6914,6 +7554,16 @@
         }
       }
     },
+    "资料会完整保留，提醒和系统通知已暂停；恢复后可继续日常管理。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All data is kept while reminders and system notifications are paused. Restore a profile to resume daily care."
+          }
+        }
+      }
+    },
     "资料会继续在后台恢复，你可以先使用已显示的内容。" : {
       "localizations" : {
         "en" : {
@@ -7032,6 +7682,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No Favorite Hospitals Yet"
+          }
+        }
+      }
+    },
+    "还没有生活记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Life Entries Yet"
+          }
+        }
+      }
+    },
+    "还没有记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Records Yet"
+          }
+        }
+      }
+    },
+    "这一刻" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Moment"
           }
         }
       }
@@ -7312,6 +7992,16 @@
         }
       }
     },
+    "选择照片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Photos"
+          }
+        }
+      }
+    },
     "通知" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7339,6 +8029,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Notification Time"
+          }
+        }
+      }
+    },
+    "逾期 %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overdue: %lld"
           }
         }
       }

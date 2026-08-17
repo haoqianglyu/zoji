@@ -73,11 +73,20 @@ final class AppStore {
     }
 
     var selectedPet: Pet? {
-        pets.first { $0.id == selectedPetID }
+        pets.first { $0.id == selectedPetID && $0.isActiveProfile }
+    }
+
+    var activePets: [Pet] {
+        pets.filter(\.isActiveProfile)
+    }
+
+    var inactivePets: [Pet] {
+        pets.filter { !$0.isActiveProfile }
     }
 
     func selectedPet(using familyStore: FamilySharingStore) -> SelectedPet? {
-        if let sharedPet = familyStore.selectedSharedPet {
+        if let sharedPet = familyStore.selectedSharedPet,
+           sharedPet.pet.isActiveProfile {
             return .shared(sharedPet)
         }
         guard let selectedPet else { return nil }
@@ -85,7 +94,8 @@ final class AppStore {
     }
 
     func selectablePets(using familyStore: FamilySharingStore) -> [SelectedPet] {
-        pets.map { localSelection(for: $0) } + familyStore.sharedPets.map { .shared($0) }
+        activePets.map { localSelection(for: $0) }
+            + familyStore.sharedPets.filter { $0.pet.isActiveProfile }.map { .shared($0) }
     }
 
     func select(_ selection: SelectedPet, using familyStore: FamilySharingStore) {
@@ -107,7 +117,8 @@ final class AppStore {
     }
 
     func rescheduleNotificationsForCurrentLanguage() async {
-        for reminder in reminders where reminder.isEnabled {
+        let activePetIDs = Set(activePets.map(\.id))
+        for reminder in reminders where reminder.isEnabled && activePetIDs.contains(reminder.petID) {
             let petName = pets.first(where: { $0.id == reminder.petID })?.name ?? L10n.string("宠物")
             try? await notificationScheduler.replaceNotifications(for: reminder, petName: petName)
         }
@@ -175,6 +186,11 @@ final class AppStore {
         try payload.validate()
         let petID = payload.pet.id
         try await petRepository?.save(payload.pet)
+        if let index = pets.firstIndex(where: { $0.id == petID }) {
+            pets[index] = payload.pet
+        } else {
+            pets.append(payload.pet)
+        }
 
         let incomingRecordIDs = Set(payload.records.map(\.id))
         for record in records where record.petID == petID && !incomingRecordIDs.contains(record.id) {
@@ -198,11 +214,6 @@ final class AppStore {
             }
         }
 
-        if let index = pets.firstIndex(where: { $0.id == petID }) {
-            pets[index] = payload.pet
-        } else {
-            pets.append(payload.pet)
-        }
         records.removeAll { $0.petID == petID }
         records.append(contentsOf: payload.records.map(Self.withoutAttachmentData))
         reminders.removeAll { $0.petID == petID }
@@ -250,7 +261,7 @@ final class AppStore {
 
     private func performPersistedAndFamilyReload(using familyStore: FamilySharingStore) async {
         await reloadPersistedData()
-        familyStore.resolveLaunchSelection(hasPrivatePets: !pets.isEmpty)
+        familyStore.resolveLaunchSelection(hasPrivatePets: !activePets.isEmpty)
         guard PersistenceController.isCloudKitConfigured else { return }
 
         let payloads: [FamilyPetSharePayload]
@@ -276,8 +287,8 @@ final class AppStore {
 
         do {
             pets = try await petRepository.listPets()
-            if !pets.contains(where: { $0.id == selectedPetID }) {
-                selectedPetID = pets.first?.id
+            if !pets.contains(where: { $0.id == selectedPetID && $0.isActiveProfile }) {
+                selectedPetID = activePets.first?.id
             }
             hasLoadedPersistedPets = true
         } catch {
@@ -383,11 +394,43 @@ final class AppStore {
             weightKilograms: resolvedWeight,
             weightEntries: weightEntries,
             avatarData: avatarData,
-            avatarPresetID: avatarPresetID
+            avatarPresetID: avatarPresetID,
+            profileStatus: originalPet.profileStatus
         )
 
         try await petRepository?.save(pet)
         pets[index] = pet
+        if let location = await FamilySharingService.shared.ownedMutationLocation(for: id) {
+            try? await FamilySharingLocalStore.shared.upsertCachedOwnedPet(pet, location: location)
+            await enqueueFamilyChange(.save(pet, replacing: originalPet, at: location))
+        }
+    }
+
+    func setPetProfileStatus(id: UUID, status: PetProfileStatus) async throws {
+        guard let index = pets.firstIndex(where: { $0.id == id }) else {
+            throw WeightEntryValidationError.petNotFound
+        }
+        let originalPet = pets[index]
+        var pet = originalPet
+        pet.profileStatus = status == .active ? nil : status
+
+        try await petRepository?.save(pet)
+        pets[index] = pet
+
+        let petReminders = reminders.filter { $0.petID == id }
+        if status.isActive {
+            for reminder in petReminders where reminder.isEnabled {
+                await scheduleNotifications(for: reminder, requestingAuthorization: false)
+            }
+        } else {
+            for reminder in petReminders {
+                await notificationScheduler.removeNotifications(reminderID: reminder.id)
+            }
+            if selectedPetID == id {
+                selectedPetID = activePets.first?.id
+            }
+        }
+
         if let location = await FamilySharingService.shared.ownedMutationLocation(for: id) {
             try? await FamilySharingLocalStore.shared.upsertCachedOwnedPet(pet, location: location)
             await enqueueFamilyChange(.save(pet, replacing: originalPet, at: location))
@@ -617,7 +660,7 @@ final class AppStore {
         notificationTime: Date,
         selectedStepIDs: Set<String>
     ) async throws -> Int {
-        guard let pet = pets.first(where: { $0.id == petID }) else {
+        guard let pet = pets.first(where: { $0.id == petID && $0.isActiveProfile }) else {
             throw ReminderValidationError.petNotFound
         }
         guard pet.species == template.species else {
@@ -869,7 +912,8 @@ final class AppStore {
         weightKilograms: Double?,
         weightEntries: [WeightEntry]? = nil,
         avatarData: Data?,
-        avatarPresetID: String?
+        avatarPresetID: String?,
+        profileStatus: PetProfileStatus? = nil
     ) throws -> Pet {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else {
@@ -893,7 +937,8 @@ final class AppStore {
             sex: sex,
             birthday: birthday,
             weightKilograms: weightKilograms,
-            weightEntries: weightEntries
+            weightEntries: weightEntries,
+            profileStatus: profileStatus
         )
     }
 
@@ -928,7 +973,7 @@ final class AppStore {
         notes: String?,
         attachments: [HealthRecordAttachment]
     ) throws -> HealthRecord {
-        guard pets.contains(where: { $0.id == petID }) else {
+        guard pets.contains(where: { $0.id == petID && $0.isActiveProfile }) else {
             throw HealthRecordValidationError.petNotFound
         }
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -978,7 +1023,7 @@ final class AppStore {
         isEnabled: Bool,
         lastCompletedAt: Date?
     ) throws -> ReminderItem {
-        guard pets.contains(where: { $0.id == petID }) else {
+        guard pets.contains(where: { $0.id == petID && $0.isActiveProfile }) else {
             throw ReminderValidationError.petNotFound
         }
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1015,6 +1060,11 @@ final class AppStore {
     }
 
     private func scheduleNotifications(for reminder: ReminderItem, requestingAuthorization: Bool) async {
+        guard let pet = pets.first(where: { $0.id == reminder.petID }),
+              pet.isActiveProfile else {
+            await notificationScheduler.removeNotifications(reminderID: reminder.id)
+            return
+        }
         if requestingAuthorization {
             let isAuthorized = await notificationScheduler.requestAuthorization()
             if !isAuthorized {
@@ -1022,9 +1072,8 @@ final class AppStore {
                 return
             }
         }
-        guard let petName = pets.first(where: { $0.id == reminder.petID })?.name else { return }
         do {
-            try await notificationScheduler.replaceNotifications(for: reminder, petName: petName)
+            try await notificationScheduler.replaceNotifications(for: reminder, petName: pet.name)
         } catch {
             reminderPersistenceMessage = L10n.string("提醒已保存，但系统通知安排失败，请稍后再试。")
         }

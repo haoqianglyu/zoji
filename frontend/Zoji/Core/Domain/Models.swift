@@ -94,7 +94,32 @@ enum PetSex: String, Codable, CaseIterable, Sendable {
     }
 }
 
+enum PetProfileStatus: String, Codable, CaseIterable, Sendable {
+    case active
+    case archived
+    case memorial
+
+    var displayName: String {
+        switch self {
+        case .active: L10n.string("正常")
+        case .archived: L10n.string("已归档")
+        case .memorial: L10n.string("纪念")
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .active: "pawprint.fill"
+        case .archived: "archivebox.fill"
+        case .memorial: "heart.fill"
+        }
+    }
+
+    var isActive: Bool { self == .active }
+}
+
 enum RecordKind: String, Codable, CaseIterable, Sendable {
+    case life
     case vaccine
     case internalDeworming
     case externalDeworming
@@ -105,6 +130,7 @@ enum RecordKind: String, Codable, CaseIterable, Sendable {
 
     var displayName: String {
         switch self {
+        case .life: L10n.string("生活记录")
         case .vaccine: L10n.string("疫苗")
         case .internalDeworming: L10n.string("体内驱虫")
         case .externalDeworming: L10n.string("体外驱虫")
@@ -117,6 +143,7 @@ enum RecordKind: String, Codable, CaseIterable, Sendable {
 
     var symbol: String {
         switch self {
+        case .life: "camera.fill"
         case .vaccine: "syringe.fill"
         case .internalDeworming, .externalDeworming: "shield.lefthalf.filled"
         case .bathGrooming: "sparkles"
@@ -128,6 +155,7 @@ enum RecordKind: String, Codable, CaseIterable, Sendable {
 
     var defaultTitle: String {
         switch self {
+        case .life: L10n.string("生活记录")
         case .vaccine: L10n.string("疫苗接种")
         case .internalDeworming: L10n.string("体内驱虫")
         case .externalDeworming: L10n.string("体外驱虫")
@@ -140,6 +168,7 @@ enum RecordKind: String, Codable, CaseIterable, Sendable {
 
     var titlePrompt: String {
         switch self {
+        case .life: L10n.string("记录今天的美好瞬间")
         case .vaccine: L10n.string("例如：狂犬疫苗")
         case .internalDeworming: L10n.string("例如：体内驱虫")
         case .externalDeworming: L10n.string("例如：体外驱虫")
@@ -148,6 +177,10 @@ enum RecordKind: String, Codable, CaseIterable, Sendable {
         case .medication: L10n.string("例如：服用益生菌")
         case .custom: L10n.string("简要概括这次记录")
         }
+    }
+
+    static var healthCases: [RecordKind] {
+        allCases.filter { $0 != .life }
     }
 }
 
@@ -185,6 +218,16 @@ struct Pet: Identifiable, Hashable, Codable, Sendable {
     /// Optional for backward-compatible decoding of older backups and family
     /// sharing snapshots that predate weight history support.
     var weightEntries: [WeightEntry]?
+    /// Optional so older backups and family-sharing snapshots decode as active.
+    var profileStatus: PetProfileStatus?
+
+    var resolvedProfileStatus: PetProfileStatus {
+        profileStatus ?? .active
+    }
+
+    var isActiveProfile: Bool {
+        resolvedProfileStatus.isActive
+    }
 
     var sortedWeightEntries: [WeightEntry] {
         (weightEntries ?? []).sorted { $0.measuredAt < $1.measuredAt }
@@ -205,7 +248,8 @@ struct Pet: Identifiable, Hashable, Codable, Sendable {
         sex: PetSex? = nil,
         birthday: Date? = nil,
         weightKilograms: Double? = nil,
-        weightEntries: [WeightEntry]? = nil
+        weightEntries: [WeightEntry]? = nil,
+        profileStatus: PetProfileStatus? = nil
     ) {
         self.id = id
         self.name = name
@@ -218,6 +262,7 @@ struct Pet: Identifiable, Hashable, Codable, Sendable {
         self.birthday = birthday
         self.weightKilograms = weightKilograms
         self.weightEntries = weightEntries
+        self.profileStatus = profileStatus
     }
 }
 

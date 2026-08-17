@@ -30,6 +30,92 @@ final class PersistenceRepositoryTests: XCTestCase {
         XCTAssertTrue(try context.fetch(FetchDescriptor<PetEntity>()).isEmpty)
     }
 
+    func testPetRepositoryPersistsArchivedAndMemorialStatus() async throws {
+        let container = try makeContainer()
+        let repository = SwiftDataPetRepository(modelContainer: container)
+        var pet = Pet(id: UUID(), name: "团子", species: .cat)
+
+        XCTAssertEqual(pet.resolvedProfileStatus, .active)
+        pet.profileStatus = .archived
+        try await repository.save(pet)
+        var storedPets = try await repository.listPets()
+        XCTAssertEqual(storedPets.first?.resolvedProfileStatus, .archived)
+
+        pet.profileStatus = .memorial
+        try await repository.save(pet)
+        storedPets = try await repository.listPets()
+        XCTAssertEqual(storedPets.first?.resolvedProfileStatus, .memorial)
+
+        pet.profileStatus = nil
+        try await repository.save(pet)
+        storedPets = try await repository.listPets()
+        XCTAssertEqual(storedPets.first?.resolvedProfileStatus, .active)
+    }
+
+    func testLegacyPetWithoutProfileStatusDecodesAsActive() throws {
+        let pet = Pet(id: UUID(), name: "旧档案", species: .dog)
+        let encoded = try JSONEncoder().encode(pet)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        object.removeValue(forKey: "profileStatus")
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+
+        let decoded = try JSONDecoder().decode(Pet.self, from: legacyData)
+
+        XCTAssertNil(decoded.profileStatus)
+        XCTAssertEqual(decoded.resolvedProfileStatus, .active)
+    }
+
+    @MainActor
+    func testAppStoreExcludesInactivePetsFromDailySelection() {
+        let active = Pet(id: UUID(), name: "日常", species: .cat)
+        var archived = Pet(id: UUID(), name: "归档", species: .dog)
+        archived.profileStatus = .archived
+        let store = AppStore(
+            selectedPetID: archived.id,
+            pets: [active, archived],
+            reminders: [],
+            records: [],
+            hospitals: []
+        )
+        let familyStore = FamilySharingStore(restoredSharedPets: [])
+
+        XCTAssertNil(store.selectedPet)
+        XCTAssertEqual(store.activePets.map(\.id), [active.id])
+        XCTAssertEqual(store.inactivePets.map(\.id), [archived.id])
+        XCTAssertEqual(store.selectablePets(using: familyStore).map(\.id), [.local(active.id)])
+    }
+
+    @MainActor
+    func testCrossPetReminderOverviewIncludesOnlyOverdueAndNextSevenDays() {
+        let now = Date()
+        let firstPet = Pet(id: UUID(), name: "团子", species: .cat)
+        let secondPet = Pet(id: UUID(), name: "布布", species: .dog)
+        let overdue = ReminderItem(
+            id: UUID(), petID: firstPet.id, title: "复诊", kind: .medicalVisit,
+            dueAt: now.addingTimeInterval(-3_600)
+        )
+        let upcoming = ReminderItem(
+            id: UUID(), petID: secondPet.id, title: "驱虫", kind: .internalDeworming,
+            dueAt: now.addingTimeInterval(6 * 86_400)
+        )
+        let later = ReminderItem(
+            id: UUID(), petID: firstPet.id, title: "体检", kind: .medicalVisit,
+            dueAt: now.addingTimeInterval(8 * 86_400)
+        )
+        let disabled = ReminderItem(
+            id: UUID(), petID: secondPet.id, title: "停用", kind: .custom,
+            dueAt: now, isEnabled: false
+        )
+        let selections: [SelectedPet] = [
+            .local(pet: firstPet, records: [], reminders: [overdue, later]),
+            .local(pet: secondPet, records: [], reminders: [upcoming, disabled]),
+        ]
+
+        let entries = CrossPetReminderEntry.visibleEntries(from: selections, now: now)
+
+        XCTAssertEqual(Set(entries.map(\.reminder.id)), Set([overdue.id, upcoming.id]))
+    }
+
     func testHealthRecordRepositoryPreservesImageAndPDFThenRemovesDeletedAttachment() async throws {
         let container = try makeContainer()
         let repository = SwiftDataHealthRecordRepository(modelContainer: container)
@@ -95,6 +181,36 @@ final class PersistenceRepositoryTests: XCTestCase {
         context = ModelContext(container)
         XCTAssertTrue(try context.fetch(FetchDescriptor<HealthRecordEntity>()).isEmpty)
         XCTAssertTrue(try context.fetch(FetchDescriptor<HealthRecordAttachmentEntity>()).isEmpty)
+    }
+
+    func testLifeRecordPersistsTextLocationAndPhotos() async throws {
+        let container = try makeContainer()
+        let repository = SwiftDataHealthRecordRepository(modelContainer: container)
+        let photo = HealthRecordAttachment(
+            kind: .image,
+            data: Data([9, 8, 7]),
+            originalName: "life-photo.jpg"
+        )
+        let record = HealthRecord(
+            id: UUID(),
+            petID: UUID(),
+            kind: .life,
+            title: "今天去了公园",
+            occurredAt: Date(timeIntervalSince1970: 1_700_000_000),
+            providerName: "城市公园",
+            notes: "今天去了公园，玩得很开心。",
+            attachments: [photo]
+        )
+
+        try await repository.save(record)
+
+        let fetched = try await repository.record(id: record.id)
+        let stored = try XCTUnwrap(fetched)
+        XCTAssertEqual(stored.kind, .life)
+        XCTAssertEqual(stored.providerName, "城市公园")
+        XCTAssertEqual(stored.notes, "今天去了公园，玩得很开心。")
+        XCTAssertEqual(stored.attachments, [photo])
+        XCTAssertFalse(RecordKind.healthCases.contains(.life))
     }
 
     func testReminderRepositoryPreservesCompletionStateAndHardDeletes() async throws {

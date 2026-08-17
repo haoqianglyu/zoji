@@ -14,6 +14,7 @@ final class PetEntity {
     var birthday: Date?
     var weightKilograms: Double?
     @Attribute(.externalStorage) var weightHistoryData: Data?
+    var profileStatusRawValue: String?
     var createdAt: Date = Date()
     var updatedAt: Date = Date()
     var deletedAt: Date?

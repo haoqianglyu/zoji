@@ -4,12 +4,38 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
+private enum RecordTimelineScope: String, CaseIterable, Identifiable {
+    case all
+    case life
+    case health
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .all: L10n.string("全部")
+        case .life: L10n.string("生活")
+        case .health: L10n.string("健康")
+        }
+    }
+
+    func includes(_ record: HealthRecord) -> Bool {
+        switch self {
+        case .all: true
+        case .life: record.kind == .life
+        case .health: record.kind != .life
+        }
+    }
+}
+
 struct RecordsView: View {
     @Environment(AppStore.self) private var store
     @Environment(FamilySharingStore.self) private var familyStore
     @Environment(\.appColorTheme) private var theme
     @State private var query = ""
     @State private var editor: HealthRecordEditorPresentation?
+    @State private var lifeEditor: HealthRecordEditorPresentation?
+    @State private var timelineScope = RecordTimelineScope.all
     @State private var recordPendingDeletion: HealthRecord?
     @State private var selectedExpenseYear = Calendar.autoupdatingCurrent.component(.year, from: Date())
     @State private var expenseReferenceDate = Date()
@@ -19,12 +45,14 @@ struct RecordsView: View {
     private var selectedRecords: [HealthRecord] { selectedPet?.records ?? [] }
 
     private var filteredRecords: [HealthRecord] {
-        guard !query.isEmpty else { return selectedRecords }
-        return selectedRecords.filter { record in
+        let scopedRecords = selectedRecords.filter(timelineScope.includes)
+        guard !query.isEmpty else { return scopedRecords }
+        return scopedRecords.filter { record in
             record.title.localizedStandardContains(query)
                 || L10n.dynamic(record.title).localizedStandardContains(query)
                 || record.kind.displayName.localizedStandardContains(query)
                 || record.providerName?.localizedStandardContains(query) == true
+                || record.localizedNotes?.localizedStandardContains(query) == true
         }
     }
 
@@ -62,7 +90,7 @@ struct RecordsView: View {
 
         NavigationStack {
             List {
-                if store.pets.isEmpty && familyStore.sharedPets.isEmpty {
+                if selectablePets.isEmpty {
                     Section {
                         ContentUnavailableView(
                             "先添加宠物",
@@ -78,7 +106,16 @@ struct RecordsView: View {
                             .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
                     }
 
-                    if let annualExpenseSummary {
+                    Section {
+                        Picker("记录范围", selection: $timelineScope) {
+                            ForEach(RecordTimelineScope.allCases) { scope in
+                                Text(scope.displayName).tag(scope)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+
+                    if timelineScope != .life, let annualExpenseSummary {
                         Section("年度花费") {
                             if expenseYears.count > 1 {
                                 Picker("统计年份", selection: Binding(
@@ -98,19 +135,15 @@ struct RecordsView: View {
                     if filteredRecords.isEmpty {
                         Section {
                             ContentUnavailableView {
-                                Label(query.isEmpty ? "还没有健康记录" : "没有找到记录", systemImage: query.isEmpty ? "heart.text.clipboard" : "magnifyingglass")
+                                Label(emptyStateTitle, systemImage: query.isEmpty ? emptyStateSymbol : "magnifyingglass")
                             } description: {
-                                Text(query.isEmpty ? "从第一次疫苗、驱虫或体检开始，建立专属健康时间线。" : "换个关键词搜索标题、类型或医院。")
+                                Text(emptyStateDescription)
                             } actions: {
                                 if query.isEmpty,
                                    let selectedPet,
                                    selectedPet.canEdit {
-                                    Button("添加第一条记录") {
-                                        editor = HealthRecordEditorPresentation(
-                                            record: nil,
-                                            petID: selectedPet.pet.id,
-                                            sharedPet: selectedPet.sharedPet
-                                        )
+                                    Button(emptyStateActionTitle) {
+                                        presentNewRecord(for: selectedPet, prefersLife: timelineScope == .life)
                                     }
                                     .buttonStyle(.borderedProminent)
                                 }
@@ -178,24 +211,31 @@ struct RecordsView: View {
             .searchable(
                 text: $query,
                 placement: .navigationBarDrawer(displayMode: .always),
-                prompt: "搜索记录、类型或医院"
+                prompt: "搜索文字、类型或地点"
             )
-            .navigationTitle("健康记录")
+            .navigationTitle("记录")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        guard let selectedPet else { return }
-                        editor = HealthRecordEditorPresentation(
-                            record: nil,
-                            petID: selectedPet.pet.id,
-                            sharedPet: selectedPet.sharedPet
-                        )
+                    Menu {
+                        Button {
+                            guard let selectedPet else { return }
+                            presentNewRecord(for: selectedPet, prefersLife: true)
+                        } label: {
+                            Label("记录生活", systemImage: "camera.fill")
+                        }
+
+                        Button {
+                            guard let selectedPet else { return }
+                            presentNewRecord(for: selectedPet, prefersLife: false)
+                        } label: {
+                            Label("添加健康记录", systemImage: "heart.text.clipboard")
+                        }
                     } label: {
                         Image(systemName: "plus")
                             .fontWeight(.semibold)
                     }
                     .disabled(selectedPet == nil || selectedPet?.canEdit == false)
-                    .accessibilityLabel("新增健康记录")
+                    .accessibilityLabel("新增记录")
                 }
             }
             .sheet(item: $editor) { presentation in
@@ -206,6 +246,14 @@ struct RecordsView: View {
                 )
                     .environment(store)
             }
+            .sheet(item: $lifeEditor) { presentation in
+                LifeRecordEditorView(
+                    record: presentation.record,
+                    initialPetID: presentation.petID,
+                    sharedPet: presentation.sharedPet
+                )
+                .environment(store)
+            }
             .confirmationDialog(
                 "删除“\(recordPendingDeletion?.title ?? "这条记录")”？",
                 isPresented: Binding(
@@ -214,15 +262,15 @@ struct RecordsView: View {
                 ),
                 titleVisibility: .visible
             ) {
-                Button("删除健康记录", role: .destructive) {
+                Button("删除记录", role: .destructive) {
                     guard let record = recordPendingDeletion else { return }
                     deleteRecord(record)
                 }
                 Button("取消", role: .cancel) { recordPendingDeletion = nil }
             } message: {
-                Text("删除后，该记录会从 \(selectedPet?.pet.name ?? "宠物") 的健康时间线中移除；由它创建的后续提醒也会一并删除。")
+                Text("删除后，该记录会从 \(selectedPet?.pet.name ?? "宠物") 的时间线中移除；如果它关联了提醒，提醒也会一并删除。")
             }
-            .alert("健康记录操作失败", isPresented: Binding(
+            .alert("记录操作失败", isPresented: Binding(
                 get: { store.recordPersistenceMessage != nil },
                 set: { if !$0 { store.recordPersistenceMessage = nil } }
             )) {
@@ -247,6 +295,48 @@ struct RecordsView: View {
         )
     }
 
+    private var emptyStateTitle: String {
+        guard query.isEmpty else { return L10n.string("没有找到记录") }
+        switch timelineScope {
+        case .all: return L10n.string("还没有记录")
+        case .life: return L10n.string("还没有生活记录")
+        case .health: return L10n.string("还没有健康记录")
+        }
+    }
+
+    private var emptyStateSymbol: String {
+        timelineScope == .life ? "camera.circle" : "heart.text.clipboard"
+    }
+
+    private var emptyStateDescription: String {
+        guard query.isEmpty else { return L10n.string("换个关键词搜索文字、类型或地点。") }
+        switch timelineScope {
+        case .all:
+            return L10n.string("记录日常瞬间，也保留疫苗、驱虫和就医等健康信息。")
+        case .life:
+            return L10n.string("从一次散步、一张照片或一句话开始，保存和宠物相处的日常。")
+        case .health:
+            return L10n.string("从第一次疫苗、驱虫或体检开始，建立专属健康时间线。")
+        }
+    }
+
+    private var emptyStateActionTitle: String {
+        timelineScope == .life ? L10n.string("记录今天") : L10n.string("添加第一条记录")
+    }
+
+    private func presentNewRecord(for pet: SelectedPet, prefersLife: Bool) {
+        let presentation = HealthRecordEditorPresentation(
+            record: nil,
+            petID: pet.pet.id,
+            sharedPet: pet.sharedPet
+        )
+        if prefersLife {
+            lifeEditor = presentation
+        } else {
+            editor = presentation
+        }
+    }
+
     private func deleteRecord(_ record: HealthRecord) {
         Task {
             defer { recordPendingDeletion = nil }
@@ -264,11 +354,16 @@ struct RecordsView: View {
 
     private func presentEditor(for record: HealthRecord, sharedPet: FamilySharedPet?) {
         if let sharedPet {
-            editor = HealthRecordEditorPresentation(
+            let presentation = HealthRecordEditorPresentation(
                 record: record,
                 petID: record.petID,
                 sharedPet: sharedPet
             )
+            if record.kind == .life {
+                lifeEditor = presentation
+            } else {
+                editor = presentation
+            }
             return
         }
 
@@ -278,10 +373,15 @@ struct RecordsView: View {
                     store.recordPersistenceMessage = L10n.string("这条健康记录已不存在。")
                     return
                 }
-                editor = HealthRecordEditorPresentation(
+                let presentation = HealthRecordEditorPresentation(
                     record: completeRecord,
                     petID: completeRecord.petID
                 )
+                if completeRecord.kind == .life {
+                    lifeEditor = presentation
+                } else {
+                    editor = presentation
+                }
             } catch {
                 store.recordPersistenceMessage = String(localized: "读取健康记录附件失败：\(error.localizedDescription)", locale: L10n.locale)
             }
@@ -494,6 +594,369 @@ private struct AnnualExpenseSummaryCard: View {
     }
 }
 
+struct LifeRecordEditorView: View {
+    @Environment(AppStore.self) private var store
+    @Environment(FamilySharingStore.self) private var familyStore
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorTheme) private var theme
+
+    let record: HealthRecord?
+    private let sharedPet: FamilySharedPet?
+    @State private var petID: UUID
+    @State private var occurredAt: Date
+    @State private var notes: String
+    @State private var location: String
+    @State private var attachments: [HealthRecordAttachment]
+    @State private var selectedPhotos: [PhotosPickerItem] = []
+    @State private var gallery: HealthRecordAttachmentGalleryPresentation?
+    @State private var isLoadingPhotos = false
+    @State private var isSaving = false
+    @State private var processingMessage: String?
+    @State private var errorMessage: String?
+    @FocusState private var isTextFocused: Bool
+
+    init(record: HealthRecord?, initialPetID: UUID, sharedPet: FamilySharedPet? = nil) {
+        self.record = record
+        self.sharedPet = sharedPet
+        _petID = State(initialValue: record?.petID ?? initialPetID)
+        _occurredAt = State(initialValue: record?.occurredAt ?? Date())
+        _notes = State(initialValue: record?.localizedNotes ?? "")
+        _location = State(initialValue: record?.providerName ?? "")
+        _attachments = State(initialValue: record?.attachments.filter { $0.kind == .image } ?? [])
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                petSection
+
+                Section {
+                    TextEditor(text: $notes)
+                        .focused($isTextFocused)
+                        .frame(minHeight: 150)
+                        .scrollContentBackground(.hidden)
+                        .padding(6)
+                        .background(theme.surfaceMuted, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(alignment: .topLeading) {
+                            if notes.isEmpty {
+                                Text("今天和宠物发生了什么？")
+                                    .foregroundStyle(.tertiary)
+                                    .padding(.horizontal, 18)
+                                    .padding(.vertical, 16)
+                                    .allowsHitTesting(false)
+                            }
+                        }
+                } header: {
+                    Text("这一刻")
+                } footer: {
+                    Text("可以只写一句话，也可以只分享照片。仅你和有权限的家庭成员可见。")
+                }
+
+                Section("时间与地点") {
+                    DatePicker(
+                        "发生时间",
+                        selection: $occurredAt,
+                        in: ...Date(),
+                        displayedComponents: [.date, .hourAndMinute]
+                    )
+                    TextField("地点（选填）", text: $location)
+                }
+
+                Section {
+                    photoEditor
+                } header: {
+                    Text("照片")
+                } footer: {
+                    Text("最多 9 张；照片会在本机压缩后保存和同步。")
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.interactively)
+            .background(theme.background)
+            .navigationTitle(record == nil ? "记录生活" : "编辑生活记录")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("保存") { save() }
+                        .fontWeight(.semibold)
+                        .disabled(!canSave || isSaving || isLoadingPhotos)
+                }
+            }
+            .onChange(of: notes) { _, value in
+                if value.count > 2_000 { notes = String(value.prefix(2_000)) }
+            }
+            .onChange(of: location) { _, value in
+                if value.count > 120 { location = String(value.prefix(120)) }
+            }
+            .onChange(of: selectedPhotos) { _, items in
+                loadPhotos(items)
+            }
+            .fullScreenCover(item: $gallery) { presentation in
+                HealthRecordAttachmentGallery(
+                    attachments: presentation.attachments,
+                    initialAttachmentID: presentation.initialAttachmentID
+                )
+            }
+            .interactiveDismissDisabled(isSaving || isLoadingPhotos)
+            .alert("无法保存生活记录", isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )) {
+                Button("知道了", role: .cancel) { }
+            } message: {
+                Text(errorMessage ?? "请稍后再试。")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var petSection: some View {
+        if let sharedPet {
+            Section("记录对象") {
+                LabeledContent("宠物", value: sharedPet.pet.name)
+            }
+        } else if record == nil, store.activePets.count > 1 {
+            Section("记录对象") {
+                Picker("宠物", selection: $petID) {
+                    ForEach(store.activePets) { pet in
+                        Text(pet.name).tag(pet.id)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var photoEditor: some View {
+        if !attachments.isEmpty {
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
+                spacing: 8
+            ) {
+                ForEach(attachments) { attachment in
+                    photoTile(attachment)
+                }
+            }
+            .padding(.vertical, 2)
+        } else {
+            HStack(spacing: 12) {
+                Image(systemName: "photo.on.rectangle.angled")
+                    .font(.title2)
+                    .foregroundStyle(theme.accent)
+                    .frame(width: 46, height: 46)
+                    .background(theme.accentSoft, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("添加今天的照片")
+                        .font(.headline)
+                    Text("散步、玩耍、旅行或成长瞬间")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+
+        if attachments.count < HealthRecordAttachmentPolicy.maximumCount {
+            PhotosPicker(
+                selection: $selectedPhotos,
+                maxSelectionCount: HealthRecordAttachmentPolicy.maximumCount - attachments.count,
+                matching: .images
+            ) {
+                Label("选择照片", systemImage: "photo.badge.plus")
+            }
+            .disabled(isLoadingPhotos)
+        }
+
+        if isLoadingPhotos {
+            HStack(spacing: 10) {
+                ProgressView()
+                Text("正在处理照片…")
+                    .foregroundStyle(.secondary)
+            }
+        } else if let processingMessage {
+            Label(processingMessage, systemImage: "checkmark.circle.fill")
+                .font(.caption)
+                .foregroundStyle(theme.accent)
+        }
+    }
+
+    private func photoTile(_ attachment: HealthRecordAttachment) -> some View {
+        ZStack(alignment: .topTrailing) {
+            Button {
+                gallery = HealthRecordAttachmentGalleryPresentation(
+                    attachments: attachments,
+                    initialAttachmentID: attachment.id
+                )
+            } label: {
+                theme.surfaceMuted
+                    .aspectRatio(1, contentMode: .fit)
+                    .overlay {
+                        if let image = UIImage(data: attachment.data) {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .clipped()
+                        } else {
+                            Image(systemName: "photo.badge.exclamationmark")
+                                .foregroundStyle(theme.accent)
+                        }
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("查看照片")
+
+            Button {
+                attachments.removeAll { $0.id == attachment.id }
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title3)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.white, .black.opacity(0.65))
+                    .padding(5)
+            }
+            .accessibilityLabel("移除照片")
+        }
+    }
+
+    private var canSave: Bool {
+        !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !attachments.isEmpty
+    }
+
+    private func loadPhotos(_ items: [PhotosPickerItem]) {
+        guard !items.isEmpty else { return }
+        isLoadingPhotos = true
+        processingMessage = nil
+
+        Task {
+            defer {
+                isLoadingPhotos = false
+                selectedPhotos = []
+            }
+
+            var accepted: [HealthRecordAttachment] = []
+            var failedCount = 0
+            var sourceBytes = 0
+            var storedBytes = 0
+            var currentBytes = attachments.reduce(0) { $0 + $1.data.count }
+            let slots = max(0, HealthRecordAttachmentPolicy.maximumCount - attachments.count)
+
+            for item in items.prefix(slots) {
+                do {
+                    guard let data = try await item.loadTransferable(type: Data.self) else {
+                        throw HealthRecordAttachmentValidationError.unreadableImage
+                    }
+                    let processed = try await Task.detached(priority: .userInitiated) {
+                        try HealthRecordEditorView.processCaseImage(data)
+                    }.value
+                    try HealthRecordAttachmentPolicy.validateAddition(
+                        kind: .image,
+                        byteCount: processed.data.count,
+                        currentCount: attachments.count + accepted.count,
+                        currentBytes: currentBytes
+                    )
+                    accepted.append(HealthRecordAttachment(
+                        data: processed.data,
+                        originalName: "life-photo.jpg"
+                    ))
+                    sourceBytes += processed.sourceByteCount
+                    storedBytes += processed.data.count
+                    currentBytes += processed.data.count
+                } catch {
+                    failedCount += 1
+                }
+            }
+
+            attachments.append(contentsOf: accepted)
+            if !accepted.isEmpty {
+                processingMessage = sourceBytes > storedBytes
+                    ? String(localized: "已添加 \(accepted.count) 张，压缩 \(HealthRecordAttachmentPolicy.formattedByteCount(sourceBytes)) → \(HealthRecordAttachmentPolicy.formattedByteCount(storedBytes))", locale: L10n.locale)
+                    : String(localized: "已添加 \(accepted.count) 张图片", locale: L10n.locale)
+            }
+            if failedCount > 0 {
+                errorMessage = String(localized: "有 \(failedCount) 张照片未能添加，请换一张重试。", locale: L10n.locale)
+            }
+        }
+    }
+
+    private func save() {
+        Task {
+            isSaving = true
+            defer { isSaving = false }
+
+            do {
+                guard canSave else { throw LifeRecordValidationError.contentRequired }
+                try HealthRecordAttachmentPolicy.validate(attachments)
+                let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+                let trimmedLocation = location.trimmingCharacters(in: .whitespacesAndNewlines)
+                let title = generatedTitle(from: trimmedNotes)
+
+                if let sharedPet {
+                    let savedRecord = HealthRecord(
+                        id: record?.id ?? UUID(),
+                        petID: petID,
+                        kind: .life,
+                        title: title,
+                        occurredAt: occurredAt,
+                        providerName: trimmedLocation.isEmpty ? nil : trimmedLocation,
+                        costCents: nil,
+                        currencyCode: nil,
+                        timeZoneIdentifier: record?.timeZoneIdentifier ?? TimeZone.autoupdatingCurrent.identifier,
+                        notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
+                        attachments: attachments
+                    )
+                    try await familyStore.saveHealthRecord(savedRecord, in: sharedPet)
+                } else if let record {
+                    try await store.updateHealthRecord(
+                        id: record.id,
+                        kind: .life,
+                        title: title,
+                        occurredAt: occurredAt,
+                        providerName: trimmedLocation,
+                        costCents: nil,
+                        notes: trimmedNotes,
+                        attachments: attachments
+                    )
+                } else {
+                    try await store.addHealthRecord(
+                        petID: petID,
+                        kind: .life,
+                        title: title,
+                        occurredAt: occurredAt,
+                        providerName: trimmedLocation,
+                        costCents: nil,
+                        notes: trimmedNotes,
+                        attachments: attachments
+                    )
+                }
+                if sharedPet == nil { familyStore.selectPrivatePet() }
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func generatedTitle(from text: String) -> String {
+        // Store the catalog key instead of a localized value so a photo-only
+        // entry follows the app language when it changes later.
+        guard !text.isEmpty else { return "生活记录" }
+        let firstLine = text.split(whereSeparator: \.isNewline).first.map(String.init) ?? text
+        return String(firstLine.trimmingCharacters(in: .whitespacesAndNewlines).prefix(40))
+    }
+}
+
+private enum LifeRecordValidationError: LocalizedError {
+    case contentRequired
+
+    var errorDescription: String? {
+        L10n.string("写点内容或至少添加一张照片。")
+    }
+}
+
 struct HealthRecordEditorPresentation: Identifiable {
     let id = UUID()
     let record: HealthRecord?
@@ -677,7 +1140,7 @@ struct HealthRecordEditorView: View {
 
     @ViewBuilder
     private var recordObjectSection: some View {
-        if sharedPet == nil, record == nil, store.pets.count > 1 {
+        if sharedPet == nil, record == nil, store.activePets.count > 1 {
             Section("记录对象") {
                 Button {
                     focusedField = nil
@@ -863,7 +1326,7 @@ struct HealthRecordEditorView: View {
     private func selectionView(for sheet: SelectionSheet) -> some View {
         switch sheet {
         case .pet:
-            HealthRecordPetSelectionView(pets: store.pets, selection: $petID)
+            HealthRecordPetSelectionView(pets: store.activePets, selection: $petID)
         case .recordKind:
             HealthRecordKindSelectionView(selection: $kind)
         case .currency:
@@ -1661,7 +2124,7 @@ private struct HealthRecordKindSelectionView: View {
 
     var body: some View {
         NavigationStack {
-            List(RecordKind.allCases, id: \.self) { kind in
+            List(RecordKind.healthCases, id: \.self) { kind in
                 Button {
                     selection = kind
                     dismiss()
@@ -1832,6 +2295,7 @@ struct HealthRecordDetailView: View {
     @Environment(\.appColorTheme) private var theme
     let recordID: UUID
     @State private var editor: HealthRecordEditorPresentation?
+    @State private var lifeEditor: HealthRecordEditorPresentation?
     @State private var attachmentGallery: HealthRecordAttachmentGalleryPresentation?
     @State private var isConfirmingDeletion = false
     @State private var loadedRecord: HealthRecord?
@@ -1863,11 +2327,18 @@ struct HealthRecordDetailView: View {
                         .padding(.vertical, 16)
                     }
 
-                    Section("记录详情") {
+                    Section(record.kind == .life ? "记录信息" : "记录详情") {
                         LabeledContent("宠物", value: store.pets.first(where: { $0.id == record.petID })?.name ?? "未知")
-                        LabeledContent("发生日期", value: L10n.date(record.occurredAt, dateStyle: .long, timeStyle: .omitted))
+                        LabeledContent(
+                            record.kind == .life ? "发生时间" : "发生日期",
+                            value: L10n.date(
+                                record.occurredAt,
+                                dateStyle: .long,
+                                timeStyle: record.kind == .life ? .shortened : .omitted
+                            )
+                        )
                         if let provider = record.providerName {
-                            LabeledContent("医院/机构", value: provider)
+                            LabeledContent(record.kind == .life ? "地点" : "医院/机构", value: provider)
                         }
                         if let cost = record.costCents {
                             LabeledContent(
@@ -1881,14 +2352,14 @@ struct HealthRecordDetailView: View {
                     }
 
                     if let notes = record.localizedNotes {
-                        Section("详情") {
+                        Section(record.kind == .life ? "这一刻" : "详情") {
                             Text(notes)
                                 .textSelection(.enabled)
                         }
                     }
 
                     if hasLoadedAttachmentData, !record.attachments.isEmpty {
-                        Section("附件") {
+                        Section(record.kind == .life ? "照片" : "附件") {
                             LazyVGrid(
                                 columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
                                 spacing: 8
@@ -1910,18 +2381,27 @@ struct HealthRecordDetailView: View {
                 }
                 .scrollContentBackground(.hidden)
                 .background(theme.background)
-                .navigationTitle("记录详情")
+                .navigationTitle(record.kind == .life ? "生活记录" : "记录详情")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("编辑") {
-                            editor = HealthRecordEditorPresentation(record: record, petID: record.petID)
+                            let presentation = HealthRecordEditorPresentation(record: record, petID: record.petID)
+                            if record.kind == .life {
+                                lifeEditor = presentation
+                            } else {
+                                editor = presentation
+                            }
                         }
                         .disabled(!hasLoadedAttachmentData)
                     }
                 }
                 .sheet(item: $editor) { presentation in
                     HealthRecordEditorView(record: presentation.record, initialPetID: presentation.petID)
+                        .environment(store)
+                }
+                .sheet(item: $lifeEditor) { presentation in
+                    LifeRecordEditorView(record: presentation.record, initialPetID: presentation.petID)
                         .environment(store)
                 }
                 .fullScreenCover(item: $attachmentGallery) { presentation in
@@ -1931,12 +2411,12 @@ struct HealthRecordDetailView: View {
                     )
                 }
                 .confirmationDialog("删除“\(record.title)”？", isPresented: $isConfirmingDeletion, titleVisibility: .visible) {
-                    Button("删除健康记录", role: .destructive) { deleteRecord(record) }
+                    Button("删除记录", role: .destructive) { deleteRecord(record) }
                     Button("取消", role: .cancel) { }
                 } message: {
-                    Text("此操作会将记录从健康时间线中移除；由它创建的后续提醒也会一并删除。")
+                    Text("此操作会将记录从时间线中移除；如果它关联了提醒，提醒也会一并删除。")
                 }
-                .alert("健康记录操作失败", isPresented: Binding(
+                .alert("记录操作失败", isPresented: Binding(
                     get: { store.recordPersistenceMessage != nil },
                     set: { if !$0 { store.recordPersistenceMessage = nil } }
                 )) {

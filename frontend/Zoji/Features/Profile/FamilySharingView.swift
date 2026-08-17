@@ -134,7 +134,7 @@ struct FamilySharingView: View {
             }
 
             Section {
-                if store.pets.isEmpty {
+                if store.activePets.isEmpty {
                     ContentUnavailableView {
                         Label("还没有宠物档案", systemImage: "pawprint")
                     } description: {
@@ -142,7 +142,7 @@ struct FamilySharingView: View {
                     }
                     .listRowBackground(Color.clear)
                 } else {
-                    ForEach(store.pets) { pet in
+                    ForEach(store.activePets) { pet in
                         HStack(spacing: 13) {
                             PetAvatarView(
                                 avatarData: pet.avatarData,
@@ -1048,6 +1048,7 @@ struct FamilySharedPetDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.appColorTheme) private var theme
     @State private var recordEditor: HealthRecordEditorPresentation?
+    @State private var lifeRecordEditor: HealthRecordEditorPresentation?
     @State private var reminderEditor: ReminderEditorPresentation?
     @State private var showsPetEditor = false
     @State private var completingReminderIDs: Set<UUID> = []
@@ -1139,9 +1140,9 @@ struct FamilySharedPetDetailView: View {
                 Text("这里只显示 Apple 为这只宠物提供的成员身份，不展示手机号、邮箱或 Apple ID。")
             }
 
-            Section("健康记录") {
+            Section("记录") {
                 if sharedPet.records.isEmpty {
-                    Text("暂无健康记录")
+                    Text("暂无记录")
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(sharedPet.records.sorted { $0.occurredAt > $1.occurredAt }) { record in
@@ -1176,7 +1177,12 @@ struct FamilySharedPetDetailView: View {
                                     Label("删除", systemImage: "trash")
                                 }
                                 Button {
-                                    recordEditor = HealthRecordEditorPresentation(record: record, petID: record.petID)
+                                    let presentation = HealthRecordEditorPresentation(record: record, petID: record.petID)
+                                    if record.kind == .life {
+                                        lifeRecordEditor = presentation
+                                    } else {
+                                        recordEditor = presentation
+                                    }
                                 } label: {
                                     Label("编辑", systemImage: "pencil")
                                 }
@@ -1186,10 +1192,19 @@ struct FamilySharedPetDetailView: View {
                     }
                 }
                 if sharedPet.canEdit {
-                    Button {
-                        recordEditor = HealthRecordEditorPresentation(record: nil, petID: sharedPet.pet.id)
+                    Menu {
+                        Button {
+                            lifeRecordEditor = HealthRecordEditorPresentation(record: nil, petID: sharedPet.pet.id)
+                        } label: {
+                            Label("记录生活", systemImage: "camera.fill")
+                        }
+                        Button {
+                            recordEditor = HealthRecordEditorPresentation(record: nil, petID: sharedPet.pet.id)
+                        } label: {
+                            Label("添加健康记录", systemImage: "heart.text.clipboard")
+                        }
                     } label: {
-                        Label("添加健康记录", systemImage: "plus")
+                        Label("新增记录", systemImage: "plus")
                     }
                 }
             }
@@ -1297,6 +1312,13 @@ struct FamilySharedPetDetailView: View {
                 sharedPet: sharedPet
             )
         }
+        .sheet(item: $lifeRecordEditor) { presentation in
+            LifeRecordEditorView(
+                record: presentation.record,
+                initialPetID: presentation.petID,
+                sharedPet: sharedPet
+            )
+        }
         .sheet(item: $reminderEditor) { presentation in
             ReminderEditorView(
                 reminder: presentation.reminder,
@@ -1397,12 +1419,19 @@ struct FamilySharedRecordDetailView: View {
                 .padding(.vertical, 16)
             }
 
-            Section("记录详情") {
+            Section(record.kind == .life ? "记录信息" : "记录详情") {
                 LabeledContent("宠物", value: currentSharedPet.pet.name)
                 LabeledContent("类型", value: record.kind.displayName)
-                LabeledContent("发生日期", value: L10n.date(record.occurredAt, dateStyle: .long, timeStyle: .omitted))
+                LabeledContent(
+                    record.kind == .life ? "发生时间" : "发生日期",
+                    value: L10n.date(
+                        record.occurredAt,
+                        dateStyle: .long,
+                        timeStyle: record.kind == .life ? .shortened : .omitted
+                    )
+                )
                 if let provider = record.providerName, !provider.isEmpty {
-                    LabeledContent("医院/机构", value: provider)
+                    LabeledContent(record.kind == .life ? "地点" : "医院/机构", value: provider)
                 }
                 if let cost = record.costCents {
                     LabeledContent(
@@ -1413,14 +1442,14 @@ struct FamilySharedRecordDetailView: View {
             }
 
             if let notes = record.localizedNotes, !notes.isEmpty {
-                Section("详情") {
+                Section(record.kind == .life ? "这一刻" : "详情") {
                     Text(notes)
                         .textSelection(.enabled)
                 }
             }
 
             if !record.attachments.isEmpty {
-                Section("附件") {
+                Section(record.kind == .life ? "照片" : "附件") {
                     LazyVGrid(
                         columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
                         spacing: 8
@@ -1445,11 +1474,19 @@ struct FamilySharedRecordDetailView: View {
             }
         }
         .sheet(isPresented: $showsEditor) {
-            HealthRecordEditorView(
-                record: record,
-                initialPetID: currentSharedPet.pet.id,
-                sharedPet: currentSharedPet
-            )
+            if record.kind == .life {
+                LifeRecordEditorView(
+                    record: record,
+                    initialPetID: currentSharedPet.pet.id,
+                    sharedPet: currentSharedPet
+                )
+            } else {
+                HealthRecordEditorView(
+                    record: record,
+                    initialPetID: currentSharedPet.pet.id,
+                    sharedPet: currentSharedPet
+                )
+            }
         }
         .fullScreenCover(item: $attachmentGallery) { presentation in
             HealthRecordAttachmentGallery(
