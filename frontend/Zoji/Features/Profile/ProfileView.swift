@@ -4,6 +4,7 @@ import UIKit
 
 struct ProfileView: View {
     @Environment(AppStore.self) private var store
+    @Environment(FamilySharingStore.self) private var familyStore
     @Environment(\.appColorTheme) private var theme
     @AppStorage(AppAppearance.storageKey) private var appearance = AppAppearance.system
     @AppStorage(AppColorTheme.storageKey) private var colorTheme = AppColorTheme.warm
@@ -475,6 +476,7 @@ private enum ICloudStorageStatus {
 
 private struct PetManagementView: View {
     @Environment(AppStore.self) private var store
+    @Environment(FamilySharingStore.self) private var familyStore
     @Environment(\.appColorTheme) private var theme
     @State private var isAddingPet = false
     @State private var editingPet: Pet?
@@ -496,7 +498,7 @@ private struct PetManagementView: View {
                 Section {
                     ForEach(store.pets) { pet in
                         Button {
-                            store.selectedPetID = pet.id
+                            store.select(.local(pet: pet, records: [], reminders: []), using: familyStore)
                             editingPet = pet
                         } label: {
                             HStack(spacing: 14) {
@@ -584,6 +586,8 @@ private struct PetManagementView: View {
                 }
             }
             Button("取消", role: .cancel) { petPendingDeletion = nil }
+        } message: {
+            Text("该宠物的记录和提醒会被删除；如果已开启家庭共享，也会撤销家人访问并删除共享云端副本。")
         }
         .alert("宠物资料操作失败", isPresented: Binding(
             get: { store.petPersistenceMessage != nil },

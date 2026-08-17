@@ -47,6 +47,8 @@ final class AppStore {
     @ObservationIgnored private var hasLoadedPersistedPets = false
     @ObservationIgnored private var hasLoadedPersistedRecords = false
     @ObservationIgnored private var hasLoadedPersistedReminders = false
+    @ObservationIgnored private var hasPurgedLegacySoftDeletes = false
+    @ObservationIgnored private var familyReloadTask: Task<Void, Never>?
 
     init(
         selectedPetID: UUID?,
@@ -111,13 +113,40 @@ final class AppStore {
         }
     }
 
-    func makeBackupArchive() -> ZojiBackupArchive {
-        ZojiBackupArchive(
+    func makeBackupArchive() async throws -> ZojiBackupArchive {
+        var completeRecords: [HealthRecord] = []
+        for pet in pets {
+            completeRecords.append(contentsOf: try await recordsWithAttachmentData(petID: pet.id))
+        }
+        return ZojiBackupArchive(
             selectedPetID: selectedPetID,
             pets: pets,
-            records: records,
+            records: completeRecords,
             reminders: reminders
         )
+    }
+
+    func healthRecordWithAttachments(id: UUID) async throws -> HealthRecord? {
+        if let healthRecordRepository {
+            return try await healthRecordRepository.record(id: id)
+        }
+        return records.first { $0.id == id }
+    }
+
+    func familySharePayload(for pet: Pet) async throws -> FamilyPetSharePayload {
+        FamilyPetSharePayload(
+            pet: pet,
+            records: try await recordsWithAttachmentData(petID: pet.id),
+            reminders: reminders
+        )
+    }
+
+    func familySharePayloads() async throws -> [FamilyPetSharePayload] {
+        var payloads: [FamilyPetSharePayload] = []
+        for pet in pets {
+            payloads.append(try await familySharePayload(for: pet))
+        }
+        return payloads
     }
 
     func importBackupArchive(_ archive: ZojiBackupArchive) async throws {
@@ -175,12 +204,13 @@ final class AppStore {
             pets.append(payload.pet)
         }
         records.removeAll { $0.petID == petID }
-        records.append(contentsOf: payload.records)
+        records.append(contentsOf: payload.records.map(Self.withoutAttachmentData))
         reminders.removeAll { $0.petID == petID }
         reminders.append(contentsOf: payload.reminders)
     }
 
     func reloadPersistedData() async {
+        await purgeLegacySoftDeletesIfNeeded()
         hasLoadedPersistedPets = false
         hasLoadedPersistedRecords = false
         hasLoadedPersistedReminders = false
@@ -189,20 +219,46 @@ final class AppStore {
         await loadPersistedRemindersIfNeeded()
     }
 
+    private func purgeLegacySoftDeletesIfNeeded() async {
+        guard !hasPurgedLegacySoftDeletes else { return }
+        do {
+            try await healthRecordRepository?.purgeLegacySoftDeletedEntities()
+            try await reminderRepository?.purgeLegacySoftDeletedEntities()
+            try await petRepository?.purgeLegacySoftDeletedEntities()
+            hasPurgedLegacySoftDeletes = true
+        } catch {
+            recordPersistenceMessage = String(localized: "清理旧版已删除数据失败：\(error.localizedDescription)", locale: L10n.locale)
+        }
+    }
+
     /// Reloads the local SwiftData mirror and reconciles both directions of
     /// family sharing. App launch, foreground refresh, and the Home pull gesture
     /// use this same path so they cannot drift into different sync behavior.
     func reloadPersistedAndFamilyData(using familyStore: FamilySharingStore) async {
+        if let familyReloadTask {
+            await familyReloadTask.value
+            return
+        }
+        let task = Task { @MainActor [weak self, weak familyStore] in
+            guard let self, let familyStore else { return }
+            await self.performPersistedAndFamilyReload(using: familyStore)
+        }
+        familyReloadTask = task
+        await task.value
+        familyReloadTask = nil
+    }
+
+    private func performPersistedAndFamilyReload(using familyStore: FamilySharingStore) async {
         await reloadPersistedData()
         familyStore.resolveLaunchSelection(hasPrivatePets: !pets.isEmpty)
         guard PersistenceController.isCloudKitConfigured else { return }
 
-        let payloads = pets.map { pet in
-            FamilyPetSharePayload(
-                pet: pet,
-                records: records,
-                reminders: reminders
-            )
+        let payloads: [FamilyPetSharePayload]
+        do {
+            payloads = try await familySharePayloads()
+        } catch {
+            recordPersistenceMessage = String(localized: "读取共享附件失败：\(error.localizedDescription)", locale: L10n.locale)
+            return
         }
         await familyStore.refresh(privatePayloads: payloads)
 
@@ -332,9 +388,9 @@ final class AppStore {
 
         try await petRepository?.save(pet)
         pets[index] = pet
-        if let location = await FamilySharingService.shared.ownedLocation(for: id) {
+        if let location = await FamilySharingService.shared.ownedMutationLocation(for: id) {
             try? await FamilySharingLocalStore.shared.upsertCachedOwnedPet(pet, location: location)
-            await enqueueFamilyChange(.save(pet, at: location))
+            await enqueueFamilyChange(.save(pet, replacing: originalPet, at: location))
         }
     }
 
@@ -344,12 +400,13 @@ final class AppStore {
         }
         try validateWeightEntry(kilograms: kilograms, measuredAt: measuredAt)
 
-        var pet = pets[index]
+        let originalPet = pets[index]
+        var pet = originalPet
         var entries = pet.weightEntries ?? []
         entries.append(WeightEntry(measuredAt: measuredAt, kilograms: kilograms))
         pet.weightEntries = entries.sorted { $0.measuredAt < $1.measuredAt }
         pet.weightKilograms = pet.sortedWeightEntries.last?.kilograms
-        try await persistUpdatedPet(pet, at: index)
+        try await persistUpdatedPet(pet, replacing: originalPet, at: index)
     }
 
     func updateWeightEntry(
@@ -363,7 +420,8 @@ final class AppStore {
         }
         try validateWeightEntry(kilograms: kilograms, measuredAt: measuredAt)
 
-        var pet = pets[index]
+        let originalPet = pets[index]
+        var pet = originalPet
         guard var entries = pet.weightEntries,
               let entryIndex = entries.firstIndex(where: { $0.id == entryID }) else {
             throw WeightEntryValidationError.entryNotFound
@@ -372,31 +430,60 @@ final class AppStore {
         entries[entryIndex].measuredAt = measuredAt
         pet.weightEntries = entries.sorted { $0.measuredAt < $1.measuredAt }
         pet.weightKilograms = pet.sortedWeightEntries.last?.kilograms
-        try await persistUpdatedPet(pet, at: index)
+        try await persistUpdatedPet(pet, replacing: originalPet, at: index)
     }
 
     func deleteWeightEntry(petID: UUID, entryID: UUID) async throws {
         guard let index = pets.firstIndex(where: { $0.id == petID }) else {
             throw WeightEntryValidationError.petNotFound
         }
-        var pet = pets[index]
+        let originalPet = pets[index]
+        var pet = originalPet
         pet.weightEntries?.removeAll { $0.id == entryID }
         pet.weightKilograms = pet.sortedWeightEntries.last?.kilograms
-        try await persistUpdatedPet(pet, at: index)
+        try await persistUpdatedPet(pet, replacing: originalPet, at: index)
     }
 
     func deletePet(id: UUID) async throws {
-        for reminder in reminders where reminder.petID == id {
-            await notificationScheduler.removeNotifications(reminderID: reminder.id)
+        let deletedPet = pets.first { $0.id == id }
+        let familyLocation: FamilyShareLocation? = if deletedPet != nil {
+            await FamilySharingService.shared.ownedMutationLocation(for: id)
+        } else { nil }
+        let deletionChange: FamilyPendingChange? = if let deletedPet, let familyLocation {
+            FamilyPendingChange.delete(deletedPet, at: familyLocation)
+        } else { nil }
+
+        // A shared pet loses its last owner-side UI entry after deletion. Store
+        // the CloudKit deletion in the durable outbox before removing that entry,
+        // otherwise an outbox write failure would leave an unreachable zombie
+        // share in every family member's app.
+        if let deletionChange {
+            try await FamilySharingLocalStore.shared.enqueue(deletionChange)
         }
-        try await reminderRepository?.deleteAll(petID: id)
-        try await healthRecordRepository?.deleteAll(petID: id)
-        try await petRepository?.delete(petID: id)
+        do {
+            for reminder in reminders where reminder.petID == id {
+                await notificationScheduler.removeNotifications(reminderID: reminder.id)
+            }
+            try await reminderRepository?.deleteAll(petID: id)
+            try await healthRecordRepository?.deleteAll(petID: id)
+            try await petRepository?.delete(petID: id)
+        } catch {
+            if let deletionChange {
+                try? await FamilySharingLocalStore.shared.markCompleted(deletionChange.id)
+            }
+            throw error
+        }
         pets.removeAll { $0.id == id }
         reminders.removeAll { $0.petID == id }
         records.removeAll { $0.petID == id }
         if selectedPetID == id {
             selectedPetID = pets.first?.id
+        }
+        if deletionChange != nil {
+            NotificationCenter.default.post(
+                name: FamilySharingService.pendingChangesDidUpdateNotification,
+                object: nil
+            )
         }
     }
 
@@ -426,9 +513,9 @@ final class AppStore {
         )
 
         try await healthRecordRepository?.save(record)
-        records.append(record)
+        records.append(Self.withoutAttachmentData(record))
         selectedPetID = petID
-        if let location = await FamilySharingService.shared.ownedLocation(for: petID) {
+        if let location = await FamilySharingService.shared.ownedMutationLocation(for: petID) {
             await enqueueFamilyChange(.save(record, at: location))
         }
         return record
@@ -446,23 +533,25 @@ final class AppStore {
         attachments: [HealthRecordAttachment] = []
     ) async throws {
         guard let index = records.firstIndex(where: { $0.id == id }) else { return }
+        let originalRecord = try await healthRecordRepository?.record(id: id) ?? records[index]
         let record = try validatedHealthRecord(
             id: id,
-            petID: records[index].petID,
+            petID: originalRecord.petID,
             kind: kind,
             title: title,
             occurredAt: occurredAt,
             providerName: providerName,
             costCents: costCents,
             currencyCode: currencyCode,
+            timeZoneIdentifier: originalRecord.timeZoneIdentifier,
             notes: notes,
             attachments: attachments
         )
 
         try await healthRecordRepository?.save(record)
-        records[index] = record
-        if let location = await FamilySharingService.shared.ownedLocation(for: record.petID) {
-            await enqueueFamilyChange(.save(record, at: location))
+        records[index] = Self.withoutAttachmentData(record)
+        if let location = await FamilySharingService.shared.ownedMutationLocation(for: record.petID) {
+            await enqueueFamilyChange(.save(record, replacing: originalRecord, at: location))
         }
     }
 
@@ -470,7 +559,7 @@ final class AppStore {
         let deletedRecord = records.first { $0.id == id }
         let linkedReminders = reminders.filter { $0.sourceRecordID == id }
         let familyLocation: FamilyShareLocation? = if let deletedRecord {
-            await FamilySharingService.shared.ownedLocation(for: deletedRecord.petID)
+            await FamilySharingService.shared.ownedMutationLocation(for: deletedRecord.petID)
         } else { nil }
         for reminder in linkedReminders {
             try await reminderRepository?.delete(reminderID: reminder.id)
@@ -515,7 +604,7 @@ final class AppStore {
         reminders.append(reminder)
         selectedPetID = petID
         await scheduleNotifications(for: reminder, requestingAuthorization: true)
-        if let location = await FamilySharingService.shared.ownedLocation(for: petID) {
+        if let location = await FamilySharingService.shared.ownedMutationLocation(for: petID) {
             await enqueueFamilyChange(.save(reminder, at: location))
         }
     }
@@ -596,7 +685,7 @@ final class AppStore {
         reminders.append(contentsOf: newReminders)
         selectedPetID = petID
 
-        if let location = await FamilySharingService.shared.ownedLocation(for: petID) {
+        if let location = await FamilySharingService.shared.ownedMutationLocation(for: petID) {
             for reminder in newReminders {
                 await enqueueFamilyChange(.save(reminder, at: location))
             }
@@ -630,10 +719,11 @@ final class AppStore {
         advanceDays: [Int]
     ) async throws {
         guard let index = reminders.firstIndex(where: { $0.id == id }) else { return }
+        let originalReminder = reminders[index]
         let reminder = try validatedReminder(
             id: id,
             petID: petID,
-            sourceRecordID: reminders[index].sourceRecordID,
+            sourceRecordID: originalReminder.sourceRecordID,
             title: title,
             kind: kind,
             dueAt: dueAt,
@@ -641,15 +731,15 @@ final class AppStore {
             intervalValue: intervalValue,
             advanceDays: advanceDays,
             isEnabled: true,
-            lastCompletedAt: reminders[index].lastCompletedAt
+            lastCompletedAt: originalReminder.lastCompletedAt
         )
 
         try await reminderRepository?.save(reminder)
         reminders[index] = reminder
         selectedPetID = petID
         await scheduleNotifications(for: reminder, requestingAuthorization: true)
-        if let location = await FamilySharingService.shared.ownedLocation(for: petID) {
-            await enqueueFamilyChange(.save(reminder, at: location))
+        if let location = await FamilySharingService.shared.ownedMutationLocation(for: petID) {
+            await enqueueFamilyChange(.save(reminder, replacing: originalReminder, at: location))
         }
     }
 
@@ -657,27 +747,6 @@ final class AppStore {
     func completeReminder(id: UUID) async throws -> Date? {
         guard let index = reminders.firstIndex(where: { $0.id == id }) else { return nil }
         let originalReminder = reminders[index]
-        if let location = await FamilySharingService.shared.ownedLocation(for: originalReminder.petID) {
-            let syncResult = await FamilySharingUploadCoordinator.shared.synchronize()
-            guard syncResult.remainingCount == 0 else {
-                throw FamilySharingError.pendingChangesNotSynced
-            }
-            let completion = try await FamilySharingService.shared.completeReminder(
-                id: id,
-                petID: originalReminder.petID,
-                location: location
-            )
-            try await healthRecordRepository?.save(completion.record)
-            try await reminderRepository?.save(completion.reminder)
-            reminders[index] = completion.reminder
-            records.append(completion.record)
-            if completion.reminder.isEnabled {
-                await scheduleNotifications(for: completion.reminder, requestingAuthorization: false)
-            } else {
-                await notificationScheduler.removeNotifications(reminderID: completion.reminder.id)
-            }
-            return completion.nextDueAt
-        }
         guard !originalReminder.isCompletionLocked() else {
             throw ReminderCompletionError.currentCycleAlreadyCompleted
         }
@@ -708,7 +777,7 @@ final class AppStore {
             occurredAt: completedAt,
             providerName: nil,
             costCents: nil,
-            notes: "由健康提醒完成后自动生成。",
+            notes: HealthRecord.reminderCompletionNoteMarker,
             attachments: []
         )
 
@@ -734,13 +803,23 @@ final class AppStore {
         } else {
             await notificationScheduler.removeNotifications(reminderID: reminder.id)
         }
+        if let location = await FamilySharingService.shared.ownedMutationLocation(
+            for: originalReminder.petID
+        ) {
+            await enqueueFamilyChange(.complete(
+                reminder,
+                replacing: originalReminder,
+                record: completionRecord,
+                at: location
+            ))
+        }
         return nextDueAt
     }
 
     func deleteReminder(id: UUID) async throws {
         let deletedReminder = reminders.first { $0.id == id }
         let familyLocation: FamilyShareLocation? = if let deletedReminder {
-            await FamilySharingService.shared.ownedLocation(for: deletedReminder.petID)
+            await FamilySharingService.shared.ownedMutationLocation(for: deletedReminder.petID)
         } else { nil }
         try await reminderRepository?.delete(reminderID: id)
         await notificationScheduler.removeNotifications(reminderID: id)
@@ -760,6 +839,24 @@ final class AppStore {
         } catch {
             recordPersistenceMessage = String(localized: "修改已保存在本机，但暂时无法加入 iCloud 同步队列：\(error.localizedDescription)", locale: L10n.locale)
         }
+    }
+
+    private func recordsWithAttachmentData(petID: UUID) async throws -> [HealthRecord] {
+        if let healthRecordRepository {
+            return try await healthRecordRepository.listRecords(
+                petID: petID,
+                includingAttachmentData: true
+            )
+        }
+        return records.filter { $0.petID == petID }
+    }
+
+    private static func withoutAttachmentData(_ record: HealthRecord) -> HealthRecord {
+        var lightweight = record
+        for index in lightweight.attachments.indices {
+            lightweight.attachments[index].data = Data()
+        }
+        return lightweight
     }
 
     private func validatedPet(
@@ -809,12 +906,12 @@ final class AppStore {
         }
     }
 
-    private func persistUpdatedPet(_ pet: Pet, at index: Int) async throws {
+    private func persistUpdatedPet(_ pet: Pet, replacing basePet: Pet, at index: Int) async throws {
         try await petRepository?.save(pet)
         pets[index] = pet
-        if let location = await FamilySharingService.shared.ownedLocation(for: pet.id) {
+        if let location = await FamilySharingService.shared.ownedMutationLocation(for: pet.id) {
             try? await FamilySharingLocalStore.shared.upsertCachedOwnedPet(pet, location: location)
-            await enqueueFamilyChange(.save(pet, at: location))
+            await enqueueFamilyChange(.save(pet, replacing: basePet, at: location))
         }
     }
 
@@ -827,6 +924,7 @@ final class AppStore {
         providerName: String?,
         costCents: Int?,
         currencyCode: String? = nil,
+        timeZoneIdentifier: String? = TimeZone.autoupdatingCurrent.identifier,
         notes: String?,
         attachments: [HealthRecordAttachment]
     ) throws -> HealthRecord {
@@ -861,6 +959,7 @@ final class AppStore {
             providerName: trimmedProvider?.isEmpty == false ? trimmedProvider : nil,
             costCents: costCents,
             currencyCode: costCents == nil ? nil : normalizedCurrencyCode,
+            timeZoneIdentifier: timeZoneIdentifier,
             notes: trimmedNotes?.isEmpty == false ? trimmedNotes : nil,
             attachments: attachments
         )

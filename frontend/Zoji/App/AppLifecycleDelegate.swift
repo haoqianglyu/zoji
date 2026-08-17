@@ -1,7 +1,60 @@
 import CloudKit
 import UIKit
+import UserNotifications
 
-final class ZojiAppDelegate: NSObject, UIApplicationDelegate {
+struct ReminderNotificationRoute: Equatable, Sendable {
+    let deliveryID = UUID()
+    let reminderID: UUID
+    let petID: UUID
+}
+
+@MainActor
+enum ReminderNotificationRouter {
+    static let didOpenNotification = Notification.Name("ZojiDidOpenReminderNotification")
+    private(set) static var pendingRoute: ReminderNotificationRoute?
+
+    static func publish(userInfo: [AnyHashable: Any]) {
+        guard let reminderValue = userInfo["reminderID"] as? String,
+              let reminderID = UUID(uuidString: reminderValue),
+              let petValue = userInfo["petID"] as? String,
+              let petID = UUID(uuidString: petValue) else { return }
+        let route = ReminderNotificationRoute(reminderID: reminderID, petID: petID)
+        pendingRoute = route
+        NotificationCenter.default.post(name: didOpenNotification, object: route)
+    }
+
+    static func clear(_ route: ReminderNotificationRoute) {
+        if pendingRoute == route { pendingRoute = nil }
+    }
+}
+
+final class ZojiAppDelegate: NSObject, UIApplicationDelegate, @preconcurrency UNUserNotificationCenterDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        UNUserNotificationCenter.current().delegate = self
+        return true
+    }
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification
+    ) async -> UNNotificationPresentationOptions {
+        [.banner, .sound]
+    }
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse
+    ) async {
+        await MainActor.run {
+            ReminderNotificationRouter.publish(
+                userInfo: response.notification.request.content.userInfo
+            )
+        }
+    }
+
     func application(
         _ application: UIApplication,
         configurationForConnecting connectingSceneSession: UISceneSession,

@@ -1,5 +1,6 @@
 import CloudKit
 import CoreTransferable
+import CryptoKit
 import Foundation
 import Network
 import Observation
@@ -298,10 +299,12 @@ struct FamilyReminderCompletion: Sendable {
 
 enum FamilyPendingChangeKind: String, Codable, Sendable {
     case savePet
+    case deletePet
     case saveHealthRecord
     case deleteHealthRecord
     case saveReminder
     case deleteReminder
+    case completeReminder
 }
 
 struct FamilyPendingChange: Codable, Identifiable, Sendable {
@@ -314,51 +317,137 @@ struct FamilyPendingChange: Codable, Identifiable, Sendable {
     let pet: Pet?
     let basePet: Pet?
     let healthRecord: HealthRecord?
+    let baseHealthRecord: HealthRecord?
     let reminder: ReminderItem?
+    let baseReminder: ReminderItem?
+    /// Version 1 stores health-record attachment bytes in queue sidecar files.
+    /// `nil` identifies a legacy plist that still embeds the bytes directly.
+    let attachmentStorageVersion: Int?
+
+    init(
+        id: UUID,
+        createdAt: Date,
+        kind: FamilyPendingChangeKind,
+        location: FamilyShareLocation,
+        petID: UUID,
+        entityID: UUID,
+        pet: Pet?,
+        basePet: Pet?,
+        healthRecord: HealthRecord?,
+        baseHealthRecord: HealthRecord?,
+        reminder: ReminderItem?,
+        baseReminder: ReminderItem?,
+        attachmentStorageVersion: Int? = nil
+    ) {
+        self.id = id
+        self.createdAt = createdAt
+        self.kind = kind
+        self.location = location
+        self.petID = petID
+        self.entityID = entityID
+        self.pet = pet
+        self.basePet = basePet
+        self.healthRecord = healthRecord
+        self.baseHealthRecord = baseHealthRecord
+        self.reminder = reminder
+        self.baseReminder = baseReminder
+        self.attachmentStorageVersion = attachmentStorageVersion
+    }
+
+    func replacingQueuedHealthRecords(
+        healthRecord: HealthRecord?,
+        baseHealthRecord: HealthRecord?,
+        attachmentStorageVersion: Int?
+    ) -> Self {
+        Self(
+            id: id,
+            createdAt: createdAt,
+            kind: kind,
+            location: location,
+            petID: petID,
+            entityID: entityID,
+            pet: pet,
+            basePet: basePet,
+            healthRecord: healthRecord,
+            baseHealthRecord: baseHealthRecord,
+            reminder: reminder,
+            baseReminder: baseReminder,
+            attachmentStorageVersion: attachmentStorageVersion
+        )
+    }
 
     var coalescingKey: String {
         let scope = "\(location.databaseScope.rawValue)|\(location.zoneOwnerName)|\(location.zoneName)"
         switch kind {
-        case .savePet: return "\(scope)|pet|\(petID)"
+        case .savePet, .deletePet: return "\(scope)|pet|\(petID)"
         case .saveHealthRecord, .deleteHealthRecord: return "\(scope)|health|\(entityID)"
         case .saveReminder, .deleteReminder: return "\(scope)|reminder|\(entityID)"
+        case .completeReminder: return "\(scope)|completion|\(healthRecord?.id.uuidString ?? id.uuidString)"
         }
     }
 
     static func save(_ pet: Pet, at location: FamilyShareLocation) -> Self {
         Self(id: UUID(), createdAt: Date(), kind: .savePet, location: location,
              petID: pet.id, entityID: pet.id, pet: pet, basePet: nil,
-             healthRecord: nil, reminder: nil)
+             healthRecord: nil, baseHealthRecord: nil, reminder: nil, baseReminder: nil)
     }
 
     static func save(_ pet: Pet, replacing basePet: Pet, at location: FamilyShareLocation) -> Self {
         Self(id: UUID(), createdAt: Date(), kind: .savePet, location: location,
              petID: pet.id, entityID: pet.id, pet: pet, basePet: basePet,
-             healthRecord: nil, reminder: nil)
+             healthRecord: nil, baseHealthRecord: nil, reminder: nil, baseReminder: nil)
     }
 
-    static func save(_ record: HealthRecord, at location: FamilyShareLocation) -> Self {
+    static func delete(_ pet: Pet, at location: FamilyShareLocation) -> Self {
+        Self(id: UUID(), createdAt: Date(), kind: .deletePet, location: location,
+             petID: pet.id, entityID: pet.id, pet: pet, basePet: nil,
+             healthRecord: nil, baseHealthRecord: nil, reminder: nil, baseReminder: nil)
+    }
+
+    static func save(
+        _ record: HealthRecord,
+        replacing baseRecord: HealthRecord? = nil,
+        at location: FamilyShareLocation
+    ) -> Self {
         Self(id: UUID(), createdAt: Date(), kind: .saveHealthRecord, location: location,
              petID: record.petID, entityID: record.id, pet: nil, basePet: nil,
-             healthRecord: record, reminder: nil)
+             healthRecord: record, baseHealthRecord: baseRecord, reminder: nil, baseReminder: nil)
     }
 
     static func delete(_ record: HealthRecord, at location: FamilyShareLocation) -> Self {
-        Self(id: UUID(), createdAt: Date(), kind: .deleteHealthRecord, location: location,
-             petID: record.petID, entityID: record.id, pet: nil, basePet: nil,
-             healthRecord: record, reminder: nil)
+        var tombstone = record
+        tombstone.attachments = []
+        return Self(id: UUID(), createdAt: Date(), kind: .deleteHealthRecord, location: location,
+                    petID: record.petID, entityID: record.id, pet: nil, basePet: nil,
+                    healthRecord: tombstone, baseHealthRecord: nil, reminder: nil, baseReminder: nil)
     }
 
-    static func save(_ reminder: ReminderItem, at location: FamilyShareLocation) -> Self {
+    static func save(
+        _ reminder: ReminderItem,
+        replacing baseReminder: ReminderItem? = nil,
+        at location: FamilyShareLocation
+    ) -> Self {
         Self(id: UUID(), createdAt: Date(), kind: .saveReminder, location: location,
              petID: reminder.petID, entityID: reminder.id, pet: nil, basePet: nil,
-             healthRecord: nil, reminder: reminder)
+             healthRecord: nil, baseHealthRecord: nil, reminder: reminder, baseReminder: baseReminder)
     }
 
     static func delete(_ reminder: ReminderItem, at location: FamilyShareLocation) -> Self {
         Self(id: UUID(), createdAt: Date(), kind: .deleteReminder, location: location,
              petID: reminder.petID, entityID: reminder.id, pet: nil, basePet: nil,
-             healthRecord: nil, reminder: reminder)
+             healthRecord: nil, baseHealthRecord: nil, reminder: reminder, baseReminder: nil)
+    }
+
+    static func complete(
+        _ reminder: ReminderItem,
+        replacing baseReminder: ReminderItem,
+        record: HealthRecord,
+        at location: FamilyShareLocation
+    ) -> Self {
+        Self(id: UUID(), createdAt: Date(), kind: .completeReminder, location: location,
+             petID: reminder.petID, entityID: reminder.id, pet: nil, basePet: nil,
+             healthRecord: record, baseHealthRecord: nil,
+             reminder: reminder, baseReminder: baseReminder)
     }
 }
 
@@ -382,7 +471,13 @@ actor FamilySharingLocalStore {
     private var ownedLocations: [UUID: FamilyShareLocation] = [:]
     private var memberSnapshots: [UUID: FamilyMemberSnapshot] = [:]
     private var activities: [FamilyShareActivity] = []
+    private var pendingAttachmentDigests: [String: String] = [:]
     private let directoryOverride: URL?
+
+    private enum PendingAttachmentSlot: String {
+        case desired
+        case base
+    }
 
     private let encoder: PropertyListEncoder = {
         let encoder = PropertyListEncoder()
@@ -422,6 +517,9 @@ actor FamilySharingLocalStore {
     }
 
     private var pendingURL: URL { directory.appendingPathComponent("pending-changes.plist") }
+    private var pendingAttachmentsURL: URL {
+        directory.appendingPathComponent("pending-attachment-blobs", isDirectory: true)
+    }
     private var cacheURL: URL { directory.appendingPathComponent("shared-pets.plist") }
     private var ownedURL: URL { directory.appendingPathComponent("owned-locations.plist") }
     private var membersURL: URL { directory.appendingPathComponent("member-snapshots.plist") }
@@ -429,7 +527,10 @@ actor FamilySharingLocalStore {
 
     func enqueue(_ change: FamilyPendingChange) throws {
         try loadIfNeeded()
-        if change.kind == .savePet,
+        if change.kind == .deletePet {
+            pendingChanges.removeAll { $0.petID == change.petID }
+            pendingChanges.append(change)
+        } else if [.savePet, .saveHealthRecord, .saveReminder].contains(change.kind),
            let earlier = pendingChanges.first(where: { $0.coalescingKey == change.coalescingKey }) {
             // Keep the earliest base and the latest desired value. This retains
             // three-way merge semantics without growing one queue item per edit.
@@ -443,7 +544,9 @@ actor FamilySharingLocalStore {
                 pet: change.pet,
                 basePet: earlier.basePet ?? change.basePet,
                 healthRecord: change.healthRecord,
-                reminder: change.reminder
+                baseHealthRecord: earlier.baseHealthRecord ?? change.baseHealthRecord,
+                reminder: change.reminder,
+                baseReminder: earlier.baseReminder ?? change.baseReminder
             )
             pendingChanges.removeAll { $0.coalescingKey == change.coalescingKey }
             pendingChanges.append(coalesced)
@@ -652,8 +755,12 @@ actor FamilySharingLocalStore {
     private func loadIfNeeded() throws {
         guard !didLoad else { return }
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        if let data = try? Data(contentsOf: pendingURL) {
-            pendingChanges = (try? decoder.decode([FamilyPendingChange].self, from: data)) ?? []
+        var needsPendingMigration = false
+        if FileManager.default.fileExists(atPath: pendingURL.path) {
+            let data = try Data(contentsOf: pendingURL)
+            let storedChanges = try decoder.decode([FamilyPendingChange].self, from: data)
+            needsPendingMigration = storedChanges.contains { $0.attachmentStorageVersion == nil }
+            pendingChanges = try storedChanges.map(hydratingPendingAttachments)
         }
         if let data = try? Data(contentsOf: cacheURL),
            let pets = try? decoder.decode([FamilySharedPet].self, from: data) {
@@ -671,10 +778,144 @@ actor FamilySharingLocalStore {
             activities = (try? decoder.decode([FamilyShareActivity].self, from: data)) ?? []
         }
         didLoad = true
+        if needsPendingMigration {
+            do {
+                try persistPendingChanges()
+            } catch {
+                didLoad = false
+                throw error
+            }
+        }
     }
 
     private func persistPendingChanges() throws {
-        try encoder.encode(pendingChanges).write(to: pendingURL, options: .atomic)
+        try FileManager.default.createDirectory(
+            at: pendingAttachmentsURL,
+            withIntermediateDirectories: true
+        )
+        var retainedBlobPaths = Set<String>()
+        let storedChanges = try pendingChanges.map { change in
+            let desired = try externalizedRecord(
+                change.healthRecord,
+                changeID: change.id,
+                slot: .desired,
+                retainedBlobPaths: &retainedBlobPaths
+            )
+            let base = try externalizedRecord(
+                change.baseHealthRecord,
+                changeID: change.id,
+                slot: .base,
+                retainedBlobPaths: &retainedBlobPaths
+            )
+            return change.replacingQueuedHealthRecords(
+                healthRecord: desired,
+                baseHealthRecord: base,
+                attachmentStorageVersion: 1
+            )
+        }
+        try encoder.encode(storedChanges).write(to: pendingURL, options: .atomic)
+        cleanupPendingAttachmentBlobs(retaining: retainedBlobPaths)
+    }
+
+    private func externalizedRecord(
+        _ value: HealthRecord?,
+        changeID: UUID,
+        slot: PendingAttachmentSlot,
+        retainedBlobPaths: inout Set<String>
+    ) throws -> HealthRecord? {
+        guard var record = value else { return nil }
+        for index in record.attachments.indices {
+            let attachment = record.attachments[index]
+            let url = pendingAttachmentURL(
+                changeID: changeID,
+                slot: slot,
+                attachmentID: attachment.id
+            )
+            let path = url.standardizedFileURL.path
+            retainedBlobPaths.insert(path)
+            let digest = Self.digest(of: attachment.data)
+            if pendingAttachmentDigests[path] != digest ||
+                !FileManager.default.fileExists(atPath: path) {
+                try FileManager.default.createDirectory(
+                    at: url.deletingLastPathComponent(),
+                    withIntermediateDirectories: true
+                )
+                try attachment.data.write(to: url, options: .atomic)
+                pendingAttachmentDigests[path] = digest
+            }
+            record.attachments[index].data = Data()
+        }
+        return record
+    }
+
+    private func hydratingPendingAttachments(_ change: FamilyPendingChange) throws -> FamilyPendingChange {
+        guard change.attachmentStorageVersion == 1 else { return change }
+        let desired = try hydratedRecord(change.healthRecord, changeID: change.id, slot: .desired)
+        let base = try hydratedRecord(change.baseHealthRecord, changeID: change.id, slot: .base)
+        return change.replacingQueuedHealthRecords(
+            healthRecord: desired,
+            baseHealthRecord: base,
+            attachmentStorageVersion: 1
+        )
+    }
+
+    private func hydratedRecord(
+        _ value: HealthRecord?,
+        changeID: UUID,
+        slot: PendingAttachmentSlot
+    ) throws -> HealthRecord? {
+        guard var record = value else { return nil }
+        for index in record.attachments.indices where record.attachments[index].data.isEmpty {
+            let url = pendingAttachmentURL(
+                changeID: changeID,
+                slot: slot,
+                attachmentID: record.attachments[index].id
+            )
+            let data = try Data(contentsOf: url, options: .mappedIfSafe)
+            record.attachments[index].data = data
+            pendingAttachmentDigests[url.standardizedFileURL.path] = Self.digest(of: data)
+        }
+        return record
+    }
+
+    private func pendingAttachmentURL(
+        changeID: UUID,
+        slot: PendingAttachmentSlot,
+        attachmentID: UUID
+    ) -> URL {
+        pendingAttachmentsURL
+            .appendingPathComponent(changeID.uuidString, isDirectory: true)
+            .appendingPathComponent(slot.rawValue, isDirectory: true)
+            .appendingPathComponent(attachmentID.uuidString)
+            .appendingPathExtension("blob")
+    }
+
+    private func cleanupPendingAttachmentBlobs(retaining retainedPaths: Set<String>) {
+        guard let enumerator = FileManager.default.enumerator(
+            at: pendingAttachmentsURL,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        ) else { return }
+        var directories: [URL] = []
+        for case let url as URL in enumerator {
+            let isDirectory = (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
+            if isDirectory {
+                directories.append(url)
+            } else if !retainedPaths.contains(url.standardizedFileURL.path) {
+                try? FileManager.default.removeItem(at: url)
+                pendingAttachmentDigests.removeValue(forKey: url.standardizedFileURL.path)
+            }
+        }
+        for url in directories.sorted(by: { $0.path.count > $1.path.count }) {
+            guard (try? FileManager.default.contentsOfDirectory(atPath: url.path).isEmpty) == true else {
+                continue
+            }
+            try? FileManager.default.removeItem(at: url)
+        }
+    }
+
+    private static func digest(of data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
     private func persistCache() throws {
@@ -854,6 +1095,32 @@ actor FamilySharingService {
         static let updatedAt = "updatedAt"
         static let schemaVersion = "schemaVersion"
         static let contentReady = "contentReady"
+
+        /// Fields needed to discover and mutate zone records without asking
+        /// CloudKit to materialize any CKAsset files.
+        static let metadataKeys: [CKRecord.FieldKey] = [
+            bodyData,
+            petID,
+            petName,
+            entityID,
+            healthRecordID,
+            attachmentKind,
+            originalName,
+            createdAt,
+            updatedAt,
+            schemaVersion,
+            contentReady,
+        ]
+
+        static let attachmentContentKeys: [CKRecord.FieldKey] = [
+            entityID,
+            healthRecordID,
+            attachmentKind,
+            originalName,
+            createdAt,
+            updatedAt,
+            attachmentAsset,
+        ]
     }
 
     private let container: CKContainer
@@ -1234,24 +1501,88 @@ actor FamilySharingService {
         return location
     }
 
+    /// Resolves the upload destination for an owner-side mutation. A failed
+    /// CloudKit lookup is deliberately different from a successful "not
+    /// shared" result: while offline, keep an outbox item addressed to the
+    /// deterministic owner zone so the edit cannot fall out of synchronization.
+    func ownedMutationLocation(for petID: UUID) async -> FamilyShareLocation? {
+        if let cached = try? await FamilySharingLocalStore.shared.ownedLocation(for: petID) {
+            return cached
+        }
+        let zoneID = Self.zoneID(for: petID)
+        let candidate = FamilyShareLocation(
+            zoneName: zoneID.zoneName,
+            zoneOwnerName: zoneID.ownerName,
+            databaseScope: .ownerPrivate
+        )
+        let shareID = Self.shareRecordID(for: petID, zoneID: zoneID)
+        do {
+            guard let share = try await existingRecord(id: shareID, in: privateDatabase) as? CKShare,
+                  Self.hasInvitedParticipants(share) else {
+                return nil
+            }
+            try? await FamilySharingLocalStore.shared.registerOwned([petID: candidate])
+            return candidate
+        } catch {
+            return candidate
+        }
+    }
+
     func uploadPendingChange(_ change: FamilyPendingChange) async throws {
         switch change.kind {
         case .savePet:
             guard let pet = change.pet else { throw FamilySharingError.invalidPayload }
             try await upsertPet(pet, replacing: change.basePet, location: change.location)
+        case .deletePet:
+            try await deleteOwnedPet(petID: change.petID, location: change.location)
         case .saveHealthRecord:
             guard let record = change.healthRecord else { throw FamilySharingError.invalidPayload }
-            try await upsertHealthRecord(record, location: change.location)
+            try await upsertHealthRecord(
+                record,
+                replacing: change.baseHealthRecord,
+                location: change.location
+            )
         case .deleteHealthRecord:
             guard let record = change.healthRecord else { throw FamilySharingError.invalidPayload }
             try await deleteHealthRecord(record, location: change.location)
         case .saveReminder:
             guard let reminder = change.reminder else { throw FamilySharingError.invalidPayload }
-            try await upsertReminder(reminder, location: change.location)
+            try await upsertReminder(
+                reminder,
+                replacing: change.baseReminder,
+                location: change.location
+            )
         case .deleteReminder:
             guard let reminder = change.reminder else { throw FamilySharingError.invalidPayload }
             try await deleteReminder(reminder, location: change.location)
+        case .completeReminder:
+            guard let reminder = change.reminder,
+                  let baseReminder = change.baseReminder,
+                  let record = change.healthRecord else {
+                throw FamilySharingError.invalidPayload
+            }
+            try await uploadReminderCompletion(
+                reminder: reminder,
+                replacing: baseReminder,
+                record: record,
+                location: change.location
+            )
         }
+    }
+
+    func deleteOwnedPet(petID: UUID, location: FamilyShareLocation) async throws {
+        guard location.databaseScope == .ownerPrivate else {
+            throw FamilySharingError.ownerOnly
+        }
+        do {
+            _ = try await privateDatabase.deleteRecordZone(withID: location.zoneID)
+        } catch let error as CKError where error.code == .zoneNotFound || error.code == .unknownItem {
+            // The desired end state is already present.
+        }
+        try? await FamilySharingLocalStore.shared.discardPendingChanges(
+            at: location,
+            removingCachedPet: true
+        )
     }
 
     /// Migrates old snapshot shares without overwriting edits already made in the
@@ -1338,71 +1669,190 @@ actor FamilySharingService {
         return merged
     }
 
-    func upsertHealthRecord(_ record: HealthRecord, location: FamilyShareLocation) async throws {
+    nonisolated static func mergingHealthRecordChange(
+        server: HealthRecord,
+        desired: HealthRecord,
+        base: HealthRecord?
+    ) -> HealthRecord {
+        guard let base else {
+            var merged = desired
+            var attachments = Dictionary(uniqueKeysWithValues: server.attachments.map { ($0.id, $0) })
+            for attachment in desired.attachments {
+                attachments[attachment.id] = attachment
+            }
+            merged.attachments = attachments.values.sorted { $0.createdAt < $1.createdAt }
+            return merged
+        }
+
+        var merged = server
+        if desired.kind != base.kind { merged.kind = desired.kind }
+        if desired.title != base.title { merged.title = desired.title }
+        if desired.occurredAt != base.occurredAt { merged.occurredAt = desired.occurredAt }
+        if desired.providerName != base.providerName { merged.providerName = desired.providerName }
+        if desired.costCents != base.costCents { merged.costCents = desired.costCents }
+        if desired.currencyCode != base.currencyCode { merged.currencyCode = desired.currencyCode }
+        if desired.timeZoneIdentifier != base.timeZoneIdentifier {
+            merged.timeZoneIdentifier = desired.timeZoneIdentifier
+        }
+        if desired.notes != base.notes { merged.notes = desired.notes }
+
+        let baseAttachments = Dictionary(uniqueKeysWithValues: base.attachments.map { ($0.id, $0) })
+        let desiredAttachments = Dictionary(uniqueKeysWithValues: desired.attachments.map { ($0.id, $0) })
+        var attachments = Dictionary(uniqueKeysWithValues: server.attachments.map { ($0.id, $0) })
+        for id in baseAttachments.keys where desiredAttachments[id] == nil {
+            attachments.removeValue(forKey: id)
+        }
+        for (id, attachment) in desiredAttachments where baseAttachments[id] != attachment {
+            attachments[id] = attachment
+        }
+        merged.attachments = attachments.values.sorted { $0.createdAt < $1.createdAt }
+        return merged
+    }
+
+    nonisolated static func mergingReminderChange(
+        server: ReminderItem,
+        desired: ReminderItem,
+        base: ReminderItem?
+    ) -> ReminderItem {
+        guard let base else {
+            var merged = desired
+            if let serverCompletedAt = server.lastCompletedAt,
+               desired.lastCompletedAt.map({ serverCompletedAt > $0 }) ?? true {
+                merged.dueAt = server.dueAt
+                merged.isEnabled = server.isEnabled
+                merged.lastCompletedAt = serverCompletedAt
+            }
+            return merged
+        }
+
+        var merged = server
+        if desired.sourceRecordID != base.sourceRecordID { merged.sourceRecordID = desired.sourceRecordID }
+        if desired.title != base.title { merged.title = desired.title }
+        if desired.kind != base.kind { merged.kind = desired.kind }
+        if desired.scheduleType != base.scheduleType { merged.scheduleType = desired.scheduleType }
+        if desired.intervalValue != base.intervalValue { merged.intervalValue = desired.intervalValue }
+        if desired.advanceDays != base.advanceDays { merged.advanceDays = desired.advanceDays }
+
+        let serverCompletedSinceBase = server.lastCompletedAt != base.lastCompletedAt
+        let desiredCompletedSinceBase = desired.lastCompletedAt != base.lastCompletedAt
+        if serverCompletedSinceBase && !desiredCompletedSinceBase {
+            merged.dueAt = server.dueAt
+            merged.isEnabled = server.isEnabled
+            merged.lastCompletedAt = server.lastCompletedAt
+        } else if serverCompletedSinceBase && desiredCompletedSinceBase {
+            let serverDate = server.lastCompletedAt ?? .distantPast
+            let desiredDate = desired.lastCompletedAt ?? .distantPast
+            if desiredDate >= serverDate {
+                merged.dueAt = desired.dueAt
+                merged.isEnabled = desired.isEnabled
+                merged.lastCompletedAt = desired.lastCompletedAt
+            }
+        } else {
+            if desired.dueAt != base.dueAt { merged.dueAt = desired.dueAt }
+            if desired.isEnabled != base.isEnabled { merged.isEnabled = desired.isEnabled }
+            if desired.lastCompletedAt != base.lastCompletedAt {
+                merged.lastCompletedAt = desired.lastCompletedAt
+            }
+        }
+        return merged
+    }
+
+    func upsertHealthRecord(
+        _ record: HealthRecord,
+        replacing baseRecord: HealthRecord?,
+        location: FamilyShareLocation
+    ) async throws {
         try HealthRecordAttachmentPolicy.validate(record.attachments)
         let database = database(for: location.databaseScope)
         let zoneID = location.zoneID
         let rootID = Self.rootRecordID(for: record.petID, zoneID: zoneID)
         let recordID = Self.healthRecordID(for: record.id, zoneID: zoneID)
-        let body = HealthRecord(
-            id: record.id,
-            petID: record.petID,
-            kind: record.kind,
-            title: record.title,
-            occurredAt: record.occurredAt,
-            providerName: record.providerName,
-            costCents: record.costCents,
-            currencyCode: record.currencyCode,
-            notes: record.notes,
-            attachments: []
-        )
-        let cloudRecord = try await existingRecord(id: recordID, in: database)
-            ?? CKRecord(recordType: RecordSchema.healthRecord, recordID: recordID)
-        cloudRecord.parent = CKRecord.Reference(recordID: rootID, action: .none)
-        cloudRecord[RecordSchema.entityID] = record.id.uuidString as CKRecordValue
-        cloudRecord[RecordSchema.petID] = record.petID.uuidString as CKRecordValue
-        cloudRecord[RecordSchema.bodyData] = try encoder.encode(body) as CKRecordValue
-        cloudRecord[RecordSchema.updatedAt] = Date() as CKRecordValue
+        for attempt in 0 ..< 2 {
+            var zoneRecords = try await fetchAllRecords(
+                zoneID: zoneID,
+                in: database,
+                desiredKeys: RecordSchema.metadataKeys
+            )
+            zoneRecords = try await hydratingAttachmentAssets(
+                for: record.id,
+                in: zoneRecords,
+                database: database
+            )
+            let serverRecord = try decodeHealthRecord(id: record.id, zoneID: zoneID, from: zoneRecords)
+            let merged = serverRecord.map {
+                Self.mergingHealthRecordChange(server: $0, desired: record, base: baseRecord)
+            } ?? record
+            try HealthRecordAttachmentPolicy.validate(merged.attachments)
 
-        let zoneRecords = try await fetchAllRecords(zoneID: zoneID, in: database)
-        let existingAttachments = zoneRecords.values.filter {
-            $0.recordType == RecordSchema.attachment
-                && ($0[RecordSchema.healthRecordID] as? String) == record.id.uuidString
-        }
-        let retainedIDs = Set(record.attachments.map(\.id))
-        let deleting = existingAttachments.compactMap { cloudAttachment -> CKRecord.ID? in
-            guard let rawID = cloudAttachment[RecordSchema.entityID] as? String,
-                  let id = UUID(uuidString: rawID),
-                  !retainedIDs.contains(id) else { return nil }
-            return cloudAttachment.recordID
-        }
+            let body = HealthRecord(
+                id: merged.id,
+                petID: merged.petID,
+                kind: merged.kind,
+                title: merged.title,
+                occurredAt: merged.occurredAt,
+                providerName: merged.providerName,
+                costCents: merged.costCents,
+                currencyCode: merged.currencyCode,
+                timeZoneIdentifier: merged.timeZoneIdentifier,
+                notes: merged.notes,
+                attachments: []
+            )
+            let cloudRecord = zoneRecords[recordID]
+                ?? CKRecord(recordType: RecordSchema.healthRecord, recordID: recordID)
+            cloudRecord.parent = CKRecord.Reference(recordID: rootID, action: .none)
+            cloudRecord[RecordSchema.entityID] = merged.id.uuidString as CKRecordValue
+            cloudRecord[RecordSchema.petID] = merged.petID.uuidString as CKRecordValue
+            cloudRecord[RecordSchema.bodyData] = try encoder.encode(body) as CKRecordValue
+            cloudRecord[RecordSchema.updatedAt] = Date() as CKRecordValue
 
-        var saving: [CKRecord] = [cloudRecord]
-        var temporaryURLs: [URL] = []
-        defer { removeTemporaryFiles(temporaryURLs) }
-        for attachment in record.attachments {
-            let id = Self.attachmentID(for: attachment.id, zoneID: zoneID)
-            let child = zoneRecords[id] ?? CKRecord(recordType: RecordSchema.attachment, recordID: id)
-            child.parent = CKRecord.Reference(recordID: recordID, action: .none)
-            child[RecordSchema.entityID] = attachment.id.uuidString as CKRecordValue
-            child[RecordSchema.healthRecordID] = record.id.uuidString as CKRecordValue
-            child[RecordSchema.attachmentKind] = attachment.kind.rawValue as CKRecordValue
-            child[RecordSchema.originalName] = attachment.originalName as CKRecordValue
-            child[RecordSchema.createdAt] = attachment.createdAt as CKRecordValue
-            child[RecordSchema.updatedAt] = Date() as CKRecordValue
-            let fileExtension = attachment.kind == .pdf ? "pdf" : "jpg"
-            let url = try makeTemporaryFile(data: attachment.data, extension: fileExtension)
-            temporaryURLs.append(url)
-            child[RecordSchema.attachmentAsset] = CKAsset(fileURL: url)
-            saving.append(child)
-        }
+            let existingAttachments = zoneRecords.values.filter {
+                $0.recordType == RecordSchema.attachment
+                    && ($0[RecordSchema.healthRecordID] as? String) == merged.id.uuidString
+            }
+            let retainedIDs = Set(merged.attachments.map(\.id))
+            let deleting = existingAttachments.compactMap { cloudAttachment -> CKRecord.ID? in
+                guard let rawID = cloudAttachment[RecordSchema.entityID] as? String,
+                      let id = UUID(uuidString: rawID),
+                      !retainedIDs.contains(id) else { return nil }
+                return cloudAttachment.recordID
+            }
 
-        try await saveRecords(saving, deleting: deleting, in: database, retryingConflicts: true)
+            var saving: [CKRecord] = [cloudRecord]
+            var temporaryURLs: [URL] = []
+            defer { removeTemporaryFiles(temporaryURLs) }
+            for attachment in merged.attachments {
+                let id = Self.attachmentID(for: attachment.id, zoneID: zoneID)
+                let child = zoneRecords[id] ?? CKRecord(recordType: RecordSchema.attachment, recordID: id)
+                child.parent = CKRecord.Reference(recordID: recordID, action: .none)
+                child[RecordSchema.entityID] = attachment.id.uuidString as CKRecordValue
+                child[RecordSchema.healthRecordID] = merged.id.uuidString as CKRecordValue
+                child[RecordSchema.attachmentKind] = attachment.kind.rawValue as CKRecordValue
+                child[RecordSchema.originalName] = attachment.originalName as CKRecordValue
+                child[RecordSchema.createdAt] = attachment.createdAt as CKRecordValue
+                child[RecordSchema.updatedAt] = Date() as CKRecordValue
+                let fileExtension = attachment.kind == .pdf ? "pdf" : "jpg"
+                let url = try makeTemporaryFile(data: attachment.data, extension: fileExtension)
+                temporaryURLs.append(url)
+                child[RecordSchema.attachmentAsset] = CKAsset(fileURL: url)
+                saving.append(child)
+            }
+
+            do {
+                try await saveRecords(saving, deleting: deleting, in: database, retryingConflicts: false)
+                return
+            } catch let error as CKError where error.code == .serverRecordChanged && attempt == 0 {
+                continue
+            }
+        }
     }
 
     func deleteHealthRecord(_ record: HealthRecord, location: FamilyShareLocation) async throws {
         let database = database(for: location.databaseScope)
-        let zoneRecords = try await fetchAllRecords(zoneID: location.zoneID, in: database)
+        let zoneRecords = try await fetchAllRecords(
+            zoneID: location.zoneID,
+            in: database,
+            desiredKeys: RecordSchema.metadataKeys
+        )
         let recordID = Self.healthRecordID(for: record.id, zoneID: location.zoneID)
         var deleting = zoneRecords[recordID] == nil ? [] : [recordID]
         deleting.append(contentsOf: zoneRecords.values.compactMap { child in
@@ -1416,18 +1866,35 @@ actor FamilySharingService {
         try await saveRecords([], deleting: deleting, in: database, retryingConflicts: false)
     }
 
-    func upsertReminder(_ reminder: ReminderItem, location: FamilyShareLocation) async throws {
+    func upsertReminder(
+        _ reminder: ReminderItem,
+        replacing baseReminder: ReminderItem?,
+        location: FamilyShareLocation
+    ) async throws {
         let database = database(for: location.databaseScope)
         let rootID = Self.rootRecordID(for: reminder.petID, zoneID: location.zoneID)
         let id = Self.reminderID(for: reminder.id, zoneID: location.zoneID)
-        let cloudRecord = try await existingRecord(id: id, in: database)
-            ?? CKRecord(recordType: RecordSchema.reminder, recordID: id)
-        cloudRecord.parent = CKRecord.Reference(recordID: rootID, action: .none)
-        cloudRecord[RecordSchema.entityID] = reminder.id.uuidString as CKRecordValue
-        cloudRecord[RecordSchema.petID] = reminder.petID.uuidString as CKRecordValue
-        cloudRecord[RecordSchema.bodyData] = try encoder.encode(reminder) as CKRecordValue
-        cloudRecord[RecordSchema.updatedAt] = Date() as CKRecordValue
-        try await saveRecords([cloudRecord], deleting: [], in: database, retryingConflicts: true)
+        for attempt in 0 ..< 2 {
+            let cloudRecord = try await existingRecord(id: id, in: database)
+                ?? CKRecord(recordType: RecordSchema.reminder, recordID: id)
+            let serverReminder: ReminderItem? = if let data = cloudRecord[RecordSchema.bodyData] as? Data {
+                try decoder.decode(ReminderItem.self, from: data)
+            } else { nil }
+            let merged = serverReminder.map {
+                Self.mergingReminderChange(server: $0, desired: reminder, base: baseReminder)
+            } ?? reminder
+            cloudRecord.parent = CKRecord.Reference(recordID: rootID, action: .none)
+            cloudRecord[RecordSchema.entityID] = merged.id.uuidString as CKRecordValue
+            cloudRecord[RecordSchema.petID] = merged.petID.uuidString as CKRecordValue
+            cloudRecord[RecordSchema.bodyData] = try encoder.encode(merged) as CKRecordValue
+            cloudRecord[RecordSchema.updatedAt] = Date() as CKRecordValue
+            do {
+                try await saveRecords([cloudRecord], deleting: [], in: database, retryingConflicts: false)
+                return
+            } catch let error as CKError where error.code == .serverRecordChanged && attempt == 0 {
+                continue
+            }
+        }
     }
 
     func deleteReminder(_ reminder: ReminderItem, location: FamilyShareLocation) async throws {
@@ -1479,7 +1946,7 @@ actor FamilySharingService {
                 occurredAt: completedAt,
                 providerName: nil,
                 costCents: nil,
-                notes: "由家庭共享提醒完成后自动生成。",
+                notes: HealthRecord.reminderCompletionNoteMarker,
                 attachments: []
             )
             cloudReminder[RecordSchema.bodyData] = try encoder.encode(reminder) as CKRecordValue
@@ -1517,17 +1984,99 @@ actor FamilySharingService {
         throw FamilySharingError.editConflict
     }
 
+    func uploadReminderCompletion(
+        reminder desiredReminder: ReminderItem,
+        replacing baseReminder: ReminderItem,
+        record completionRecord: HealthRecord,
+        location: FamilyShareLocation
+    ) async throws {
+        let database = database(for: location.databaseScope)
+        let reminderID = Self.reminderID(for: desiredReminder.id, zoneID: location.zoneID)
+        let healthID = Self.healthRecordID(for: completionRecord.id, zoneID: location.zoneID)
+
+        for attempt in 0 ..< 2 {
+            if try await existingRecord(id: healthID, in: database) != nil {
+                return
+            }
+            guard let cloudReminder = try await existingRecord(id: reminderID, in: database),
+                  let data = cloudReminder[RecordSchema.bodyData] as? Data else {
+                throw FamilySharingError.sharedReminderNotFound
+            }
+            let serverReminder = try decoder.decode(ReminderItem.self, from: data)
+            guard serverReminder.petID == desiredReminder.petID else {
+                throw FamilySharingError.invalidPayload
+            }
+
+            // Someone else already completed the cycle while this device was
+            // offline. Their single completion wins; the next refresh removes
+            // this device's optimistic duplicate record.
+            if serverReminder.lastCompletedAt != baseReminder.lastCompletedAt {
+                return
+            }
+
+            let mergedReminder = Self.mergingReminderChange(
+                server: serverReminder,
+                desired: desiredReminder,
+                base: baseReminder
+            )
+            cloudReminder[RecordSchema.bodyData] = try encoder.encode(mergedReminder) as CKRecordValue
+            cloudReminder[RecordSchema.updatedAt] = completionRecord.occurredAt as CKRecordValue
+
+            let healthBody = HealthRecord(
+                id: completionRecord.id,
+                petID: completionRecord.petID,
+                kind: completionRecord.kind,
+                title: completionRecord.title,
+                occurredAt: completionRecord.occurredAt,
+                providerName: completionRecord.providerName,
+                costCents: completionRecord.costCents,
+                currencyCode: completionRecord.currencyCode,
+                timeZoneIdentifier: completionRecord.timeZoneIdentifier,
+                notes: completionRecord.notes,
+                attachments: []
+            )
+            let cloudHealth = CKRecord(recordType: RecordSchema.healthRecord, recordID: healthID)
+            cloudHealth.parent = CKRecord.Reference(
+                recordID: Self.rootRecordID(for: completionRecord.petID, zoneID: location.zoneID),
+                action: .none
+            )
+            cloudHealth[RecordSchema.entityID] = completionRecord.id.uuidString as CKRecordValue
+            cloudHealth[RecordSchema.petID] = completionRecord.petID.uuidString as CKRecordValue
+            cloudHealth[RecordSchema.bodyData] = try encoder.encode(healthBody) as CKRecordValue
+            cloudHealth[RecordSchema.updatedAt] = completionRecord.occurredAt as CKRecordValue
+
+            do {
+                let result = try await database.modifyRecords(
+                    saving: [cloudReminder, cloudHealth],
+                    deleting: [],
+                    savePolicy: .ifServerRecordUnchanged,
+                    atomically: true
+                )
+                try Self.validateSaveResult(result.saveResults, recordID: reminderID)
+                try Self.validateSaveResult(result.saveResults, recordID: healthID)
+                return
+            } catch let error as CKError where error.code == .serverRecordChanged && attempt == 0 {
+                continue
+            }
+        }
+        throw FamilySharingError.editConflict
+    }
+
     private func seedMissingStructuredRecords(
         payload: FamilyPetSharePayload,
         zoneID: CKRecordZone.ID
     ) async throws {
-        let existing = try await fetchAllRecords(zoneID: zoneID, in: privateDatabase)
+        let existing = try await fetchAllRecords(
+            zoneID: zoneID,
+            in: privateDatabase,
+            desiredKeys: RecordSchema.metadataKeys
+        )
         var saving: [CKRecord] = []
         var temporaryURLs: [URL] = []
         defer { removeTemporaryFiles(temporaryURLs) }
         let rootID = Self.rootRecordID(for: payload.pet.id, zoneID: zoneID)
 
-        if let root = existing[rootID], root[RecordSchema.petAsset] == nil {
+        if let root = existing[rootID] {
             let url = try makeTemporaryFile(data: encoder.encode(payload.pet), extension: "json")
             temporaryURLs.append(url)
             root[RecordSchema.petAsset] = CKAsset(fileURL: url)
@@ -1548,6 +2097,7 @@ actor FamilySharingService {
                     providerName: record.providerName,
                     costCents: record.costCents,
                     currencyCode: record.currencyCode,
+                    timeZoneIdentifier: record.timeZoneIdentifier,
                     notes: record.notes,
                     attachments: []
                 )
@@ -1696,6 +2246,37 @@ actor FamilySharingService {
         )
     }
 
+    private func decodeHealthRecord(
+        id: UUID,
+        zoneID: CKRecordZone.ID,
+        from records: [CKRecord.ID: CKRecord]
+    ) throws -> HealthRecord? {
+        guard let cloudRecord = records[Self.healthRecordID(for: id, zoneID: zoneID)],
+              let data = cloudRecord[RecordSchema.bodyData] as? Data else {
+            return nil
+        }
+        var record = try decoder.decode(HealthRecord.self, from: data)
+        record.attachments = []
+        for attachmentRecord in records.values where attachmentRecord.recordType == RecordSchema.attachment {
+            guard (attachmentRecord[RecordSchema.healthRecordID] as? String) == id.uuidString,
+                  let rawAttachmentID = attachmentRecord[RecordSchema.entityID] as? String,
+                  let attachmentID = UUID(uuidString: rawAttachmentID),
+                  let asset = attachmentRecord[RecordSchema.attachmentAsset] as? CKAsset,
+                  let url = asset.fileURL else { continue }
+            let kind = (attachmentRecord[RecordSchema.attachmentKind] as? String)
+                .flatMap(HealthRecordAttachmentKind.init(rawValue:)) ?? .image
+            record.attachments.append(HealthRecordAttachment(
+                id: attachmentID,
+                kind: kind,
+                data: try Data(contentsOf: url, options: .mappedIfSafe),
+                originalName: attachmentRecord[RecordSchema.originalName] as? String,
+                createdAt: attachmentRecord[RecordSchema.createdAt] as? Date ?? Date()
+            ))
+        }
+        record.attachments.sort { $0.createdAt < $1.createdAt }
+        return record
+    }
+
     private func accessDetails(
         root: CKRecord,
         sharedZoneID: CKRecordZone.ID,
@@ -1826,12 +2407,20 @@ actor FamilySharingService {
         }
     }
 
-    private func fetchAllRecords(zoneID: CKRecordZone.ID, in database: CKDatabase) async throws -> [CKRecord.ID: CKRecord] {
+    private func fetchAllRecords(
+        zoneID: CKRecordZone.ID,
+        in database: CKDatabase,
+        desiredKeys: [CKRecord.FieldKey]? = nil
+    ) async throws -> [CKRecord.ID: CKRecord] {
         var token: CKServerChangeToken?
         var records: [CKRecord.ID: CKRecord] = [:]
         var moreComing = true
         while moreComing {
-            let changes = try await database.recordZoneChanges(inZoneWith: zoneID, since: token)
+            let changes = try await database.recordZoneChanges(
+                inZoneWith: zoneID,
+                since: token,
+                desiredKeys: desiredKeys
+            )
             token = changes.changeToken
             moreComing = changes.moreComing
             for (id, result) in changes.modificationResultsByID {
@@ -1843,6 +2432,53 @@ actor FamilySharingService {
             }
         }
         return records
+    }
+
+    private func hydratingAttachmentAssets(
+        for healthRecordID: UUID,
+        in records: [CKRecord.ID: CKRecord],
+        database: CKDatabase
+    ) async throws -> [CKRecord.ID: CKRecord] {
+        let attachmentIDs = Self.attachmentRecordIDs(
+            for: healthRecordID,
+            in: records
+        )
+        guard !attachmentIDs.isEmpty else { return records }
+
+        let results = try await database.records(
+            for: attachmentIDs,
+            desiredKeys: RecordSchema.attachmentContentKeys
+        )
+        var hydrated = records
+        for id in attachmentIDs {
+            guard let result = results[id] else { continue }
+            switch result {
+            case .success(let record):
+                hydrated[id] = record
+            case .failure(let error as CKError)
+                where error.code == .unknownItem || error.code == .zoneNotFound:
+                // The attachment was deleted between the metadata scan and the
+                // targeted fetch. Treat it as absent and let the retry/merge use
+                // the latest remaining server attachments.
+                hydrated.removeValue(forKey: id)
+            case .failure(let error):
+                throw error
+            }
+        }
+        return hydrated
+    }
+
+    nonisolated static func attachmentRecordIDs(
+        for healthRecordID: UUID,
+        in records: [CKRecord.ID: CKRecord]
+    ) -> [CKRecord.ID] {
+        records.values.compactMap { record in
+            guard record.recordType == RecordSchema.attachment,
+                  (record[RecordSchema.healthRecordID] as? String) == healthRecordID.uuidString else {
+                return nil
+            }
+            return record.recordID
+        }
     }
 
     private func fetchAllZoneIDs(in database: CKDatabase) async throws -> [CKRecordZone.ID] {
@@ -1994,9 +2630,12 @@ final class FamilySharingStore {
         var message: String? {
             switch self {
             case .idle: nil
-            case .syncing(let count): "正在同步 \(count) 项修改…"
-            case .pending(let count): "有 \(count) 项修改等待同步"
-            case .failed(let count, _): "有 \(count) 项修改尚未同步"
+            case .syncing(let count):
+                String(localized: "正在同步 \(count) 项修改…", locale: L10n.locale)
+            case .pending(let count):
+                String(localized: "有 \(count) 项修改等待同步", locale: L10n.locale)
+            case .failed(let count, _):
+                String(localized: "有 \(count) 项修改尚未同步", locale: L10n.locale)
             }
         }
     }
@@ -2022,6 +2661,7 @@ final class FamilySharingStore {
     @ObservationIgnored private var didAutoSelectLaunchCache = false
     @ObservationIgnored private var syncTask: Task<Void, Never>?
     @ObservationIgnored private var ownedShareMigrationTask: Task<Void, Never>?
+    @ObservationIgnored private var refreshTask: Task<Void, Never>?
 
     init(
         restoredSharedPets: [FamilySharedPet]? = nil,
@@ -2083,6 +2723,20 @@ final class FamilySharingStore {
     }
 
     func refresh(privatePayloads: [FamilyPetSharePayload]) async {
+        if let refreshTask {
+            await refreshTask.value
+            return
+        }
+        let task = Task { @MainActor [weak self] in
+            guard let self else { return }
+            await self.performRefresh(privatePayloads: privatePayloads)
+        }
+        refreshTask = task
+        await task.value
+        refreshTask = nil
+    }
+
+    private func performRefresh(privatePayloads: [FamilyPetSharePayload]) async {
         guard PersistenceController.isCloudKitConfigured else { return }
         isRefreshing = true
         defer { isRefreshing = false }
@@ -2114,7 +2768,9 @@ final class FamilySharingStore {
                 selectedSharedPetID = sharedPets.first?.id
             }
         case .failure(let error):
-            refreshErrors.append("读取家人分享失败：\(error.localizedDescription)")
+            refreshErrors.append(L10n.usesEnglish
+                ? "Failed to load family-shared pets: \(error.localizedDescription)"
+                : "读取家人分享失败：\(error.localizedDescription)")
         }
 
         switch ownedOutcome {
@@ -2128,13 +2784,17 @@ final class FamilySharingStore {
                 await FamilySharingService.shared.refreshOwnedShares(payloads: privatePayloads)
             }
         case .failure(let error):
-            refreshErrors.append("读取我分享的数据失败：\(error.localizedDescription)")
+            refreshErrors.append(L10n.usesEnglish
+                ? "Failed to load data you shared: \(error.localizedDescription)"
+                : "读取我分享的数据失败：\(error.localizedDescription)")
         }
 
         statusMessage = refreshErrors.isEmpty
             ? (sharedPets.isEmpty
-                ? "目前没有家人分享给你的宠物档案。"
-                : "已同步 \(sharedPets.count) 份家人共享档案。")
+                ? L10n.string("目前没有家人分享给你的宠物档案。")
+                : (L10n.usesEnglish
+                    ? "Synced \(sharedPets.count) family-shared pet profiles."
+                    : "已同步 \(sharedPets.count) 份家人共享档案。"))
             : refreshErrors.joined(separator: "；")
         startSync()
     }
@@ -2283,9 +2943,13 @@ final class FamilySharingStore {
 
     func saveHealthRecord(_ record: HealthRecord, in sharedPet: FamilySharedPet) async throws {
         var updated = try liveEditablePet(sharedPet)
+        let baseRecord = updated.records.first { $0.id == record.id }
         updated.payload.records.removeAll { $0.id == record.id }
         updated.payload.records.append(record)
-        try await applyOptimistic(updated, change: .save(record, at: updated.location))
+        try await applyOptimistic(
+            updated,
+            change: .save(record, replacing: baseRecord, at: updated.location)
+        )
     }
 
     func deleteHealthRecord(_ record: HealthRecord, in sharedPet: FamilySharedPet) async throws {
@@ -2301,9 +2965,13 @@ final class FamilySharingStore {
 
     func saveReminder(_ reminder: ReminderItem, in sharedPet: FamilySharedPet) async throws {
         var updated = try liveEditablePet(sharedPet)
+        let baseReminder = updated.reminders.first { $0.id == reminder.id }
         updated.payload.reminders.removeAll { $0.id == reminder.id }
         updated.payload.reminders.append(reminder)
-        try await applyOptimistic(updated, change: .save(reminder, at: updated.location))
+        try await applyOptimistic(
+            updated,
+            change: .save(reminder, replacing: baseReminder, at: updated.location)
+        )
     }
 
     func deleteReminder(_ reminder: ReminderItem, in sharedPet: FamilySharedPet) async throws {
@@ -2313,18 +2981,53 @@ final class FamilySharingStore {
     }
 
     func completeReminder(_ reminder: ReminderItem, in sharedPet: FamilySharedPet) async throws -> Date? {
-        let livePet = try liveEditablePet(sharedPet)
-        let syncResult = await FamilySharingUploadCoordinator.shared.synchronize()
-        guard syncResult.remainingCount == 0 else {
-            throw FamilySharingError.pendingChangesNotSynced
+        var updated = try liveEditablePet(sharedPet)
+        guard let baseReminder = updated.reminders.first(where: { $0.id == reminder.id }) else {
+            throw FamilySharingError.sharedReminderNotFound
         }
-        let completion = try await FamilySharingService.shared.completeReminder(
-            id: reminder.id,
-            petID: reminder.petID,
-            location: livePet.location
+        guard !baseReminder.isCompletionLocked() else {
+            throw ReminderCompletionError.currentCycleAlreadyCompleted
+        }
+
+        let completedAt = Date()
+        var completedReminder = baseReminder
+        completedReminder.lastCompletedAt = completedAt
+        let nextDueAt = ReminderCalculator.nextDueDate(
+            after: completedAt,
+            scheduleType: completedReminder.scheduleType,
+            intervalValue: completedReminder.intervalValue,
+            preservingTimeFrom: completedReminder.dueAt
         )
-        try await refresh(sharedPet)
-        return completion.nextDueAt
+        if let nextDueAt {
+            completedReminder.dueAt = nextDueAt
+            completedReminder.isEnabled = true
+        } else {
+            completedReminder.isEnabled = false
+        }
+        let completionRecord = HealthRecord(
+            id: UUID(),
+            petID: completedReminder.petID,
+            kind: completedReminder.kind,
+            title: completedReminder.title,
+            occurredAt: completedAt,
+            providerName: nil,
+            costCents: nil,
+            notes: HealthRecord.reminderCompletionNoteMarker,
+            attachments: []
+        )
+        updated.payload.reminders.removeAll { $0.id == completedReminder.id }
+        updated.payload.reminders.append(completedReminder)
+        updated.payload.records.append(completionRecord)
+        try await applyOptimistic(
+            updated,
+            change: .complete(
+                completedReminder,
+                replacing: baseReminder,
+                record: completionRecord,
+                at: updated.location
+            )
+        )
+        return nextDueAt
     }
 
     func leave(_ sharedPet: FamilySharedPet) async throws {
@@ -2370,11 +3073,20 @@ final class FamilySharingStore {
     }
 
     private func applyOptimistic(_ pet: FamilySharedPet, change: FamilyPendingChange) async throws {
+        // Persist the outbox first. If this fails, leave the visible/cache state
+        // untouched so an edit can never appear saved without a retry path.
+        try await FamilySharingLocalStore.shared.enqueue(change)
         replace(pet)
         if pet.location.databaseScope == .shared {
-            try await FamilySharingLocalStore.shared.upsertCachedPet(pet)
+            try? await FamilySharingLocalStore.shared.upsertCachedPet(pet)
         }
-        try await enqueue(change)
+        let count = (try? await FamilySharingLocalStore.shared.pendingCount()) ?? 1
+        syncState = .pending(count)
+        NotificationCenter.default.post(
+            name: FamilySharingService.pendingChangesDidUpdateNotification,
+            object: nil
+        )
+        startSync()
     }
 
     private func enqueue(_ change: FamilyPendingChange) async throws {
@@ -2413,7 +3125,7 @@ final class FamilySharingStore {
         for recovery in recoveries {
             let location = recovery.location
             let existing = sharedPets.first { $0.location == location }
-            let petName = existing?.pet.name ?? "一只宠物"
+            let petName = existing?.pet.name ?? (L10n.usesEnglish ? "a pet" : "一只宠物")
 
             switch recovery {
             case .shareUnavailable:
@@ -2442,19 +3154,18 @@ final class FamilySharingStore {
 
         var messages: [String] = []
         if !unavailableNames.isEmpty {
-            messages.append("“\(unavailableNames.joined(separator: "、"))”的共享已停止，未上传的修改已从同步队列移除")
+            let names = unavailableNames.joined(separator: L10n.usesEnglish ? ", " : "、")
+            messages.append(L10n.usesEnglish
+                ? "Sharing for “\(names)” stopped. Unsynced changes were removed from the upload queue."
+                : "“\(names)”的共享已停止，未上传的修改已从同步队列移除")
         }
         if !readOnlyNames.isEmpty {
-            messages.append("“\(readOnlyNames.joined(separator: "、"))”已变为仅查看，未上传的修改无法提交")
+            let names = readOnlyNames.joined(separator: L10n.usesEnglish ? ", " : "、")
+            messages.append(L10n.usesEnglish
+                ? "“\(names)” is now view-only. Unsynced changes can no longer be submitted."
+                : "“\(names)”已变为仅查看，未上传的修改无法提交")
         }
-        statusMessage = messages.joined(separator: "；")
-    }
-
-    private func currentPet(_ fallback: FamilySharedPet) -> FamilySharedPet {
-        if fallback.location.databaseScope == .shared {
-            return sharedPets.first(where: { $0.id == fallback.id }) ?? fallback
-        }
-        return ownedSharedPets.first(where: { $0.pet.id == fallback.pet.id }) ?? fallback
+        statusMessage = messages.joined(separator: L10n.usesEnglish ? "; " : "；")
     }
 
     private func liveEditablePet(_ fallback: FamilySharedPet) throws -> FamilySharedPet {
@@ -2498,20 +3209,49 @@ final class FamilySharingStore {
                         base: change.basePet
                     )
                 }
+            case .deletePet:
+                values.remove(at: index)
             case .saveHealthRecord:
                 if let record = change.healthRecord {
-                    values[index].payload.records.removeAll { $0.id == record.id }
-                    values[index].payload.records.append(record)
+                    if let server = values[index].payload.records.first(where: { $0.id == record.id }) {
+                        let merged = FamilySharingService.mergingHealthRecordChange(
+                            server: server,
+                            desired: record,
+                            base: change.baseHealthRecord
+                        )
+                        values[index].payload.records.removeAll { $0.id == record.id }
+                        values[index].payload.records.append(merged)
+                    } else {
+                        values[index].payload.records.append(record)
+                    }
                 }
             case .deleteHealthRecord:
                 values[index].payload.records.removeAll { $0.id == change.entityID }
             case .saveReminder:
                 if let reminder = change.reminder {
-                    values[index].payload.reminders.removeAll { $0.id == reminder.id }
-                    values[index].payload.reminders.append(reminder)
+                    if let server = values[index].payload.reminders.first(where: { $0.id == reminder.id }) {
+                        let merged = FamilySharingService.mergingReminderChange(
+                            server: server,
+                            desired: reminder,
+                            base: change.baseReminder
+                        )
+                        values[index].payload.reminders.removeAll { $0.id == reminder.id }
+                        values[index].payload.reminders.append(merged)
+                    } else {
+                        values[index].payload.reminders.append(reminder)
+                    }
                 }
             case .deleteReminder:
                 values[index].payload.reminders.removeAll { $0.id == change.entityID }
+            case .completeReminder:
+                if let reminder = change.reminder {
+                    values[index].payload.reminders.removeAll { $0.id == reminder.id }
+                    values[index].payload.reminders.append(reminder)
+                }
+                if let record = change.healthRecord,
+                   !values[index].payload.records.contains(where: { $0.id == record.id }) {
+                    values[index].payload.records.append(record)
+                }
             }
         }
         return sorted(values)

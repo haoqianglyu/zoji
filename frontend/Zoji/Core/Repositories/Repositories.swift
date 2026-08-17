@@ -5,13 +5,25 @@ protocol PetRepository: Sendable {
     func listPets() async throws -> [Pet]
     func save(_ pet: Pet) async throws
     func delete(petID: UUID) async throws
+    func purgeLegacySoftDeletedEntities() async throws
 }
 
 protocol HealthRecordRepository: Sendable {
-    func listRecords(petID: UUID) async throws -> [HealthRecord]
+    func listRecords(petID: UUID, includingAttachmentData: Bool) async throws -> [HealthRecord]
+    func record(id: UUID) async throws -> HealthRecord?
     func save(_ record: HealthRecord) async throws
     func delete(recordID: UUID) async throws
     func deleteAll(petID: UUID) async throws
+    func purgeLegacySoftDeletedEntities() async throws
+}
+
+extension HealthRecordRepository {
+    /// Timeline and summary screens only need attachment identity and type. The
+    /// potentially large external-storage blobs are loaded explicitly by the
+    /// detail/editor, backup, and family-sharing paths.
+    func listRecords(petID: UUID) async throws -> [HealthRecord] {
+        try await listRecords(petID: petID, includingAttachmentData: false)
+    }
 }
 
 protocol ReminderRepository: Sendable {
@@ -19,6 +31,19 @@ protocol ReminderRepository: Sendable {
     func save(_ reminder: ReminderItem) async throws
     func delete(reminderID: UUID) async throws
     func deleteAll(petID: UUID) async throws
+    func purgeLegacySoftDeletedEntities() async throws
+}
+
+extension PetRepository {
+    func purgeLegacySoftDeletedEntities() async throws { }
+}
+
+extension HealthRecordRepository {
+    func purgeLegacySoftDeletedEntities() async throws { }
+}
+
+extension ReminderRepository {
+    func purgeLegacySoftDeletedEntities() async throws { }
 }
 
 enum PrivateDataScope {
@@ -109,9 +134,17 @@ actor SwiftDataPetRepository: PetRepository {
         )
         guard let entity = try modelContext.fetch(descriptor).first else { return }
 
-        entity.deletedAt = Date()
-        entity.updatedAt = Date()
-        entity.syncStateRawValue = "pending"
+        modelContext.delete(entity)
+        try modelContext.save()
+    }
+
+    func purgeLegacySoftDeletedEntities() async throws {
+        let descriptor = FetchDescriptor<PetEntity>(
+            predicate: #Predicate { $0.deletedAt != nil }
+        )
+        let entities = try modelContext.fetch(descriptor)
+        guard !entities.isEmpty else { return }
+        for entity in entities { modelContext.delete(entity) }
         try modelContext.save()
     }
 
@@ -128,7 +161,10 @@ actor SwiftDataPetRepository: PetRepository {
 
 @ModelActor
 actor SwiftDataHealthRecordRepository: HealthRecordRepository {
-    func listRecords(petID: UUID) async throws -> [HealthRecord] {
+    func listRecords(
+        petID: UUID,
+        includingAttachmentData: Bool
+    ) async throws -> [HealthRecord] {
         let descriptor = FetchDescriptor<HealthRecordEntity>(
             predicate: #Predicate { entity in
                 entity.petID == petID && entity.deletedAt == nil
@@ -137,20 +173,18 @@ actor SwiftDataHealthRecordRepository: HealthRecordRepository {
         )
 
         return try modelContext.fetch(descriptor).map { entity in
-            let attachments = try attachments(for: entity)
-            return HealthRecord(
-                id: entity.id,
-                petID: entity.petID,
-                kind: RecordKind(rawValue: entity.kindRawValue) ?? .custom,
-                title: entity.title,
-                occurredAt: entity.occurredAt,
-                providerName: entity.providerName,
-                costCents: entity.costCents,
-                currencyCode: entity.currencyCode,
-                notes: entity.notes,
-                attachments: attachments
-            )
+            try healthRecord(from: entity, includingAttachmentData: includingAttachmentData)
         }
+    }
+
+    func record(id: UUID) async throws -> HealthRecord? {
+        let descriptor = FetchDescriptor<HealthRecordEntity>(
+            predicate: #Predicate { entity in
+                entity.id == id && entity.deletedAt == nil
+            }
+        )
+        guard let entity = try modelContext.fetch(descriptor).first else { return nil }
+        return try healthRecord(from: entity, includingAttachmentData: true)
     }
 
     func save(_ record: HealthRecord) async throws {
@@ -166,6 +200,7 @@ actor SwiftDataHealthRecordRepository: HealthRecordRepository {
             entity.providerName = record.providerName
             entity.costCents = record.costCents
             entity.currencyCode = record.currencyCode
+            entity.timeZoneIdentifier = record.timeZoneIdentifier
             entity.notes = record.notes
             entity.caseImageData = nil
             entity.deletedAt = nil
@@ -182,6 +217,7 @@ actor SwiftDataHealthRecordRepository: HealthRecordRepository {
             entity.providerName = record.providerName
             entity.costCents = record.costCents
             entity.currencyCode = record.currencyCode
+            entity.timeZoneIdentifier = record.timeZoneIdentifier
             entity.notes = record.notes
             modelContext.insert(entity)
         }
@@ -197,33 +233,65 @@ actor SwiftDataHealthRecordRepository: HealthRecordRepository {
         )
         guard let entity = try modelContext.fetch(descriptor).first else { return }
 
-        entity.deletedAt = Date()
-        entity.updatedAt = Date()
-        entity.syncStateRawValue = "pending"
-        try softDeleteAttachments(recordID: recordID, at: entity.updatedAt)
+        try deleteAttachments(recordID: recordID)
+        modelContext.delete(entity)
         try modelContext.save()
     }
 
     func deleteAll(petID: UUID) async throws {
         let descriptor = FetchDescriptor<HealthRecordEntity>(
-            predicate: #Predicate { entity in
-                entity.petID == petID && entity.deletedAt == nil
-            }
+            predicate: #Predicate { $0.petID == petID }
         )
         let records = try modelContext.fetch(descriptor)
         guard !records.isEmpty else { return }
 
-        let now = Date()
         for entity in records {
-            entity.deletedAt = now
-            entity.updatedAt = now
-            entity.syncStateRawValue = "pending"
-            try softDeleteAttachments(recordID: entity.id, at: now)
+            try deleteAttachments(recordID: entity.id)
+            modelContext.delete(entity)
         }
         try modelContext.save()
     }
 
-    private func attachments(for record: HealthRecordEntity) throws -> [HealthRecordAttachment] {
+    func purgeLegacySoftDeletedEntities() async throws {
+        let records = try modelContext.fetch(FetchDescriptor<HealthRecordEntity>())
+        let retainedRecordIDs = Set(records.lazy.filter { $0.deletedAt == nil }.map(\.id))
+        let attachments = try modelContext.fetch(FetchDescriptor<HealthRecordAttachmentEntity>())
+        var hasChanges = false
+        for attachment in attachments
+        where attachment.deletedAt != nil || !retainedRecordIDs.contains(attachment.recordID) {
+            modelContext.delete(attachment)
+            hasChanges = true
+        }
+        for record in records where record.deletedAt != nil {
+            modelContext.delete(record)
+            hasChanges = true
+        }
+        if hasChanges { try modelContext.save() }
+    }
+
+    private func healthRecord(
+        from entity: HealthRecordEntity,
+        includingAttachmentData: Bool
+    ) throws -> HealthRecord {
+        HealthRecord(
+            id: entity.id,
+            petID: entity.petID,
+            kind: RecordKind(rawValue: entity.kindRawValue) ?? .custom,
+            title: entity.title,
+            occurredAt: entity.occurredAt,
+            providerName: entity.providerName,
+            costCents: entity.costCents,
+            currencyCode: entity.currencyCode,
+            timeZoneIdentifier: entity.timeZoneIdentifier,
+            notes: entity.notes,
+            attachments: try attachments(for: entity, includingData: includingAttachmentData)
+        )
+    }
+
+    private func attachments(
+        for record: HealthRecordEntity,
+        includingData: Bool
+    ) throws -> [HealthRecordAttachment] {
         let recordID = record.id
         let descriptor = FetchDescriptor<HealthRecordAttachmentEntity>(
             predicate: #Predicate { entity in
@@ -235,13 +303,13 @@ actor SwiftDataHealthRecordRepository: HealthRecordRepository {
             HealthRecordAttachment(
                 id: entity.id,
                 kind: entity.kindRawValue.flatMap(HealthRecordAttachmentKind.init(rawValue:)) ?? .image,
-                data: entity.imageData,
+                data: includingData ? entity.imageData : Data(),
                 originalName: entity.originalName,
                 createdAt: entity.createdAt
             )
         }
 
-        if storedAttachments.isEmpty, let legacyImageData = record.caseImageData {
+        if includingData, storedAttachments.isEmpty, let legacyImageData = record.caseImageData {
             return [HealthRecordAttachment(id: record.id, data: legacyImageData, createdAt: record.createdAt)]
         }
         return storedAttachments
@@ -276,23 +344,17 @@ actor SwiftDataHealthRecordRepository: HealthRecordRepository {
             }
         }
 
-        for entity in existingAttachments where !retainedIDs.contains(entity.id) && entity.deletedAt == nil {
-            entity.deletedAt = now
-            entity.updatedAt = now
-            entity.syncStateRawValue = "pending"
+        for entity in existingAttachments where !retainedIDs.contains(entity.id) {
+            modelContext.delete(entity)
         }
     }
 
-    private func softDeleteAttachments(recordID: UUID, at date: Date) throws {
+    private func deleteAttachments(recordID: UUID) throws {
         let descriptor = FetchDescriptor<HealthRecordAttachmentEntity>(
-            predicate: #Predicate { entity in
-                entity.recordID == recordID && entity.deletedAt == nil
-            }
+            predicate: #Predicate { $0.recordID == recordID }
         )
         for entity in try modelContext.fetch(descriptor) {
-            entity.deletedAt = date
-            entity.updatedAt = date
-            entity.syncStateRawValue = "pending"
+            modelContext.delete(entity)
         }
     }
 }
@@ -367,27 +429,30 @@ actor SwiftDataReminderRepository: ReminderRepository {
         )
         guard let entity = try modelContext.fetch(descriptor).first else { return }
 
-        entity.deletedAt = Date()
-        entity.updatedAt = Date()
-        entity.syncStateRawValue = "pending"
+        modelContext.delete(entity)
         try modelContext.save()
     }
 
     func deleteAll(petID: UUID) async throws {
         let descriptor = FetchDescriptor<ReminderRuleEntity>(
-            predicate: #Predicate { entity in
-                entity.petID == petID && entity.deletedAt == nil
-            }
+            predicate: #Predicate { $0.petID == petID }
         )
         let entities = try modelContext.fetch(descriptor)
         guard !entities.isEmpty else { return }
 
-        let now = Date()
         for entity in entities {
-            entity.deletedAt = now
-            entity.updatedAt = now
-            entity.syncStateRawValue = "pending"
+            modelContext.delete(entity)
         }
+        try modelContext.save()
+    }
+
+    func purgeLegacySoftDeletedEntities() async throws {
+        let descriptor = FetchDescriptor<ReminderRuleEntity>(
+            predicate: #Predicate { $0.deletedAt != nil }
+        )
+        let entities = try modelContext.fetch(descriptor)
+        guard !entities.isEmpty else { return }
+        for entity in entities { modelContext.delete(entity) }
         try modelContext.save()
     }
 }

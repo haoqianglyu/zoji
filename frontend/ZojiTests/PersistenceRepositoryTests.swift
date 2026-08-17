@@ -4,7 +4,7 @@ import XCTest
 @testable import Zoji
 
 final class PersistenceRepositoryTests: XCTestCase {
-    func testPetRepositorySavesUpdatesAndSoftDeletes() async throws {
+    func testPetRepositorySavesUpdatesAndHardDeletes() async throws {
         let container = try makeContainer()
         let repository = SwiftDataPetRepository(modelContainer: container)
         let petID = UUID()
@@ -26,6 +26,8 @@ final class PersistenceRepositoryTests: XCTestCase {
         try await repository.delete(petID: petID)
         pets = try await repository.listPets()
         XCTAssertTrue(pets.isEmpty)
+        let context = ModelContext(container)
+        XCTAssertTrue(try context.fetch(FetchDescriptor<PetEntity>()).isEmpty)
     }
 
     func testHealthRecordRepositoryPreservesImageAndPDFThenRemovesDeletedAttachment() async throws {
@@ -53,6 +55,7 @@ final class PersistenceRepositoryTests: XCTestCase {
             providerName: "示例动物医院",
             costCents: 12_345,
             currencyCode: "USD",
+            timeZoneIdentifier: "America/Los_Angeles",
             notes: "精神状态恢复。",
             attachments: [imageAttachment, pdfAttachment]
         )
@@ -62,20 +65,39 @@ final class PersistenceRepositoryTests: XCTestCase {
         XCTAssertEqual(records.first?.attachments.count, 2)
         XCTAssertEqual(records.first?.attachments.map(\.kind), [.image, .pdf])
         XCTAssertEqual(records.first?.attachments.last?.originalName, "检查报告.pdf")
+        XCTAssertEqual(records.first?.attachments.map(\.data), [Data(), Data()])
         XCTAssertEqual(records.first?.costCents, 12_345)
         XCTAssertEqual(records.first?.currencyCode, "USD")
+        XCTAssertEqual(records.first?.timeZoneIdentifier, "America/Los_Angeles")
+
+        let completeRecord = try await repository.record(id: record.id)
+        XCTAssertEqual(completeRecord?.attachments.map(\.data), [Data([1, 2, 3]), Data([4, 5, 6])])
+
+        let completeRecords = try await repository.listRecords(
+            petID: petID,
+            includingAttachmentData: true
+        )
+        XCTAssertEqual(completeRecords.first?.attachments.map(\.data), [Data([1, 2, 3]), Data([4, 5, 6])])
 
         record.attachments = [pdfAttachment]
         try await repository.save(record)
         records = try await repository.listRecords(petID: petID)
         XCTAssertEqual(records.first?.attachments.map(\.id), [pdfAttachment.id])
+        var context = ModelContext(container)
+        XCTAssertEqual(
+            try context.fetch(FetchDescriptor<HealthRecordAttachmentEntity>()).map(\.id),
+            [pdfAttachment.id]
+        )
 
         try await repository.delete(recordID: record.id)
         records = try await repository.listRecords(petID: petID)
         XCTAssertTrue(records.isEmpty)
+        context = ModelContext(container)
+        XCTAssertTrue(try context.fetch(FetchDescriptor<HealthRecordEntity>()).isEmpty)
+        XCTAssertTrue(try context.fetch(FetchDescriptor<HealthRecordAttachmentEntity>()).isEmpty)
     }
 
-    func testReminderRepositoryPreservesCompletionStateAndSoftDeletes() async throws {
+    func testReminderRepositoryPreservesCompletionStateAndHardDeletes() async throws {
         let container = try makeContainer()
         let repository = SwiftDataReminderRepository(modelContainer: container)
         let completedAt = Date(timeIntervalSince1970: 1_700_000_000)
@@ -102,6 +124,41 @@ final class PersistenceRepositoryTests: XCTestCase {
         try await repository.delete(reminderID: reminder.id)
         reminders = try await repository.listReminders(petID: reminder.petID)
         XCTAssertTrue(reminders.isEmpty)
+        let context = ModelContext(container)
+        XCTAssertTrue(try context.fetch(FetchDescriptor<ReminderRuleEntity>()).isEmpty)
+    }
+
+    func testHealthRecordRepositoryPurgesLegacySoftDeletesAndOrphanedAttachments() async throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let recordID = UUID()
+        let legacyRecord = HealthRecordEntity(
+            id: recordID,
+            petID: UUID(),
+            kind: .custom,
+            title: "Legacy deleted record",
+            occurredAt: Date()
+        )
+        legacyRecord.deletedAt = Date()
+        let orphanedAttachment = HealthRecordAttachmentEntity(
+            id: UUID(),
+            recordID: recordID,
+            kind: .image,
+            data: Data([1, 2, 3]),
+            originalName: "legacy.jpg"
+        )
+        context.insert(legacyRecord)
+        context.insert(orphanedAttachment)
+        try context.save()
+
+        let repository = SwiftDataHealthRecordRepository(modelContainer: container)
+        try await repository.purgeLegacySoftDeletedEntities()
+
+        let verificationContext = ModelContext(container)
+        XCTAssertTrue(try verificationContext.fetch(FetchDescriptor<HealthRecordEntity>()).isEmpty)
+        XCTAssertTrue(
+            try verificationContext.fetch(FetchDescriptor<HealthRecordAttachmentEntity>()).isEmpty
+        )
     }
 
     private func makeContainer() throws -> ModelContainer {
@@ -121,6 +178,38 @@ final class PersistenceRepositoryTests: XCTestCase {
 }
 
 final class FamilyPetSharePayloadTests: XCTestCase {
+    func testAttachmentHydrationSelectsOnlyTheEditedHealthRecordsAssets() {
+        let zoneID = CKRecordZone.ID(zoneName: "test-zone", ownerName: "owner")
+        let targetHealthID = UUID()
+        let otherHealthID = UUID()
+        let targetAttachmentID = CKRecord.ID(recordName: "target-attachment", zoneID: zoneID)
+        let otherAttachmentID = CKRecord.ID(recordName: "other-attachment", zoneID: zoneID)
+        let bodyID = CKRecord.ID(recordName: "health-body", zoneID: zoneID)
+
+        let targetAttachment = CKRecord(
+            recordType: "ZojiFamilyAttachment",
+            recordID: targetAttachmentID
+        )
+        targetAttachment["healthRecordID"] = targetHealthID.uuidString as CKRecordValue
+        let otherAttachment = CKRecord(
+            recordType: "ZojiFamilyAttachment",
+            recordID: otherAttachmentID
+        )
+        otherAttachment["healthRecordID"] = otherHealthID.uuidString as CKRecordValue
+        let body = CKRecord(recordType: "ZojiFamilyHealthRecord", recordID: bodyID)
+
+        let selected = FamilySharingService.attachmentRecordIDs(
+            for: targetHealthID,
+            in: [
+                targetAttachmentID: targetAttachment,
+                otherAttachmentID: otherAttachment,
+                bodyID: body,
+            ]
+        )
+
+        XCTAssertEqual(selected, [targetAttachmentID])
+    }
+
     func testPayloadContainsOnlyTheSelectedPetsDataAndAttachments() throws {
         let selectedPet = Pet(id: UUID(), name: "团子", species: .cat)
         let otherPet = Pet(id: UUID(), name: "毛毛", species: .dog)
@@ -274,6 +363,40 @@ final class FamilyPetSharePayloadTests: XCTestCase {
         XCTAssertEqual(store.selectedSharedPet?.pet.name, "布布")
         store.resolveLaunchSelection(hasPrivatePets: false)
         XCTAssertEqual(defaults.string(forKey: "familySharing.selectedSharedPetID"), sharedPet.id)
+    }
+
+    @MainActor
+    func testHospitalViewModelDefersFavoriteLoadingAndActivatesOnlyOnce() throws {
+        let defaultsName = "ZojiHospitalFavoriteTests-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: defaultsName))
+        defer { defaults.removePersistentDomain(forName: defaultsName) }
+
+        let favorite = HospitalSummary(
+            id: "hospital-1",
+            name: "示例宠物医院",
+            address: "上海市",
+            latitude: 31.23,
+            longitude: 121.47,
+            distanceMeters: 800,
+            isFavorite: true
+        )
+        let favoriteStore = HospitalFavoriteStore(
+            defaults: defaults,
+            ubiquitousStore: nil
+        )
+        favoriteStore.save([favorite])
+        let storedSnapshot = defaults.data(forKey: "zoji.favorite-hospitals.v3")
+
+        let model = HospitalsViewModel(favoriteStore: favoriteStore)
+        XCTAssertTrue(model.favorites.isEmpty)
+
+        model.activate()
+        XCTAssertEqual(model.favorites.map(\.id), [favorite.id])
+        XCTAssertEqual(defaults.data(forKey: "zoji.favorite-hospitals.v3"), storedSnapshot)
+
+        model.activate()
+        XCTAssertEqual(model.favorites.map(\.id), [favorite.id])
+        XCTAssertEqual(defaults.data(forKey: "zoji.favorite-hospitals.v3"), storedSnapshot)
     }
 
     func testRevokedOwnedShareRemovesStaleLocationAndQueuedWrites() async throws {

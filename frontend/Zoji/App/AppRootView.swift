@@ -1,4 +1,5 @@
 import CloudKit
+import Combine
 import CoreData
 import SwiftUI
 
@@ -56,16 +57,20 @@ struct AppRootView: View {
                 familyStore.startSync()
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: FamilySharingService.pendingChangesDidUpdateNotification)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: FamilySharingService.pendingChangesDidUpdateNotification)
+            .receive(on: DispatchQueue.main)) { _ in
             familyStore.startSync()
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSPersistentCloudKitContainer.eventChangedNotification)) { notification in
+        .onReceive(NotificationCenter.default.publisher(for: NSPersistentCloudKitContainer.eventChangedNotification)
+            .receive(on: DispatchQueue.main)) { notification in
             handleCloudKitEvent(notification)
         }
-        .onReceive(NotificationCenter.default.publisher(for: InitialCloudRestore.retryNotification)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: InitialCloudRestore.retryNotification)
+            .receive(on: DispatchQueue.main)) { _ in
             Task { await startInitialCloudRestore(force: true) }
         }
-        .onReceive(NotificationCenter.default.publisher(for: FamilySharingService.didAcceptShareNotification)) { notification in
+        .onReceive(NotificationCenter.default.publisher(for: FamilySharingService.didAcceptShareNotification)
+            .receive(on: DispatchQueue.main)) { notification in
             if let error = notification.userInfo?["error"] as? Error {
                 shareAcceptanceError = String(
                     localized: "接受邀请失败：\(error.localizedDescription)",
@@ -325,6 +330,15 @@ enum LegalDocument: String, Identifiable {
         case .termsOfUse: LegalCopy.text("用户协议", "Terms of Use")
         }
     }
+
+    var publicURL: URL {
+        switch self {
+        case .privacyPolicy:
+            URL(string: "https://haoqianglyu.github.io/zoji/privacy-policy.html")!
+        case .termsOfUse:
+            URL(string: "https://haoqianglyu.github.io/zoji/terms-of-use.html")!
+        }
+    }
 }
 
 enum LegalCopy {
@@ -574,6 +588,13 @@ struct LegalDocumentView: View {
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
+                }
+
+                Section(LegalCopy.text("公开网页", "Public Web Version")) {
+                    Link(
+                        LegalCopy.text("在浏览器中查看", "View in Browser"),
+                        destination: document.publicURL
+                    )
                 }
 
                 if document == .privacyPolicy {

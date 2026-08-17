@@ -219,7 +219,7 @@ struct HomeView: View {
                 }
                 Button("取消", role: .cancel) { petPendingDeletion = nil }
             } message: {
-                Text("该宠物在本机的记录和提醒也会从当前界面移除。")
+                Text("该宠物的记录和提醒会被删除；如果已开启家庭共享，也会撤销家人访问并删除共享云端副本。")
             }
             .alert("宠物资料操作失败", isPresented: Binding(
                 get: { store.petPersistenceMessage != nil },
@@ -236,14 +236,6 @@ struct HomeView: View {
                 Button("知道了", role: .cancel) { }
             } message: {
                 Text(store.reminderPersistenceMessage ?? "请稍后再试。")
-            }
-            .alert("系统通知未开启", isPresented: Binding(
-                get: { store.notificationPermissionMessage != nil },
-                set: { if !$0 { store.notificationPermissionMessage = nil } }
-            )) {
-                Button("知道了", role: .cancel) { }
-            } message: {
-                Text(store.notificationPermissionMessage ?? "提醒仍会保存在 App 中。")
             }
             .overlay(alignment: .top) {
                 TransientSuccessBanner(message: $reminderCompletionMessage)
@@ -702,7 +694,7 @@ struct HomeView: View {
                         String(localized: "本次已记录，下次提醒：\(L10n.date(nextDueAt, dateStyle: .long, timeStyle: .shortened))。", locale: L10n.locale)
                     )
                 } else {
-                    showReminderCompletion(L10n.string("这条一次性提醒已完成并归档。"))
+                    showReminderCompletion(L10n.string("这条一次性提醒已完成，可在健康时间线中查看记录。"))
                 }
             } catch {
                 store.reminderPersistenceMessage = error.localizedDescription
@@ -942,6 +934,11 @@ struct ReminderListView: View {
     @State private var completionMessage: String?
     @State private var completionFeedbackTrigger = 0
     @State private var showsCarePlanTemplates = false
+    @Binding private var notificationRoute: ReminderNotificationRoute?
+
+    init(notificationRoute: Binding<ReminderNotificationRoute?> = .constant(nil)) {
+        _notificationRoute = notificationRoute
+    }
 
     private var selectedPet: SelectedPet? { store.selectedPet(using: familyStore) }
     private var selectablePets: [SelectedPet] { store.selectablePets(using: familyStore) }
@@ -1064,18 +1061,14 @@ struct ReminderListView: View {
         } message: {
             Text(store.reminderPersistenceMessage ?? "请稍后再试。")
         }
-        .alert("系统通知未开启", isPresented: Binding(
-            get: { store.notificationPermissionMessage != nil },
-            set: { if !$0 { store.notificationPermissionMessage = nil } }
-        )) {
-            Button("知道了", role: .cancel) { }
-        } message: {
-            Text(store.notificationPermissionMessage ?? "提醒仍会保存在 App 中。")
-        }
         .overlay(alignment: .top) {
             TransientSuccessBanner(message: $completionMessage)
         }
         .sensoryFeedback(.success, trigger: completionFeedbackTrigger)
+        .task(id: notificationRoute?.deliveryID) {
+            guard let notificationRoute else { return }
+            presentNotificationReminder(notificationRoute)
+        }
     }
 
     private func presentNewReminder() {
@@ -1084,6 +1077,27 @@ struct ReminderListView: View {
             petID: selectedPet?.pet.id,
             sharedPet: selectedPet?.sharedPet
         )
+    }
+
+    private func presentNotificationReminder(_ route: ReminderNotificationRoute) {
+        if let reminder = store.reminders.first(where: { $0.id == route.reminderID }) {
+            editor = ReminderEditorPresentation(
+                reminder: reminder,
+                petID: route.petID,
+                sharedPet: nil
+            )
+            return
+        }
+        for sharedPet in familyStore.sharedPets {
+            if let reminder = sharedPet.reminders.first(where: { $0.id == route.reminderID }) {
+                editor = ReminderEditorPresentation(
+                    reminder: reminder,
+                    petID: route.petID,
+                    sharedPet: sharedPet
+                )
+                return
+            }
+        }
     }
 
     @ViewBuilder
@@ -1225,7 +1239,7 @@ struct ReminderListView: View {
                         String(localized: "本次已记录，下次提醒：\(L10n.date(nextDueAt, dateStyle: .long, timeStyle: .shortened))。", locale: L10n.locale)
                     )
                 } else {
-                    showCompletion(L10n.string("这条一次性提醒已完成并归档。"))
+                    showCompletion(L10n.string("这条一次性提醒已完成，可在健康时间线中查看记录。"))
                 }
             } catch {
                 store.reminderPersistenceMessage = error.localizedDescription
@@ -1259,6 +1273,7 @@ struct ReminderListView: View {
 private struct CarePlanTemplatePickerView: View {
     @Environment(\.appColorTheme) private var theme
     @Environment(AppStore.self) private var store
+    @Environment(FamilySharingStore.self) private var familyStore
     @Environment(\.dismiss) private var dismiss
 
     @State private var petID: UUID?
@@ -1523,6 +1538,7 @@ private struct CarePlanTemplatePickerView: View {
                     notificationTime: notificationTime,
                     selectedStepIDs: selectedStepIDs
                 )
+                familyStore.selectPrivatePet()
                 resultTitle = "计划已创建"
                 resultMessage = String(localized: "已添加 \(count) 项健康提醒。之后完成任一提醒时，会自动生成对应的健康记录。", locale: L10n.locale)
                 dismissAfterResult = true
@@ -1768,6 +1784,7 @@ struct ReminderEditorView: View {
                         intervalValue: selectedIntervalValue,
                         advanceDays: Array(advanceDays)
                     )
+                    familyStore.selectPrivatePet()
                 } else {
                     try await store.addReminder(
                         petID: petID,
@@ -1778,6 +1795,7 @@ struct ReminderEditorView: View {
                         intervalValue: selectedIntervalValue,
                         advanceDays: Array(advanceDays)
                     )
+                    familyStore.selectPrivatePet()
                 }
                 dismiss()
             } catch {
@@ -1874,7 +1892,7 @@ enum ReminderRepeatOption: String, CaseIterable, Identifiable {
     static func displayName(for reminder: ReminderItem) -> String {
         let option = ReminderRepeatOption(reminder: reminder)
         if option == .customDays, let intervalValue = reminder.intervalValue {
-            return "每 \(intervalValue) 天"
+            return String(localized: "每 \(intervalValue) 天", locale: L10n.locale)
         }
         return option.displayName
     }

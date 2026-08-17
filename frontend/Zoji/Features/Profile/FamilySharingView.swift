@@ -1,5 +1,6 @@
 import CoreTransferable
 import CloudKit
+import Combine
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -86,7 +87,7 @@ struct FamilySharingView: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(sharedPet.pet.name)
                                         .font(.headline)
-                                    Text("家人分享 · \(sharedPet.role.displayName)")
+                                    Text("家庭共享 · \(sharedPet.role.displayName)")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -374,7 +375,8 @@ struct FamilySharingView: View {
             ownedShareCheckDeadline?.cancel()
             ownedShareCheckDeadline = nil
         }
-        .onReceive(NotificationCenter.default.publisher(for: FamilySharingService.didAcceptShareNotification)) { notification in
+        .onReceive(NotificationCenter.default.publisher(for: FamilySharingService.didAcceptShareNotification)
+            .receive(on: DispatchQueue.main)) { notification in
             if let error = notification.userInfo?["error"] as? Error {
                 familyStore.statusMessage = String(localized: "接受邀请失败：\(error.localizedDescription)", locale: L10n.locale)
             } else {
@@ -464,9 +466,9 @@ struct FamilySharingView: View {
         guard preparingInvitationPetID == nil else { return }
         preparingInvitationPetID = pet.id
         invitationError = nil
-        let sharePayload = payload(for: pet)
         Task {
             do {
+                let sharePayload = try await store.familySharePayload(for: pet)
                 let share = try await FamilySharingService.shared.prepareOrUpdateShare(payload: sharePayload)
                 preparedInvitation = PreparedFamilyInvitation(
                     pet: pet,
@@ -479,14 +481,6 @@ struct FamilySharingView: View {
             }
             preparingInvitationPetID = nil
         }
-    }
-
-    private func payload(for pet: Pet) -> FamilyPetSharePayload {
-        FamilyPetSharePayload(
-            pet: pet,
-            records: store.records,
-            reminders: store.reminders
-        )
     }
 
     private func refreshSharingState() async {
@@ -507,7 +501,13 @@ struct FamilySharingView: View {
             ownedSharedPetIDs = cachedIDs.intersection(store.pets.map(\.id))
             hasCheckedOwnedShares = true
         }
-        let payloads = store.pets.map(payload(for:))
+        let payloads: [FamilyPetSharePayload]
+        do {
+            payloads = try await store.familySharePayloads()
+        } catch {
+            invitationError = String(localized: "读取共享附件失败：\(error.localizedDescription)", locale: L10n.locale)
+            return
+        }
         await familyStore.refresh(privatePayloads: payloads)
         ownedSharedPetIDs = Set(familyStore.ownedSharedPets.map(\.pet.id))
             .intersection(store.pets.map(\.id))
@@ -1074,7 +1074,7 @@ struct FamilySharedPetDetailView: View {
                     )
                     Text(sharedPet.pet.name)
                         .font(.title2.bold())
-                    Label("家人共享 · \(sharedPet.role.displayName)", systemImage: sharedPet.role.symbol)
+                    Label("家庭共享 · \(sharedPet.role.displayName)", systemImage: sharedPet.role.symbol)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(theme.accent)
                         .padding(.horizontal, 10)
@@ -1121,7 +1121,9 @@ struct FamilySharedPetDetailView: View {
                                 .background(theme.accentSoft, in: Circle())
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(member.isCurrentUser
-                                    ? "\(L10n.dynamic(member.displayName))（我）"
+                                    ? (L10n.usesEnglish
+                                        ? "\(L10n.dynamic(member.displayName)) (Me)"
+                                        : "\(L10n.dynamic(member.displayName))（我）")
                                     : L10n.dynamic(member.displayName))
                                     .font(.headline)
                                 Text(member.accessSummary)
@@ -1335,7 +1337,7 @@ struct FamilySharedPetDetailView: View {
                 let nextDueAt = try await familyStore.completeReminder(reminder, in: sharedPet)
                 reminderCompletionMessage = nextDueAt.map {
                     String(localized: "本次已记录，下次提醒：\(L10n.date($0, dateStyle: .long, timeStyle: .shortened))。", locale: L10n.locale)
-                } ?? L10n.string("这条一次性提醒已完成并归档。")
+                } ?? L10n.string("这条一次性提醒已完成，可在健康时间线中查看记录。")
                 reminderCompletionFeedbackTrigger += 1
             } catch {
                 operationMessage = error.localizedDescription
@@ -1387,7 +1389,7 @@ struct FamilySharedRecordDetailView: View {
                     Text(L10n.dynamic(record.title))
                         .font(.title2.bold())
                         .multilineTextAlignment(.center)
-                    Text("家人共享 · \(currentSharedPet.role.displayName)")
+                    Text("家庭共享 · \(currentSharedPet.role.displayName)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -1410,7 +1412,7 @@ struct FamilySharedRecordDetailView: View {
                 }
             }
 
-            if let notes = record.notes, !notes.isEmpty {
+            if let notes = record.localizedNotes, !notes.isEmpty {
                 Section("详情") {
                     Text(notes)
                         .textSelection(.enabled)
@@ -1513,6 +1515,7 @@ struct DataPrivacyView: View {
     @Environment(\.appColorTheme) private var theme
     @State private var backupDocument: ZojiBackupDocument?
     @State private var isExportingBackup = false
+    @State private var isPreparingBackup = false
     @State private var isImportingBackup = false
     @State private var backupMessage: String?
     @State private var backupMessageIsError = false
@@ -1560,12 +1563,15 @@ struct DataPrivacyView: View {
 
             Section {
                 Button {
-                    backupDocument = ZojiBackupDocument(archive: store.makeBackupArchive())
-                    isExportingBackup = true
+                    prepareBackup()
                 } label: {
-                    Label("导出完整备份", systemImage: "square.and.arrow.up.fill")
+                    if isPreparingBackup {
+                        Label("正在准备完整备份…", systemImage: "hourglass")
+                    } else {
+                        Label("导出完整备份", systemImage: "square.and.arrow.up.fill")
+                    }
                 }
-                .disabled(store.pets.isEmpty)
+                .disabled(store.pets.isEmpty || isPreparingBackup)
 
                 Button {
                     isImportingBackup = true
@@ -1666,7 +1672,25 @@ struct DataPrivacyView: View {
     private var backupFilename: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        return "爪记完整备份-\(formatter.string(from: Date()))"
+        let date = formatter.string(from: Date())
+        return L10n.usesEnglish
+            ? "Zoji-Full-Backup-\(date)"
+            : "爪记完整备份-\(date)"
+    }
+
+    private func prepareBackup() {
+        guard !isPreparingBackup else { return }
+        isPreparingBackup = true
+        Task { @MainActor in
+            defer { isPreparingBackup = false }
+            do {
+                let archive = try await store.makeBackupArchive()
+                backupDocument = ZojiBackupDocument(archive: archive)
+                isExportingBackup = true
+            } catch {
+                showBackupMessage("导出失败：\(error.localizedDescription)", isError: true)
+            }
+        }
     }
 
     private func importBackup(from url: URL) {

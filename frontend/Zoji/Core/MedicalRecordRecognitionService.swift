@@ -10,9 +10,11 @@ struct MedicalRecordRecognitionResult: Sendable {
 
 enum MedicalRecordRecognitionService {
     static func recognize(imageData: Data) async throws -> MedicalRecordRecognitionResult {
+        try Task.checkCancellation()
+        let cancellation = VisionRequestCancellationBox()
         let recognitionTask = Task.detached(priority: .userInitiated) {
             try Task.checkCancellation()
-            let text = try recognizeText(in: imageData)
+            let text = try recognizeText(in: imageData, cancellation: cancellation)
             try Task.checkCancellation()
             return MedicalRecordRecognitionResult(
                 text: text,
@@ -27,11 +29,15 @@ enum MedicalRecordRecognitionService {
         return try await withTaskCancellationHandler {
             try await recognitionTask.value
         } onCancel: {
+            cancellation.cancel()
             recognitionTask.cancel()
         }
     }
 
-    nonisolated private static func recognizeText(in imageData: Data) throws -> String {
+    nonisolated private static func recognizeText(
+        in imageData: Data,
+        cancellation: VisionRequestCancellationBox
+    ) throws -> String {
         var recognizedLines: [String] = []
         var recognitionError: Error?
         let request = VNRecognizeTextRequest { request, error in
@@ -45,7 +51,19 @@ enum MedicalRecordRecognitionService {
         request.recognitionLevel = .accurate
         request.recognitionLanguages = ["zh-Hans", "en-US"]
         request.usesLanguageCorrection = true
-        try VNImageRequestHandler(data: imageData).perform([request])
+        guard cancellation.register(request) else { throw CancellationError() }
+        defer { cancellation.unregister(request) }
+        do {
+            try VNImageRequestHandler(data: imageData).perform([request])
+        } catch {
+            if cancellation.isCancelled || Task.isCancelled {
+                throw CancellationError()
+            }
+            throw error
+        }
+        if cancellation.isCancelled || Task.isCancelled {
+            throw CancellationError()
+        }
         if let recognitionError { throw recognitionError }
         try Task.checkCancellation()
         return recognizedLines.joined(separator: "\n")
@@ -73,11 +91,47 @@ enum MedicalRecordRecognitionService {
     }
 
     nonisolated static func detectedCost(in text: String) -> Decimal? {
-        let pattern = "(?:合计|总计|应收|实收|金额|费用|total|amount|paid|cost)[^0-9]{0,12}([0-9][0-9.,'’\\u00A0 ]*)"
-        guard let expression = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-              let match = expression.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-              let range = Range(match.range(at: 1), in: text)
-        else { return nil }
+        let labelPattern = "(?:合计|总计|应收|实收|金额|费用|total|amount|paid|cost)[^0-9\\r\\n]{0,12}([0-9][0-9.,'’\\u00A0 ]*)"
+        let labelOnlyPattern = "(?:合计|总计|应收|实收|金额|费用|total|amount|paid|cost)\\s*[:：]?[\\p{Sc}]?\\s*$"
+        let valuePattern = "^[\\p{Sc}\\s]*([0-9][0-9.,'’\\u00A0 ]*)$"
+        guard let labelExpression = try? NSRegularExpression(
+            pattern: labelPattern,
+            options: .caseInsensitive
+        ), let labelOnlyExpression = try? NSRegularExpression(
+            pattern: labelOnlyPattern,
+            options: .caseInsensitive
+        ), let valueExpression = try? NSRegularExpression(pattern: valuePattern) else {
+            return nil
+        }
+
+        let lines = text.components(separatedBy: .newlines)
+        for (index, line) in lines.enumerated() {
+            if let amount = firstRecognizedAmount(in: line, using: labelExpression) {
+                return amount
+            }
+            guard labelOnlyExpression.firstMatch(
+                in: line,
+                range: NSRange(line.startIndex..., in: line)
+            ) != nil, index + 1 < lines.count else {
+                continue
+            }
+            if let amount = firstRecognizedAmount(in: lines[index + 1], using: valueExpression) {
+                return amount
+            }
+        }
+        return nil
+    }
+
+    private nonisolated static func firstRecognizedAmount(
+        in text: String,
+        using expression: NSRegularExpression
+    ) -> Decimal? {
+        guard let match = expression.firstMatch(
+            in: text,
+            range: NSRange(text.startIndex..., in: text)
+        ), let range = Range(match.range(at: 1), in: text) else {
+            return nil
+        }
         return parseRecognizedAmount(String(text[range]))
     }
 
@@ -103,5 +157,47 @@ enum MedicalRecordRecognitionService {
         guard !integerPart.isEmpty else { return nil }
         let canonical = fractionPart.isEmpty ? integerPart : "\(integerPart).\(fractionPart)"
         return Decimal(string: canonical, locale: Locale(identifier: "en_US_POSIX"))
+    }
+}
+
+final class VisionRequestCancellationBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var request: VNRequest?
+    private var cancelled = false
+
+    var isCancelled: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return cancelled
+    }
+
+    /// Returns false when cancellation won the race before Vision registered
+    /// its request. In that case the caller must not start recognition.
+    func register(_ request: VNRequest) -> Bool {
+        lock.lock()
+        if cancelled {
+            lock.unlock()
+            request.cancel()
+            return false
+        }
+        self.request = request
+        lock.unlock()
+        return true
+    }
+
+    func unregister(_ request: VNRequest) {
+        lock.lock()
+        if self.request === request {
+            self.request = nil
+        }
+        lock.unlock()
+    }
+
+    func cancel() {
+        lock.lock()
+        cancelled = true
+        let request = request
+        lock.unlock()
+        request?.cancel()
     }
 }

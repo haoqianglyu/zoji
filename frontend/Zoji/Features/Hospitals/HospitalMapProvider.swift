@@ -2,7 +2,7 @@
 import AMapFoundationKit
 import AMapSearchKit
 #endif
-import CoreLocation
+@preconcurrency import CoreLocation
 import Foundation
 import MapKit
 import OSLog
@@ -114,6 +114,8 @@ final class MapKitHospitalProvider: HospitalMapProviding {
                 }
             } catch is CancellationError {
                 throw CancellationError()
+            } catch let error where Self.isEmptySearchResult(error) {
+                continue
             } catch {
                 lastError = error
             }
@@ -125,6 +127,7 @@ final class MapKitHospitalProvider: HospitalMapProviding {
         ) {
             let request = MKLocalSearch.Request()
             request.naturalLanguageQuery = trimmedQuery
+            request.region = region
             request.resultTypes = .pointOfInterest
             var usesAnimalServiceFilter = false
             if #available(iOS 18.0, *) {
@@ -137,6 +140,9 @@ final class MapKitHospitalProvider: HospitalMapProviding {
             do {
                 let response = try await MKLocalSearch(request: request).start()
                 for mapItem in response.mapItems {
+                    guard isWithinSearchRegion(mapItem.placemark.coordinate, region: region) else {
+                        continue
+                    }
                     guard usesAnimalServiceFilter || HospitalPOICategory.appearsVeterinary(
                         mapItem.name,
                         mapItem.placemark.title
@@ -152,6 +158,8 @@ final class MapKitHospitalProvider: HospitalMapProviding {
                 }
             } catch is CancellationError {
                 throw CancellationError()
+            } catch let error where Self.isEmptySearchResult(error) {
+                // MapKit reports a normal zero-result search as placemarkNotFound.
             } catch {
                 lastError = error
             }
@@ -170,10 +178,17 @@ final class MapKitHospitalProvider: HospitalMapProviding {
                 return lhs.distanceMeters < rhs.distanceMeters
             }
 
-        if results.isEmpty, let lastError {
+        let matchingResults = trimmedQuery.isEmpty
+            ? results
+            : results.filter { HospitalPOICategory.isNameMatch($0, query: trimmedQuery) }
+        if matchingResults.isEmpty, let lastError {
             throw lastError
         }
-        return Array(results.prefix(40))
+        return Array(matchingResults.prefix(40))
+    }
+
+    private static func isEmptySearchResult(_ error: Error) -> Bool {
+        (error as? MKError)?.code == .placemarkNotFound
     }
 
     private func isWithinSearchRegion(
@@ -603,12 +618,20 @@ enum HospitalProviderPolicy {
         let cacheKey = "\((coordinate.latitude * 10).rounded() / 10),\((coordinate.longitude * 10).rounded() / 10)"
         if let cached = countryCache[cacheKey] { return cached }
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        let countryCode = try? await CLGeocoder()
-            .reverseGeocodeLocation(location, preferredLocale: Locale(identifier: "en_US_POSIX"))
-            .first?.isoCountryCode
-        let isMainlandChina = countryCode?.uppercased() == "CN"
-        countryCache[cacheKey] = isMainlandChina
-        return isMainlandChina
+        do {
+            guard let countryCode = try await CLGeocoder()
+                .reverseGeocodeLocation(location, preferredLocale: Locale(identifier: "en_US_POSIX"))
+                .first?.isoCountryCode else {
+                return false
+            }
+            let isMainlandChina = countryCode.uppercased() == "CN"
+            countryCache[cacheKey] = isMainlandChina
+            return isMainlandChina
+        } catch {
+            // A transient offline/rate-limit failure is not evidence that the
+            // coordinate is outside mainland China, so do not poison the cache.
+            return false
+        }
         #endif
     }
 }
@@ -672,20 +695,53 @@ private extension String {
 }
 
 struct HospitalFavoriteStore {
+    private struct Snapshot: Codable {
+        let modifiedAt: Date
+        let hospitals: [HospitalSummary]
+    }
+
     private let defaults: UserDefaults
+    private let ubiquitousStore: NSUbiquitousKeyValueStore?
 
     private var storageKey: String {
+        "zoji.favorite-hospitals.v3"
+    }
+
+    private var legacyStorageKey: String {
         "zoji.favorite-hospitals.v2.private"
     }
 
-    init(defaults: UserDefaults = .standard) {
+    init(
+        defaults: UserDefaults = .standard,
+        ubiquitousStore: NSUbiquitousKeyValueStore? = .default
+    ) {
         self.defaults = defaults
+        self.ubiquitousStore = ubiquitousStore
     }
 
-    func load() -> [HospitalSummary] {
-        guard let data = defaults.data(forKey: storageKey),
-              let hospitals = try? JSONDecoder().decode([HospitalSummary].self, from: data) else {
-            return []
+    func load(synchronize: Bool = true) -> [HospitalSummary] {
+        if synchronize {
+            ubiquitousStore?.synchronize()
+        }
+        let localData = defaults.data(forKey: storageKey)
+        let cloudData = ubiquitousStore?.data(forKey: storageKey)
+        let localSnapshot = localData.flatMap(decodeSnapshot)
+        let cloudSnapshot = cloudData.flatMap(decodeSnapshot)
+        let snapshot = [localSnapshot, cloudSnapshot]
+            .compactMap { $0 }
+            .max { $0.modifiedAt < $1.modifiedAt }
+
+        let hospitals: [HospitalSummary]
+        if let snapshot {
+            hospitals = snapshot.hospitals
+            persist(snapshot, replacingLocalData: localData, cloudData: cloudData)
+        } else if let legacyData = defaults.data(forKey: legacyStorageKey),
+                  let legacy = try? JSONDecoder().decode([HospitalSummary].self, from: legacyData) {
+            hospitals = legacy
+            save(legacy)
+            defaults.removeObject(forKey: legacyStorageKey)
+        } else {
+            hospitals = []
         }
         return hospitals.map { hospital in
             var favorite = hospital
@@ -696,8 +752,38 @@ struct HospitalFavoriteStore {
 
     func save(_ hospitals: [HospitalSummary]) {
         let sorted = hospitals.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-        guard let data = try? JSONEncoder().encode(sorted) else { return }
-        defaults.set(data, forKey: storageKey)
+        persist(Snapshot(modifiedAt: Date(), hospitals: sorted))
+    }
+
+    private func decodeSnapshot(_ data: Data) -> Snapshot? {
+        try? JSONDecoder().decode(Snapshot.self, from: data)
+    }
+
+    private func persist(_ snapshot: Snapshot) {
+        persist(
+            snapshot,
+            replacingLocalData: defaults.data(forKey: storageKey),
+            cloudData: ubiquitousStore?.data(forKey: storageKey)
+        )
+    }
+
+    private func persist(
+        _ snapshot: Snapshot,
+        replacingLocalData localData: Data?,
+        cloudData: Data?
+    ) {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        guard let data = try? encoder.encode(snapshot) else { return }
+        if localData != data {
+            defaults.set(data, forKey: storageKey)
+        }
+        // iCloud key-value values are intentionally small. Keep the complete
+        // local copy even if an unusually large favorites list exceeds this
+        // conservative cloud payload limit.
+        if data.count <= 900_000, cloudData != data {
+            ubiquitousStore?.set(data, forKey: storageKey)
+        }
     }
 }
 
@@ -705,7 +791,7 @@ struct HospitalFavoriteStore {
 @Observable
 final class HospitalsViewModel {
     var hospitals: [HospitalSummary] = []
-    var favorites: [HospitalSummary]
+    var favorites: [HospitalSummary] = []
     var isSearching = false
     var message: String?
     var hasSearchError = false
@@ -713,6 +799,8 @@ final class HospitalsViewModel {
     @ObservationIgnored private let provider: any HospitalMapProviding
     @ObservationIgnored private let favoriteStore: HospitalFavoriteStore
     @ObservationIgnored private var searchGeneration = 0
+    @ObservationIgnored private var favoriteStoreObserver: NSObjectProtocol?
+    @ObservationIgnored private var isActivated = false
     private var currentSource: HospitalDataSource
 
     init(
@@ -722,8 +810,28 @@ final class HospitalsViewModel {
         let resolvedProvider = provider ?? AutomaticHospitalProvider()
         self.provider = resolvedProvider
         self.favoriteStore = favoriteStore
-        self.favorites = favoriteStore.load()
         self.currentSource = resolvedProvider.source
+    }
+
+    func activate() {
+        guard !isActivated else { return }
+        isActivated = true
+        favorites = favoriteStore.load()
+        favoriteStoreObserver = NotificationCenter.default.addObserver(
+            forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+            object: NSUbiquitousKeyValueStore.default,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.reloadFavorites()
+            }
+        }
+    }
+
+    deinit {
+        if let favoriteStoreObserver {
+            NotificationCenter.default.removeObserver(favoriteStoreObserver)
+        }
     }
 
     var sourceName: String { currentSource.displayName }
@@ -801,6 +909,16 @@ final class HospitalsViewModel {
         favoriteStore.save(favorites)
     }
 
+    private func reloadFavorites() {
+        favorites = favoriteStore.load(synchronize: false)
+        let favoriteIDs = Set(favorites.map(\.id))
+        hospitals = hospitals.map { hospital in
+            var updated = hospital
+            updated.isFavorite = favoriteIDs.contains(hospital.id)
+            return updated
+        }
+    }
+
     func hospital(id: String) -> HospitalSummary? {
         hospitals.first { $0.id == id } ?? favorites.first { $0.id == id }
     }
@@ -813,15 +931,14 @@ final class HospitalLocationManager: NSObject, @preconcurrency CLLocationManager
     var locationRevision = 0
     var message: String?
 
-    @ObservationIgnored private let manager = CLLocationManager()
+    @ObservationIgnored private var manager: CLLocationManager?
 
     override init() {
         super.init()
-        manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
     }
 
     func requestLocation() {
+        let manager = locationManager()
         switch manager.authorizationStatus {
         case .notDetermined:
             manager.requestWhenInUseAuthorization()
@@ -832,6 +949,15 @@ final class HospitalLocationManager: NSObject, @preconcurrency CLLocationManager
         @unknown default:
             message = L10n.string("暂时无法获取定位，可以拖动地图后搜索。")
         }
+    }
+
+    private func locationManager() -> CLLocationManager {
+        if let manager { return manager }
+        let manager = CLLocationManager()
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        self.manager = manager
+        return manager
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {

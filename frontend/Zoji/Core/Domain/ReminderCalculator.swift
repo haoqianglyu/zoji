@@ -37,6 +37,12 @@ protocol ReminderNotificationScheduling: Sendable {
     func removeNotifications(reminderID: UUID) async
 }
 
+struct ReminderNotificationCandidate: Equatable, Sendable {
+    /// Positive values are days before the due date; negative values are days overdue.
+    let advanceDay: Int
+    let alertAt: Date
+}
+
 struct LocalReminderNotificationScheduler: ReminderNotificationScheduling, @unchecked Sendable {
     private let identifierPrefix = "zoji.reminder."
 
@@ -61,24 +67,33 @@ struct LocalReminderNotificationScheduler: ReminderNotificationScheduling, @unch
         }
 
         let calendar = Calendar.current
-        for advanceDay in Set(reminder.advanceDays).filter({ $0 >= 0 }).sorted(by: >) {
-            guard
-                let alertAt = calendar.date(byAdding: .day, value: -advanceDay, to: reminder.dueAt),
-                alertAt > Date()
-            else { continue }
+        let now = Date()
+        let candidates = Self.notificationCandidates(for: reminder, now: now, calendar: calendar)
+        let occupiedSlots = await center.pendingNotificationRequests().count
+        let availableSlots = max(0, 64 - occupiedSlots)
+
+        for candidate in candidates.prefix(availableSlots) {
+            let advanceDay = candidate.advanceDay
+            let alertAt = candidate.alertAt
 
             let content = UNMutableNotificationContent()
             let localizedReminderTitle = L10n.dynamic(reminder.title)
             content.title = L10n.string("Zoji 健康提醒")
-            content.body = advanceDay == 0
-                ? String(
+            content.body = if advanceDay < 0 {
+                L10n.usesEnglish
+                    ? "\(petName)’s “\(localizedReminderTitle)” is \(-advanceDay) days overdue"
+                    : "\(petName) 的“\(localizedReminderTitle)”已逾期 \(-advanceDay) 天"
+            } else if advanceDay == 0 {
+                String(
                     localized: "今天该为 \(petName) 安排：\(localizedReminderTitle)",
                     locale: L10n.locale
                 )
-                : String(
+            } else {
+                String(
                     localized: "\(petName) 的“\(localizedReminderTitle)”还有 \(advanceDay) 天",
                     locale: L10n.locale
                 )
+            }
             content.sound = .default
             content.userInfo = ["reminderID": reminder.id.uuidString, "petID": reminder.petID.uuidString]
 
@@ -106,6 +121,68 @@ struct LocalReminderNotificationScheduler: ReminderNotificationScheduling, @unch
 
     private func identifier(for reminderID: UUID, advanceDay: Int) -> String {
         "\(identifierPrefix)\(reminderID.uuidString).\(advanceDay)"
+    }
+
+    static func notificationCandidates(
+        for reminder: ReminderItem,
+        now: Date,
+        calendar: Calendar
+    ) -> [ReminderNotificationCandidate] {
+        var candidates: [ReminderNotificationCandidate] = Set(
+            reminder.advanceDays.filter { $0 >= 0 }
+        ).compactMap { advanceDay -> ReminderNotificationCandidate? in
+            guard let alertAt = calendar.date(
+                byAdding: .day,
+                value: -advanceDay,
+                to: reminder.dueAt
+            ), alertAt > now else { return nil }
+            return ReminderNotificationCandidate(advanceDay: advanceDay, alertAt: alertAt)
+        }
+
+        if reminder.dueAt > now {
+            candidates.append(contentsOf: (1 ... 7).compactMap { overdueDay -> ReminderNotificationCandidate? in
+                guard let alertAt = calendar.date(
+                    byAdding: .day,
+                    value: overdueDay,
+                    to: reminder.dueAt
+                ) else { return nil }
+                return ReminderNotificationCandidate(advanceDay: -overdueDay, alertAt: alertAt)
+            })
+        } else {
+            let dueTime = calendar.dateComponents([.hour, .minute], from: reminder.dueAt)
+            guard let todayAtDueTime = calendar.date(
+                bySettingHour: dueTime.hour ?? 9,
+                minute: dueTime.minute ?? 0,
+                second: 0,
+                of: now
+            ) else {
+                return candidates.sorted { $0.alertAt < $1.alertAt }
+            }
+            let firstAlert = if todayAtDueTime > now {
+                todayAtDueTime
+            } else {
+                calendar.date(byAdding: .day, value: 1, to: todayAtDueTime)
+            }
+            if let firstAlert {
+                let dueDay = calendar.startOfDay(for: reminder.dueAt)
+                candidates.append(contentsOf: (0 ..< 7).compactMap { offset -> ReminderNotificationCandidate? in
+                    guard let alertAt = calendar.date(byAdding: .day, value: offset, to: firstAlert) else {
+                        return nil
+                    }
+                    let overdueDay = max(
+                        1,
+                        calendar.dateComponents(
+                            [.day],
+                            from: dueDay,
+                            to: calendar.startOfDay(for: alertAt)
+                        ).day ?? 1
+                    )
+                    return ReminderNotificationCandidate(advanceDay: -overdueDay, alertAt: alertAt)
+                })
+            }
+        }
+
+        return candidates.sorted { $0.alertAt < $1.alertAt }
     }
 }
 

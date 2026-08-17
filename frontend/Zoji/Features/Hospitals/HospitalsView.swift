@@ -96,14 +96,13 @@ struct HospitalsView: View {
                 resultHeader
                 resultList
                     .layoutPriority(-1)
-                resultDisclaimer
-                    .padding(.bottom, 52)
             }
             .background(theme.background)
             .navigationTitle("宠物医院")
             .navigationBarTitleDisplayMode(.inline)
             .animation(.easeInOut(duration: 0.2), value: mode)
             .task {
+                model.activate()
                 if !store.hospitals.isEmpty, model.hospitals.isEmpty {
                     model.hospitals = store.hospitals
                 }
@@ -167,6 +166,7 @@ struct HospitalsView: View {
                     }
                     .presentationDetents([.large])
                     .presentationDragIndicator(.hidden)
+                    .interactiveDismissDisabled()
                 }
             }
         }
@@ -285,7 +285,7 @@ struct HospitalsView: View {
         .onMapCameraChange(frequency: .onEnd) { context in
             currentRegion = context.region
         }
-        .frame(height: 250)
+        .frame(height: 220)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(alignment: .bottom) {
             Button {
@@ -361,11 +361,14 @@ struct HospitalsView: View {
                             onToggleFavorite: { model.toggleFavorite(hospital) }
                         )
                     }
+
+                    resultDisclaimer
+                        .padding(.top, 4)
                 }
 
             }
             .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            .padding(.bottom, 16)
         }
         .refreshable {
             await searchCurrentRegion(allowAMapConsentPrompt: true)
@@ -619,7 +622,10 @@ private struct HospitalDetailView: View {
 
     private func callHospital() {
         guard let phone = hospital.phoneNumber else { return }
-        let allowed = phone.filter { $0.isNumber || $0 == "+" }
+        let firstNumber = phone.split(whereSeparator: { character in
+            ";；,，".contains(character)
+        }).first.map(String.init) ?? phone
+        let allowed = firstNumber.filter { $0.isNumber || $0 == "+" }
         guard !allowed.isEmpty, let url = URL(string: "tel://\(allowed)") else { return }
         UIApplication.shared.open(url)
     }

@@ -42,6 +42,7 @@ final class HealthRecordEntity {
     var providerName: String?
     var costCents: Int?
     var currencyCode: String?
+    var timeZoneIdentifier: String?
     var notes: String?
     @Attribute(.externalStorage) var caseImageData: Data?
     var createdAt: Date = Date()

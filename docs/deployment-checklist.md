@@ -21,4 +21,8 @@
 - 数据库迁移、权限隔离、双设备同步、离线恢复和附件失败重试通过。
 - 通知允许/拒绝/后续开启、定位允许/拒绝、无结果和弱网均有可恢复界面。
 - App Privacy、权限描述、隐私政策和商店截图与真实功能一致。
-
+- 将本仓库 `docs/` 中的法律文案同步到 `haoqianglyu/haoqianglyu.github.io` 的 `/zoji/` 目录，并确认以下页面无需登录即可访问：
+  - `https://haoqianglyu.github.io/zoji/privacy-policy.html`
+  - `https://haoqianglyu.github.io/zoji/terms-of-use.html`
+- 用无痕浏览器和 `curl -I` 验证以上 URL 返回 `200`，TLS 证书有效且没有重定向循环；验证通过前不要提交到 App Store Connect。
+- 在 App Store Connect 的 App Privacy 中填写公开的隐私政策 URL；政策内容须与 App 内版本及 Privacy Manifest 保持一致。

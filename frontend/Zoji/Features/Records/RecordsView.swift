@@ -11,6 +11,8 @@ struct RecordsView: View {
     @State private var query = ""
     @State private var editor: HealthRecordEditorPresentation?
     @State private var recordPendingDeletion: HealthRecord?
+    @State private var selectedExpenseYear = Calendar.autoupdatingCurrent.component(.year, from: Date())
+    @State private var expenseReferenceDate = Date()
 
     private var selectedPet: SelectedPet? { store.selectedPet(using: familyStore) }
     private var selectablePets: [SelectedPet] { store.selectablePets(using: familyStore) }
@@ -20,13 +22,28 @@ struct RecordsView: View {
         guard !query.isEmpty else { return selectedRecords }
         return selectedRecords.filter { record in
             record.title.localizedStandardContains(query)
+                || L10n.dynamic(record.title).localizedStandardContains(query)
                 || record.kind.displayName.localizedStandardContains(query)
                 || record.providerName?.localizedStandardContains(query) == true
         }
     }
 
+    private var expenseYears: [Int] {
+        let calendar = Calendar.autoupdatingCurrent
+        return Set(selectedRecords.compactMap { record in
+            guard (record.costCents ?? 0) > 0 else { return nil }
+            return record.occurrenceYear(fallbackCalendar: calendar)
+        }).sorted(by: >)
+    }
+
+    private var effectiveExpenseYear: Int {
+        expenseYears.contains(selectedExpenseYear)
+            ? selectedExpenseYear
+            : (expenseYears.first ?? Calendar.autoupdatingCurrent.component(.year, from: expenseReferenceDate))
+    }
+
     private var annualExpenseSummary: AnnualExpenseSummary? {
-        AnnualExpenseSummary(records: selectedRecords)
+        AnnualExpenseSummary(records: selectedRecords, year: effectiveExpenseYear)
     }
 
     private var monthSections: [HealthRecordMonthSection] {
@@ -63,6 +80,17 @@ struct RecordsView: View {
 
                     if let annualExpenseSummary {
                         Section("年度花费") {
+                            if expenseYears.count > 1 {
+                                Picker("统计年份", selection: Binding(
+                                    get: { effectiveExpenseYear },
+                                    set: { selectedExpenseYear = $0 }
+                                )) {
+                                    ForEach(expenseYears, id: \.self) { year in
+                                        Text(year.formatted(.number.grouping(.never).locale(L10n.locale)))
+                                            .tag(year)
+                                    }
+                                }
+                            }
                             AnnualExpenseSummaryCard(summary: annualExpenseSummary)
                         }
                     }
@@ -112,9 +140,8 @@ struct RecordsView: View {
                                             }
 
                                             Button {
-                                                editor = HealthRecordEditorPresentation(
-                                                    record: record,
-                                                    petID: record.petID,
+                                                presentEditor(
+                                                    for: record,
                                                     sharedPet: selectedPet?.sharedPet
                                                 )
                                             } label: {
@@ -141,6 +168,9 @@ struct RecordsView: View {
             .refreshable {
                 await store.reloadPersistedAndFamilyData(using: familyStore)
                 await familyStore.synchronizePendingChanges()
+            }
+            .task {
+                await refreshExpenseReferenceDateAtMidnight()
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
@@ -190,7 +220,7 @@ struct RecordsView: View {
                 }
                 Button("取消", role: .cancel) { recordPendingDeletion = nil }
             } message: {
-                Text("删除后，该记录会从 \(selectedPet?.pet.name ?? "宠物") 的健康时间线中移除。")
+                Text("删除后，该记录会从 \(selectedPet?.pet.name ?? "宠物") 的健康时间线中移除；由它创建的后续提醒也会一并删除。")
             }
             .alert("健康记录操作失败", isPresented: Binding(
                 get: { store.recordPersistenceMessage != nil },
@@ -231,6 +261,53 @@ struct RecordsView: View {
             }
         }
     }
+
+    private func presentEditor(for record: HealthRecord, sharedPet: FamilySharedPet?) {
+        if let sharedPet {
+            editor = HealthRecordEditorPresentation(
+                record: record,
+                petID: record.petID,
+                sharedPet: sharedPet
+            )
+            return
+        }
+
+        Task { @MainActor in
+            do {
+                guard let completeRecord = try await store.healthRecordWithAttachments(id: record.id) else {
+                    store.recordPersistenceMessage = L10n.string("这条健康记录已不存在。")
+                    return
+                }
+                editor = HealthRecordEditorPresentation(
+                    record: completeRecord,
+                    petID: completeRecord.petID
+                )
+            } catch {
+                store.recordPersistenceMessage = String(localized: "读取健康记录附件失败：\(error.localizedDescription)", locale: L10n.locale)
+            }
+        }
+    }
+
+    private func refreshExpenseReferenceDateAtMidnight() async {
+        while !Task.isCancelled {
+            let calendar = Calendar.autoupdatingCurrent
+            let now = Date()
+            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) else {
+                return
+            }
+            do {
+                try await Task.sleep(for: .seconds(max(nextDay.timeIntervalSince(now), 1)))
+            } catch {
+                return
+            }
+            let previousYear = calendar.component(.year, from: expenseReferenceDate)
+            expenseReferenceDate = Date()
+            let currentYear = calendar.component(.year, from: expenseReferenceDate)
+            if currentYear != previousYear {
+                selectedExpenseYear = currentYear
+            }
+        }
+    }
 }
 
 private struct AnnualExpenseSummary: Sendable {
@@ -251,13 +328,9 @@ private struct AnnualExpenseSummary: Sendable {
     let recordCount: Int
     let currencyGroups: [CurrencyGroup]
 
-    init?(records: [HealthRecord], now: Date = Date(), calendar: Calendar = .autoupdatingCurrent) {
-        let year = calendar.component(.year, from: now)
-        guard let start = calendar.date(from: DateComponents(year: year)),
-              let end = calendar.date(byAdding: .year, value: 1, to: start) else { return nil }
-
+    init?(records: [HealthRecord], year: Int, calendar: Calendar = .autoupdatingCurrent) {
         let paidRecords = records.filter {
-            $0.occurredAt >= start && $0.occurredAt < end && ($0.costCents ?? 0) > 0
+            $0.occurrenceYear(fallbackCalendar: calendar) == year && ($0.costCents ?? 0) > 0
         }
         guard !paidRecords.isEmpty else { return nil }
 
@@ -497,7 +570,7 @@ struct HealthRecordEditorView: View {
         _title = State(initialValue: record?.title ?? initialKind.defaultTitle)
         _occurredAt = State(initialValue: record?.occurredAt ?? Date())
         _providerName = State(initialValue: record?.providerName ?? "")
-        _notes = State(initialValue: record?.notes ?? "")
+        _notes = State(initialValue: record?.localizedNotes ?? "")
         _attachments = State(initialValue: record?.attachments ?? [])
         _reminderDueAt = State(initialValue: Calendar.current.date(byAdding: .month, value: 1, to: Date())!)
         let initialCurrencyCode = record?.currencyCode
@@ -1001,6 +1074,7 @@ struct HealthRecordEditorView: View {
 
             do {
                 let costCents = try parsedCostCents()
+                let linkedReminderInterval = try validatedLinkedReminderInterval()
                 let savedRecordID: UUID
                 if let sharedPet {
                     let savedRecord = HealthRecord(
@@ -1013,6 +1087,8 @@ struct HealthRecordEditorView: View {
                             ? nil : providerName.trimmingCharacters(in: .whitespacesAndNewlines),
                         costCents: costCents,
                         currencyCode: currencyCode,
+                        timeZoneIdentifier: record?.timeZoneIdentifier
+                            ?? TimeZone.autoupdatingCurrent.identifier,
                         notes: notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                             ? nil : notes.trimmingCharacters(in: .whitespacesAndNewlines),
                         attachments: attachments
@@ -1053,7 +1129,13 @@ struct HealthRecordEditorView: View {
                     )
                     savedRecordID = savedRecord.id
                 }
-                try await saveLinkedReminder(recordID: savedRecordID)
+                try await saveLinkedReminder(
+                    recordID: savedRecordID,
+                    intervalValue: linkedReminderInterval
+                )
+                if sharedPet == nil {
+                    familyStore.selectPrivatePet()
+                }
                 dismiss()
             } catch {
                 errorTitle = L10n.string("无法保存")
@@ -1078,12 +1160,17 @@ struct HealthRecordEditorView: View {
         reminderAdvanceDays = Set(reminder.advanceDays)
     }
 
-    private func saveLinkedReminder(recordID: UUID) async throws {
+    private func validatedLinkedReminderInterval() throws -> Int? {
+        guard setsReminder else { return nil }
+        guard !reminderAdvanceDays.isEmpty else {
+            throw ReminderValidationError.invalidAdvanceDays
+        }
+        return try reminderIntervalValue()
+    }
+
+    private func saveLinkedReminder(recordID: UUID, intervalValue: Int?) async throws {
         if let sharedPet {
             if setsReminder {
-                guard !reminderAdvanceDays.isEmpty else {
-                    throw ReminderValidationError.invalidAdvanceDays
-                }
                 let reminder = ReminderItem(
                     id: linkedReminderID ?? UUID(),
                     petID: petID,
@@ -1092,7 +1179,7 @@ struct HealthRecordEditorView: View {
                     kind: kind,
                     dueAt: reminderDueAt,
                     scheduleType: reminderRepeatOption.scheduleType,
-                    intervalValue: try reminderIntervalValue(),
+                    intervalValue: intervalValue,
                     advanceDays: Array(reminderAdvanceDays).sorted(by: >),
                     isEnabled: true,
                     lastCompletedAt: sharedPet.reminders.first(where: { $0.id == linkedReminderID })?.lastCompletedAt
@@ -1106,9 +1193,6 @@ struct HealthRecordEditorView: View {
         }
 
         if setsReminder {
-            guard !reminderAdvanceDays.isEmpty else {
-                throw ReminderValidationError.invalidAdvanceDays
-            }
             if let linkedReminderID {
                 try await store.updateReminder(
                     id: linkedReminderID,
@@ -1117,7 +1201,7 @@ struct HealthRecordEditorView: View {
                     kind: kind,
                     dueAt: reminderDueAt,
                     scheduleType: reminderRepeatOption.scheduleType,
-                    intervalValue: try reminderIntervalValue(),
+                    intervalValue: intervalValue,
                     advanceDays: Array(reminderAdvanceDays)
                 )
             } else {
@@ -1128,7 +1212,7 @@ struct HealthRecordEditorView: View {
                     kind: kind,
                     dueAt: reminderDueAt,
                     scheduleType: reminderRepeatOption.scheduleType,
-                    intervalValue: try reminderIntervalValue(),
+                    intervalValue: intervalValue,
                     advanceDays: Array(reminderAdvanceDays)
                 )
             }
@@ -1246,7 +1330,10 @@ struct HealthRecordEditorView: View {
                 return
             } catch {
                 errorTitle = L10n.string("无法识别")
-                errorMessage = L10n.string("无法识别这张图片，请选择更清晰的图片重试。")
+                errorMessage = String(
+                    localized: "无法识别这张图片：\(error.localizedDescription)",
+                    locale: L10n.locale
+                )
             }
         }
     }
@@ -1260,6 +1347,7 @@ struct HealthRecordEditorView: View {
         recognitionTask = Task {
             var recognizedCount = 0
             var failedCount = 0
+            var failureReasons: [String] = []
             defer { recognizingAttachmentID = nil }
 
             for attachment in imageAttachments {
@@ -1276,12 +1364,23 @@ struct HealthRecordEditorView: View {
                     return
                 } catch {
                     failedCount += 1
+                    let reason = error.localizedDescription
+                    if !failureReasons.contains(reason) {
+                        failureReasons.append(reason)
+                    }
                 }
             }
 
             if recognizedCount == 0 {
                 errorTitle = L10n.string("无法识别")
-                errorMessage = L10n.string("这些图片均未识别成功，请选择更清晰的图片重试。")
+                if let reason = failureReasons.first {
+                    errorMessage = String(
+                        localized: "这些图片均未识别成功：\(reason)",
+                        locale: L10n.locale
+                    )
+                } else {
+                    errorMessage = L10n.string("这些图片均未识别成功，请选择更清晰的图片重试。")
+                }
             } else if failedCount > 0 {
                 recognitionMessage = String(
                     localized: "识别完成：\(recognizedCount) 张；未成功：\(failedCount) 张",
@@ -1735,9 +1834,11 @@ struct HealthRecordDetailView: View {
     @State private var editor: HealthRecordEditorPresentation?
     @State private var attachmentGallery: HealthRecordAttachmentGalleryPresentation?
     @State private var isConfirmingDeletion = false
+    @State private var loadedRecord: HealthRecord?
+    @State private var hasLoadedAttachmentData = false
 
     private var record: HealthRecord? {
-        store.records.first { $0.id == recordID }
+        loadedRecord ?? store.records.first { $0.id == recordID }
     }
 
     var body: some View {
@@ -1779,14 +1880,14 @@ struct HealthRecordDetailView: View {
                         }
                     }
 
-                    if let notes = record.notes {
+                    if let notes = record.localizedNotes {
                         Section("详情") {
                             Text(notes)
                                 .textSelection(.enabled)
                         }
                     }
 
-                    if !record.attachments.isEmpty {
+                    if hasLoadedAttachmentData, !record.attachments.isEmpty {
                         Section("附件") {
                             LazyVGrid(
                                 columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
@@ -1816,6 +1917,7 @@ struct HealthRecordDetailView: View {
                         Button("编辑") {
                             editor = HealthRecordEditorPresentation(record: record, petID: record.petID)
                         }
+                        .disabled(!hasLoadedAttachmentData)
                     }
                 }
                 .sheet(item: $editor) { presentation in
@@ -1832,7 +1934,7 @@ struct HealthRecordDetailView: View {
                     Button("删除健康记录", role: .destructive) { deleteRecord(record) }
                     Button("取消", role: .cancel) { }
                 } message: {
-                    Text("此操作会将记录从健康时间线中移除。")
+                    Text("此操作会将记录从健康时间线中移除；由它创建的后续提醒也会一并删除。")
                 }
                 .alert("健康记录操作失败", isPresented: Binding(
                     get: { store.recordPersistenceMessage != nil },
@@ -1844,6 +1946,14 @@ struct HealthRecordDetailView: View {
                 }
             } else {
                 ContentUnavailableView("记录不存在", systemImage: "exclamationmark.triangle")
+            }
+        }
+        .task(id: recordID) {
+            do {
+                loadedRecord = try await store.healthRecordWithAttachments(id: recordID)
+                hasLoadedAttachmentData = true
+            } catch {
+                store.recordPersistenceMessage = String(localized: "读取健康记录附件失败：\(error.localizedDescription)", locale: L10n.locale)
             }
         }
     }

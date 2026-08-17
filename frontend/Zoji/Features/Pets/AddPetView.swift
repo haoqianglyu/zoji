@@ -434,6 +434,7 @@ struct PetEditorView: View {
                         avatarData: avatarData,
                         avatarPresetID: avatarPresetID
                     )
+                    familyStore.selectPrivatePet()
                 } else {
                     try await store.addPet(
                         name: name,
@@ -445,6 +446,7 @@ struct PetEditorView: View {
                         avatarData: avatarData,
                         avatarPresetID: avatarPresetID
                     )
+                    familyStore.selectPrivatePet()
                 }
                 dismiss()
             } catch {

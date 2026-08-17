@@ -222,6 +222,8 @@ struct Pet: Identifiable, Hashable, Codable, Sendable {
 }
 
 struct HealthRecord: Identifiable, Hashable, Codable, Sendable {
+    static let reminderCompletionNoteMarker = "zoji:system-note:reminder-completion:v1"
+
     let id: UUID
     let petID: UUID
     var kind: RecordKind
@@ -232,6 +234,9 @@ struct HealthRecord: Identifiable, Hashable, Codable, Sendable {
     /// smallest unit of `currencyCode` (for example cents for CNY/USD).
     var costCents: Int?
     var currencyCode: String? = nil
+    /// Time zone in which the event date was entered. Optional so records from
+    /// older backups and family-sharing payloads continue to decode.
+    var timeZoneIdentifier: String? = TimeZone.autoupdatingCurrent.identifier
     var notes: String? = nil
     var attachments: [HealthRecordAttachment] = []
 
@@ -239,6 +244,26 @@ struct HealthRecord: Identifiable, Hashable, Codable, Sendable {
         // Records created before currency support always stored Chinese yuan.
         guard let currencyCode else { return "CNY" }
         return RegionalFormat.validatedCurrencyCode(currencyCode) ?? "XXX"
+    }
+
+    var localizedNotes: String? {
+        switch notes {
+        case Self.reminderCompletionNoteMarker,
+             "由健康提醒完成后自动生成。",
+             "由家庭共享提醒完成后自动生成。":
+            L10n.string("由健康提醒完成后自动生成。")
+        default:
+            notes
+        }
+    }
+
+    func occurrenceYear(fallbackCalendar: Calendar = .autoupdatingCurrent) -> Int {
+        var calendar = fallbackCalendar
+        if let timeZoneIdentifier,
+           let timeZone = TimeZone(identifier: timeZoneIdentifier) {
+            calendar.timeZone = timeZone
+        }
+        return calendar.component(.year, from: occurredAt)
     }
 }
 

@@ -25,7 +25,7 @@
     <key>AMapAPIKey</key>
     <string>$(AMAP_API_KEY)</string>
     <key>LSApplicationCategoryType</key>
-    <string>public.app-category.medical</string>
+    <string>public.app-category.lifestyle</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSLocationWhenInUseUsageDescription</key>
