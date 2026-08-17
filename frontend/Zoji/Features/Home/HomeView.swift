@@ -222,7 +222,7 @@ struct HomeView: View {
                 titleVisibility: .visible
             ) {
                 if let change = profileStatusChange {
-                    Button(change.status.displayName) {
+                    Button(change.status.actionName) {
                         changeProfileStatus(change)
                     }
                 }

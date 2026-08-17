@@ -213,6 +213,32 @@ final class PersistenceRepositoryTests: XCTestCase {
         XCTAssertFalse(RecordKind.healthCases.contains(.life))
     }
 
+    func testLifeRecordEncodingFallsBackToCustomForLegacyReaders() throws {
+        let record = HealthRecord(
+            id: UUID(),
+            petID: UUID(),
+            kind: .life,
+            title: "公园散步",
+            occurredAt: Date(timeIntervalSince1970: 1_700_000_000),
+            notes: "今天玩得很开心。"
+        )
+
+        let encoded = try JSONEncoder().encode(record)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        XCTAssertEqual(object["kind"] as? String, RecordKind.custom.rawValue)
+        XCTAssertEqual(object["recordCategory"] as? String, RecordKind.life.rawValue)
+
+        let currentDecoded = try JSONDecoder().decode(HealthRecord.self, from: encoded)
+        XCTAssertEqual(currentDecoded.kind, .life)
+
+        object.removeValue(forKey: "recordCategory")
+        let legacyView = try JSONSerialization.data(withJSONObject: object)
+        let legacyDecoded = try JSONDecoder().decode(HealthRecord.self, from: legacyView)
+        XCTAssertEqual(legacyDecoded.kind, .custom)
+        XCTAssertEqual(legacyDecoded.title, record.title)
+        XCTAssertEqual(legacyDecoded.notes, record.notes)
+    }
+
     func testReminderRepositoryPreservesCompletionStateAndHardDeletes() async throws {
         let container = try makeContainer()
         let repository = SwiftDataReminderRepository(modelContainer: container)

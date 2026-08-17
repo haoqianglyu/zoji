@@ -12,7 +12,7 @@
 
 ## 数据策略
 
-- SwiftData/CloudKit：宠物资料、健康记录、提醒规则、头像、病例图片和 PDF。
+- SwiftData/CloudKit：宠物资料、生活与健康记录、提醒规则、头像、生活照片、病例图片和 PDF。
 - 本机：主题、显示偏好、通知权限、缩略图和其他可重建缓存。
 - 每条数据使用稳定 UUID；历史 `ownerID`、`revision` 和 `syncState` 字段仅用于兼容旧本地数据库，不再参与服务器协议。
 - 删除保留 tombstone 字段，以便 CloudKit 在设备间传播删除结果。

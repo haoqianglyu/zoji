@@ -56,7 +56,7 @@ struct FamilySharingView: View {
                     Text("和家人一起照顾宠物")
                         .font(.title2.bold())
 
-                    Text("可以按宠物邀请家人共同维护资料、健康记录和提醒。邀请时可选择“可更改”或“仅查看”。")
+                    Text("可以按宠物邀请家人共同维护资料、生活与健康记录和提醒。邀请时可选择“可更改”或“仅查看”。")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -66,7 +66,7 @@ struct FamilySharingView: View {
 
             Section("共享的内容") {
                 sharingContentRow("宠物资料与头像", symbol: "pawprint.fill")
-                sharingContentRow("健康记录与病例附件", symbol: "list.bullet.clipboard.fill")
+                sharingContentRow("生活与健康记录、照片和附件", symbol: "list.bullet.clipboard.fill")
                 sharingContentRow("提醒规则与完成记录", symbol: "bell.badge.fill")
             }
 
@@ -572,7 +572,7 @@ private struct PreparedFamilyInvitationView: View {
                 }
 
                 Text(invitation.role == .editor
-                     ? "对方可以修改宠物资料、健康记录、附件和提醒。"
+                     ? "对方可以修改宠物资料、生活与健康记录、附件和提醒。"
                      : "对方可以查看档案，但不能修改或删除内容。")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)

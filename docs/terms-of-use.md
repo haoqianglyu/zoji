@@ -1,16 +1,17 @@
 ---
 title: Terms of Use / 用户协议
+lang: zh-CN
 ---
 
 # Terms of Use / 用户协议
 
-Effective date / 生效日期：August 14, 2026 / 2026 年 8 月 14 日
+Effective date / 生效日期：August 17, 2026 / 2026 年 8 月 17 日
 
 ## 中文
 
 ### 服务用途
 
-爪记用于帮助你整理宠物资料、健康记录和提醒，不提供诊断、治疗或紧急医疗服务，也不能替代执业兽医的建议。紧急情况请立即联系兽医或当地急诊机构。
+爪记用于帮助你整理宠物资料、生活与健康记录和提醒，不提供诊断、治疗或紧急医疗服务，也不能替代执业兽医的建议。紧急情况请立即联系兽医或当地急诊机构。
 
 ### 你的责任
 
@@ -32,7 +33,7 @@ Effective date / 生效日期：August 14, 2026 / 2026 年 8 月 14 日
 
 ### Purpose of the Service
 
-Zoji helps organize pet profiles, health records, and reminders. It does not provide diagnosis, treatment, or emergency medical services and does not replace advice from a licensed veterinarian. Contact a veterinarian or local emergency provider immediately in an emergency.
+Zoji helps organize pet profiles, life and health records, and reminders. It does not provide diagnosis, treatment, or emergency medical services and does not replace advice from a licensed veterinarian. Contact a veterinarian or local emergency provider immediately in an emergency.
 
 ### Your Responsibilities
 
@@ -52,4 +53,4 @@ If the service or its data practices materially change, we will update this page
 
 ## Contact / 联系我们
 
-[haoqianglyu@gmail.com](mailto:haoqianglyu@gmail.com)
+[zoji.app.support@gmail.com](mailto:zoji.app.support@gmail.com)

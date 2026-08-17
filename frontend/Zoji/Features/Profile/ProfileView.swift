@@ -513,7 +513,7 @@ private struct PetManagementView: View {
                 titleVisibility: .visible
             ) {
                 if let statusChange {
-                    Button(statusChange.status.displayName) {
+                    Button(statusChange.status.actionName) {
                         apply(statusChange)
                     }
                 }
@@ -595,49 +595,62 @@ private struct PetManagementView: View {
     }
 
     private func petRow(_ pet: Pet, isActive: Bool) -> some View {
-        Button {
-            if isActive {
-                store.select(.local(pet: pet, records: [], reminders: []), using: familyStore)
-            }
-            editingPet = pet
-        } label: {
-            HStack(spacing: 14) {
-                PetAvatarView(
-                    avatarData: pet.avatarData,
-                    avatarPresetID: pet.avatarPresetID,
-                    fallbackSymbol: pet.avatarSymbol,
-                    size: 44
-                )
-
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text(pet.name)
-                            .font(.headline)
-                        if isActive, store.selectedPetID == pet.id {
-                            Text("当前")
-                                .font(.caption2.bold())
-                                .foregroundStyle(theme.accent)
-                                .padding(.horizontal, 7)
-                                .padding(.vertical, 3)
-                                .background(theme.accent.opacity(0.10), in: Capsule())
-                        } else if !isActive {
-                            Label(pet.resolvedProfileStatus.displayName, systemImage: pet.resolvedProfileStatus.symbol)
-                                .font(.caption2.bold())
-                                .foregroundStyle(pet.resolvedProfileStatus == .memorial ? Color.pink : theme.accent.opacity(0.78))
-                        }
-                    }
-                    Text([pet.localizedBreed, pet.species.displayName].compactMap { $0 }.joined(separator: " · "))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+        HStack(spacing: 14) {
+            Button {
+                if isActive {
+                    store.select(.local(pet: pet, records: [], reminders: []), using: familyStore)
                 }
+                editingPet = pet
+            } label: {
+                HStack(spacing: 14) {
+                    PetAvatarView(
+                        avatarData: pet.avatarData,
+                        avatarPresetID: pet.avatarPresetID,
+                        fallbackSymbol: pet.avatarSymbol,
+                        size: 44
+                    )
 
-                Spacer()
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Text(pet.name)
+                                .font(.headline)
+                            if isActive, store.selectedPetID == pet.id {
+                                Text("当前")
+                                    .font(.caption2.bold())
+                                    .foregroundStyle(theme.accent)
+                                    .padding(.horizontal, 7)
+                                    .padding(.vertical, 3)
+                                    .background(theme.accent.opacity(0.10), in: Capsule())
+                            } else if !isActive {
+                                Label(pet.resolvedProfileStatus.displayName, systemImage: pet.resolvedProfileStatus.symbol)
+                                    .font(.caption2.bold())
+                                    .foregroundStyle(pet.resolvedProfileStatus == .memorial ? Color.pink : theme.accent.opacity(0.78))
+                            }
+                        }
+                        Text([pet.localizedBreed, pet.species.displayName].compactMap { $0 }.joined(separator: " · "))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isActive {
                 Image(systemName: "chevron.right")
                     .font(.caption.bold())
                     .foregroundStyle(.tertiary)
+            } else {
+                Button("恢复") {
+                    statusChange = PetStatusChange(pet: pet, status: .active)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .accessibilityLabel("恢复 \(pet.name) 为日常档案")
             }
         }
-        .buttonStyle(.plain)
         .swipeActions(edge: .trailing) {
             Button("删除", role: .destructive) {
                 petPendingDeletion = pet

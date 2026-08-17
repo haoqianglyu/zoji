@@ -13,7 +13,7 @@
 - 为 development、staging、production 分别创建 PostgreSQL、私有 R2 桶和密钥。
 - 配置 TLS、短时签名 URL、结构化日志、健康检查和错误监控。
 - 在 staging 运行 `prisma migrate deploy` 并演练备份恢复后再迁移生产。
-- 日志禁止包含健康记录正文、访问令牌、Apple token 和完整附件 URL。
+- 日志禁止包含生活或健康记录正文、访问令牌、Apple token 和完整附件 URL。
 
 ## 发布前
 

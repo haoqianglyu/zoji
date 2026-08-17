@@ -115,6 +115,14 @@ enum PetProfileStatus: String, Codable, CaseIterable, Sendable {
         }
     }
 
+    var actionName: String {
+        switch self {
+        case .active: L10n.string("恢复")
+        case .archived: L10n.string("归档")
+        case .memorial: L10n.string("设为纪念")
+        }
+    }
+
     var isActive: Bool { self == .active }
 }
 
@@ -284,6 +292,85 @@ struct HealthRecord: Identifiable, Hashable, Codable, Sendable {
     var timeZoneIdentifier: String? = TimeZone.autoupdatingCurrent.identifier
     var notes: String? = nil
     var attachments: [HealthRecordAttachment] = []
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case petID
+        case kind
+        case title
+        case occurredAt
+        case providerName
+        case costCents
+        case currencyCode
+        case timeZoneIdentifier
+        case notes
+        case attachments
+        case recordCategory
+    }
+
+    init(
+        id: UUID,
+        petID: UUID,
+        kind: RecordKind,
+        title: String,
+        occurredAt: Date,
+        providerName: String? = nil,
+        costCents: Int? = nil,
+        currencyCode: String? = nil,
+        timeZoneIdentifier: String? = TimeZone.autoupdatingCurrent.identifier,
+        notes: String? = nil,
+        attachments: [HealthRecordAttachment] = []
+    ) {
+        self.id = id
+        self.petID = petID
+        self.kind = kind
+        self.title = title
+        self.occurredAt = occurredAt
+        self.providerName = providerName
+        self.costCents = costCents
+        self.currencyCode = currencyCode
+        self.timeZoneIdentifier = timeZoneIdentifier
+        self.notes = notes
+        self.attachments = attachments
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        petID = try container.decode(UUID.self, forKey: .petID)
+        let storedKind = try container.decode(RecordKind.self, forKey: .kind)
+        let category = try container.decodeIfPresent(String.self, forKey: .recordCategory)
+        kind = category == RecordKind.life.rawValue ? .life : storedKind
+        title = try container.decode(String.self, forKey: .title)
+        occurredAt = try container.decode(Date.self, forKey: .occurredAt)
+        providerName = try container.decodeIfPresent(String.self, forKey: .providerName)
+        costCents = try container.decodeIfPresent(Int.self, forKey: .costCents)
+        currencyCode = try container.decodeIfPresent(String.self, forKey: .currencyCode)
+        timeZoneIdentifier = try container.decodeIfPresent(String.self, forKey: .timeZoneIdentifier)
+        notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        attachments = try container.decodeIfPresent([HealthRecordAttachment].self, forKey: .attachments) ?? []
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(petID, forKey: .petID)
+        // Older releases do not know the `life` enum case and would reject the
+        // entire family payload. Encode it as their supported custom kind and
+        // add an optional marker that current releases use to restore `.life`.
+        try container.encode(kind == .life ? RecordKind.custom : kind, forKey: .kind)
+        if kind == .life {
+            try container.encode(RecordKind.life.rawValue, forKey: .recordCategory)
+        }
+        try container.encode(title, forKey: .title)
+        try container.encode(occurredAt, forKey: .occurredAt)
+        try container.encodeIfPresent(providerName, forKey: .providerName)
+        try container.encodeIfPresent(costCents, forKey: .costCents)
+        try container.encodeIfPresent(currencyCode, forKey: .currencyCode)
+        try container.encodeIfPresent(timeZoneIdentifier, forKey: .timeZoneIdentifier)
+        try container.encodeIfPresent(notes, forKey: .notes)
+        try container.encode(attachments, forKey: .attachments)
+    }
 
     var resolvedCurrencyCode: String {
         // Records created before currency support always stored Chinese yuan.

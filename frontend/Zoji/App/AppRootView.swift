@@ -295,7 +295,7 @@ private struct FamilyShareLoadingOverlay: View {
 }
 
 enum AppPrivacyConsent {
-    static let storageKey = "zoji.privacy-consent.v2"
+    static let storageKey = "zoji.privacy-consent.v3"
 
     static var isGranted: Bool {
         UserDefaults.standard.bool(forKey: storageKey)
@@ -378,7 +378,7 @@ private struct PrivacyConsentView: View {
                         consentRow(
                             icon: "lock.shield.fill",
                             title: "数据用于提供服务",
-                            detail: "宠物资料和健康记录会先保存在本机；开启 iCloud 后，可通过你的私有 iCloud 空间在 Apple 设备间同步。"
+                            detail: "宠物资料、生活与健康记录会先保存在本机；开启 iCloud 后，可通过你的私有 iCloud 空间在 Apple 设备间同步。"
                         )
                         consentRow(
                             icon: "location.fill",
@@ -576,7 +576,7 @@ struct LegalDocumentView: View {
         NavigationStack {
             List {
                 Section {
-                    Text(LegalCopy.text("生效日期：2026 年 8 月 14 日", "Effective date: August 14, 2026"))
+                    Text(LegalCopy.text("生效日期：2026 年 8 月 17 日", "Effective date: August 17, 2026"))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -611,7 +611,7 @@ struct LegalDocumentView: View {
                 }
 
                 Section(LegalCopy.text("联系我们", "Contact")) {
-                    Link("haoqianglyu@gmail.com", destination: URL(string: "mailto:haoqianglyu@gmail.com")!)
+                    Link("zoji.app.support@gmail.com", destination: URL(string: "mailto:zoji.app.support@gmail.com")!)
                 }
             }
             .scrollContentBackground(.hidden)
@@ -638,15 +638,15 @@ struct LegalDocumentView: View {
             (
                 LegalCopy.text("我们处理的数据", "Data We Process"),
                 LegalCopy.text(
-                    "爪记用于管理你主动输入的宠物资料、健康记录、提醒、费用、医院收藏及附件。爪记不提供独立账号系统，也不使用这些内容投放广告或进行跨 App 跟踪。",
-                    "Zoji stores the pet profiles, health records, reminders, expenses, favorite hospitals, and attachments that you choose to enter. Zoji does not operate its own account system or use this content for advertising or cross-app tracking."
+                    "爪记用于管理你主动输入的宠物资料、生活记录文字与照片、手动填写的地点、健康记录、提醒、费用、医院收藏及附件。爪记不提供独立账号系统，也不使用这些内容投放广告或进行跨 App 跟踪。",
+                    "Zoji stores the pet profiles, life-entry text and photos, manually entered locations, health records, reminders, expenses, favorite hospitals, and attachments that you choose to enter. Zoji does not operate its own account system or use this content for advertising or cross-app tracking."
                 )
             ),
             (
                 LegalCopy.text("本地保存与 iCloud", "Local Storage and iCloud"),
                 LegalCopy.text(
-                    "数据会先保存在你的设备上。启用 iCloud 后，Apple 可通过你的私有 CloudKit 空间在设备间同步。家庭共享仅会向你选择并邀请的成员共享指定宠物的数据。",
-                    "Zoji stores data locally on your device. When iCloud is enabled, Apple syncs it across your devices using your private CloudKit storage. Family Sharing shares data only for the selected pet with people you invite."
+                    "数据会先保存在你的设备上。启用 iCloud 后，Apple 可通过你的私有 CloudKit 空间在设备间同步。家庭共享仅会向你选择并邀请的成员共享指定宠物的数据，包括生活记录及照片；成员能否修改取决于你授予的权限。",
+                    "Zoji stores data locally on your device. When iCloud is enabled, Apple syncs it across your devices using your private CloudKit storage. Family Sharing shares data for the selected pet, including life entries and photos, only with people you invite. Whether a member can make changes depends on the permission you grant."
                 )
             ),
             (
@@ -659,8 +659,8 @@ struct LegalDocumentView: View {
             (
                 LegalCopy.text("位置与地图服务", "Location and Map Services"),
                 LegalCopy.text(
-                    "只有在你使用医院功能并授权定位时，附近位置范围才会用于搜索。中国大陆可在另行征得同意后使用高德地图搜索；其他地区使用 Apple 地图。地图服务会按各自政策处理查询。爪记不会把宠物或健康数据发送给地图服务。",
-                    "Your approximate location is used only when you search for nearby veterinary hospitals and grant location access. In mainland China, AMap Search may be used after separate consent; Apple Maps is used elsewhere. Each map provider processes queries under its own policy. Zoji does not send pet or health data to map providers."
+                    "只有在你使用医院功能并授权定位时，附近位置范围才会用于搜索。中国大陆可在另行征得同意后使用高德地图搜索；其他地区使用 Apple 地图。生活记录中的地点由你手动填写，不读取设备定位，也不会发送给地图服务。地图服务会按各自政策处理查询，爪记不会把宠物、生活记录或健康数据发送给地图服务。",
+                    "Your approximate location is used only when you search for nearby veterinary hospitals and grant location access. In mainland China, AMap Search may be used after separate consent; Apple Maps is used elsewhere. Locations in life entries are entered manually, do not read device location, and are not sent to map providers. Each map provider processes queries under its own policy. Zoji does not send pet, life-entry, or health data to map providers."
                 )
             ),
             (
@@ -685,8 +685,8 @@ struct LegalDocumentView: View {
             (
                 LegalCopy.text("服务用途", "Purpose of the Service"),
                 LegalCopy.text(
-                    "爪记用于帮助你整理宠物资料、健康记录和提醒，不提供诊断、治疗或紧急医疗服务，也不能替代执业兽医的建议。紧急情况请立即联系兽医或当地急诊机构。",
-                    "Zoji helps organize pet profiles, health records, and reminders. It does not provide diagnosis, treatment, or emergency medical services and does not replace advice from a licensed veterinarian. Contact a veterinarian or local emergency provider immediately in an emergency."
+                    "爪记用于帮助你整理宠物资料、生活与健康记录和提醒，不提供诊断、治疗或紧急医疗服务，也不能替代执业兽医的建议。紧急情况请立即联系兽医或当地急诊机构。",
+                    "Zoji helps organize pet profiles, life and health records, and reminders. It does not provide diagnosis, treatment, or emergency medical services and does not replace advice from a licensed veterinarian. Contact a veterinarian or local emergency provider immediately in an emergency."
                 )
             ),
             (

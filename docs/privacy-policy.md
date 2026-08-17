@@ -1,20 +1,21 @@
 ---
 title: Privacy Policy / 隐私政策
+lang: zh-CN
 ---
 
 # Privacy Policy / 隐私政策
 
-Effective date / 生效日期：August 14, 2026 / 2026 年 8 月 14 日
+Effective date / 生效日期：August 17, 2026 / 2026 年 8 月 17 日
 
 ## 中文
 
 ### 我们处理的数据
 
-爪记用于管理你主动输入的宠物资料、健康记录、提醒、费用、医院收藏及附件。爪记不提供独立账号系统，也不使用这些内容投放广告或进行跨 App 跟踪。
+爪记用于管理你主动输入的宠物资料、生活记录文字与照片、手动填写的地点、健康记录、提醒、费用、医院收藏及附件。爪记不提供独立账号系统，也不使用这些内容投放广告或进行跨 App 跟踪。
 
 ### 本地保存与 iCloud
 
-数据会先保存在你的设备上。启用 iCloud 后，Apple 可通过你的私有 CloudKit 空间在设备间同步。家庭共享仅会向你选择并邀请的成员共享指定宠物的数据。
+数据会先保存在你的设备上。启用 iCloud 后，Apple 可通过你的私有 CloudKit 空间在设备间同步。家庭共享仅会向你选择并邀请的成员共享指定宠物的数据，包括生活记录及照片；成员能否修改取决于你授予的权限。
 
 ### 病例识别
 
@@ -22,7 +23,7 @@ Effective date / 生效日期：August 14, 2026 / 2026 年 8 月 14 日
 
 ### 位置与地图服务
 
-只有在你使用医院功能并授权定位时，附近位置范围才会用于搜索。中国大陆可在另行征得同意后使用高德地图搜索；其他地区使用 Apple 地图。地图服务会按各自政策处理查询。爪记不会把宠物或健康数据发送给地图服务。
+只有在你使用医院功能并授权定位时，附近位置范围才会用于搜索。中国大陆可在另行征得同意后使用高德地图搜索；其他地区使用 Apple 地图。生活记录中的地点由你手动填写，不读取设备定位，也不会发送给地图服务。地图服务会按各自政策处理查询，爪记不会把宠物、生活记录或健康数据发送给地图服务。
 
 ### 保存期限与删除
 
@@ -36,11 +37,11 @@ Effective date / 生效日期：August 14, 2026 / 2026 年 8 月 14 日
 
 ### Data We Process
 
-Zoji stores the pet profiles, health records, reminders, expenses, favorite hospitals, and attachments that you choose to enter. Zoji does not operate its own account system or use this content for advertising or cross-app tracking.
+Zoji stores the pet profiles, life-entry text and photos, manually entered locations, health records, reminders, expenses, favorite hospitals, and attachments that you choose to enter. Zoji does not operate its own account system or use this content for advertising or cross-app tracking.
 
 ### Local Storage and iCloud
 
-Zoji stores data locally on your device. When iCloud is enabled, Apple syncs it across your devices using your private CloudKit storage. Family Sharing shares data only for the selected pet with people you invite.
+Zoji stores data locally on your device. When iCloud is enabled, Apple syncs it across your devices using your private CloudKit storage. Family Sharing shares data for the selected pet, including life entries and photos, only with people you invite. Whether a member can make changes depends on the permission you grant.
 
 ### Medical Record Recognition
 
@@ -48,7 +49,7 @@ Text recognition uses Apple Vision and is performed on device whenever possible.
 
 ### Location and Map Services
 
-Your approximate location is used only when you search for nearby veterinary hospitals and grant location access. In mainland China, AMap Search may be used after separate consent; Apple Maps is used elsewhere. Each map provider processes queries under its own policy. Zoji does not send pet or health data to map providers.
+Your approximate location is used only when you search for nearby veterinary hospitals and grant location access. In mainland China, AMap Search may be used after separate consent; Apple Maps is used elsewhere. Locations in life entries are entered manually, do not read device location, and are not sent to map providers. Each map provider processes queries under its own policy. Zoji does not send pet, life-entry, or health data to map providers.
 
 ### Retention and Deletion
 
@@ -65,4 +66,4 @@ Location and notification permissions are optional and can be disabled in iPhone
 
 ## Contact / 联系我们
 
-[haoqianglyu@gmail.com](mailto:haoqianglyu@gmail.com)
+[zoji.app.support@gmail.com](mailto:zoji.app.support@gmail.com)
