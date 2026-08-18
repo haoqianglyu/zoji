@@ -254,19 +254,18 @@ struct RecordsView: View {
                 )
                 .environment(store)
             }
-            .confirmationDialog(
+            .alert(
                 "删除“\(recordPendingDeletion?.title ?? "这条记录")”？",
                 isPresented: Binding(
                     get: { recordPendingDeletion != nil },
                     set: { if !$0 { recordPendingDeletion = nil } }
-                ),
-                titleVisibility: .visible
+                )
             ) {
+                Button("取消", role: .cancel) { recordPendingDeletion = nil }
                 Button("删除记录", role: .destructive) {
                     guard let record = recordPendingDeletion else { return }
                     deleteRecord(record)
                 }
-                Button("取消", role: .cancel) { recordPendingDeletion = nil }
             } message: {
                 Text("删除后，该记录会从 \(selectedPet?.pet.name ?? "宠物") 的时间线中移除；如果它关联了提醒，提醒也会一并删除。")
             }
@@ -2410,9 +2409,9 @@ struct HealthRecordDetailView: View {
                         initialAttachmentID: presentation.initialAttachmentID
                     )
                 }
-                .confirmationDialog("删除“\(record.title)”？", isPresented: $isConfirmingDeletion, titleVisibility: .visible) {
-                    Button("删除记录", role: .destructive) { deleteRecord(record) }
+                .alert("删除“\(record.title)”？", isPresented: $isConfirmingDeletion) {
                     Button("取消", role: .cancel) { }
+                    Button("删除记录", role: .destructive) { deleteRecord(record) }
                 } message: {
                     Text("此操作会将记录从时间线中移除；如果它关联了提醒，提醒也会一并删除。")
                 }

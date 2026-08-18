@@ -163,16 +163,15 @@ struct WeightTrendView: View {
             )
                 .environment(store)
         }
-        .confirmationDialog(
+        .alert(
             "删除这条体重记录？",
             isPresented: Binding(
                 get: { entryPendingDeletion != nil },
                 set: { if !$0 { entryPendingDeletion = nil } }
-            ),
-            titleVisibility: .visible
+            )
         ) {
-            Button("删除记录", role: .destructive) { deletePendingEntry() }
             Button("取消", role: .cancel) { entryPendingDeletion = nil }
+            Button("删除记录", role: .destructive) { deletePendingEntry() }
         }
         .alert("体重记录操作失败", isPresented: Binding(
             get: { errorMessage != nil },

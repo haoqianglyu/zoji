@@ -251,19 +251,18 @@ struct HomeView: View {
             } message: {
                 Text("健康记录、体重、照片和费用都会保留，但该宠物会退出日常页面，所有系统提醒暂停。")
             }
-            .confirmationDialog(
+            .alert(
                 "删除 \(petPendingDeletion?.name ?? "这份宠物档案")？",
                 isPresented: Binding(
                     get: { petPendingDeletion != nil },
                     set: { if !$0 { petPendingDeletion = nil } }
-                ),
-                titleVisibility: .visible
+                )
             ) {
+                Button("取消", role: .cancel) { petPendingDeletion = nil }
                 Button("删除宠物档案", role: .destructive) {
                     guard let pet = petPendingDeletion else { return }
                     deletePet(pet)
                 }
-                Button("取消", role: .cancel) { petPendingDeletion = nil }
             } message: {
                 Text("该宠物的记录和提醒会被删除；如果已开启家庭共享，也会撤销家人访问并删除共享云端副本。")
             }
@@ -1331,19 +1330,18 @@ struct ReminderListView: View {
             CarePlanTemplatePickerView(initialPetID: store.selectedPetID)
                 .environment(store)
         }
-        .confirmationDialog(
+        .alert(
             "删除这条提醒？",
             isPresented: Binding(
                 get: { reminderPendingDeletion != nil },
                 set: { if !$0 { reminderPendingDeletion = nil } }
-            ),
-            titleVisibility: .visible
+            )
         ) {
+            Button("取消", role: .cancel) { reminderPendingDeletion = nil }
             Button("删除提醒", role: .destructive) {
                 guard let reminder = reminderPendingDeletion else { return }
                 deleteReminder(reminder)
             }
-            Button("取消", role: .cancel) { reminderPendingDeletion = nil }
         }
         .alert("提醒操作失败", isPresented: Binding(
             get: { store.reminderPersistenceMessage != nil },

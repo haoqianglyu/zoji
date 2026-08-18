@@ -521,14 +521,14 @@ private struct PetManagementView: View {
             } message: {
                 Text(statusChangeMessage)
             }
-            .confirmationDialog(
+            .alert(
                 "删除 \(petPendingDeletion?.name ?? "这份宠物档案")？",
                 isPresented: Binding(
                     get: { petPendingDeletion != nil },
                     set: { if !$0 { petPendingDeletion = nil } }
-                ),
-                titleVisibility: .visible
+                )
             ) {
+                Button("取消", role: .cancel) { petPendingDeletion = nil }
                 Button("删除宠物档案", role: .destructive) {
                     guard let pet = petPendingDeletion else { return }
                     Task {
@@ -540,7 +540,6 @@ private struct PetManagementView: View {
                         petPendingDeletion = nil
                     }
                 }
-                Button("取消", role: .cancel) { petPendingDeletion = nil }
             } message: {
                 Text("该宠物的记录和提醒会被删除；如果已开启家庭共享，也会撤销家人访问并删除共享云端副本。")
             }

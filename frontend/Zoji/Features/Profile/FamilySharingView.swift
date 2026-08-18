@@ -743,19 +743,18 @@ private struct FamilyMemberOverviewView: View {
         .background(theme.background)
         .navigationTitle("成员权限")
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog(
+        .alert(
             "撤回“\(pendingRemoval?.petName ?? "这只宠物")”？",
             isPresented: Binding(
                 get: { pendingRemoval != nil },
                 set: { if !$0 { pendingRemoval = nil } }
-            ),
-            titleVisibility: .visible
+            )
         ) {
+            Button("取消", role: .cancel) { pendingRemoval = nil }
             Button("只撤回这只宠物", role: .destructive) {
                 guard let access = pendingRemoval else { return }
                 remove(access)
             }
-            Button("取消", role: .cancel) { pendingRemoval = nil }
         } message: {
             Text("该成员对其他宠物的共享和权限保持不变。")
         }
@@ -978,19 +977,18 @@ private struct FamilyOwnedPetSharingView: View {
         .background(theme.background)
         .navigationTitle("共享成员")
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog(
+        .alert(
             "撤回\(memberPendingRemoval?.displayName ?? "这位成员")对这只宠物的访问？",
             isPresented: Binding(
                 get: { memberPendingRemoval != nil },
                 set: { if !$0 { memberPendingRemoval = nil } }
-            ),
-            titleVisibility: .visible
+            )
         ) {
+            Button("取消", role: .cancel) { memberPendingRemoval = nil }
             Button("撤回这只宠物", role: .destructive) {
                 guard let member = memberPendingRemoval, let sharedPet else { return }
                 remove(member, from: sharedPet)
             }
-            Button("取消", role: .cancel) { memberPendingRemoval = nil }
         } message: {
             Text("只撤回当前这只宠物；该成员对其他宠物的共享不会受到影响。")
         }
@@ -1057,6 +1055,8 @@ struct FamilySharedPetDetailView: View {
     @State private var reminderCompletionFeedbackTrigger = 0
     @State private var showsLeaveConfirmation = false
     @State private var isLeavingShare = false
+    @State private var recordPendingDeletion: HealthRecord?
+    @State private var reminderPendingDeletion: ReminderItem?
 
     private var currentSharedPet: FamilySharedPet {
         familyStore.sharedPets.first(where: { $0.id == sharedPet.id }) ?? sharedPet
@@ -1166,13 +1166,7 @@ struct FamilySharedPetDetailView: View {
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             if sharedPet.canEdit {
                                 Button(role: .destructive) {
-                                    Task {
-                                        do {
-                                            try await familyStore.deleteHealthRecord(record, in: sharedPet)
-                                        } catch {
-                                            operationMessage = error.localizedDescription
-                                        }
-                                    }
+                                    recordPendingDeletion = record
                                 } label: {
                                     Label("删除", systemImage: "trash")
                                 }
@@ -1255,13 +1249,7 @@ struct FamilySharedPetDetailView: View {
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             if sharedPet.canEdit {
                                 Button(role: .destructive) {
-                                    Task {
-                                        do {
-                                            try await familyStore.deleteReminder(reminder, in: sharedPet)
-                                        } catch {
-                                            operationMessage = error.localizedDescription
-                                        }
-                                    }
+                                    reminderPendingDeletion = reminder
                                 } label: {
                                     Label("删除", systemImage: "trash")
                                 }
@@ -1325,6 +1313,48 @@ struct FamilySharedPetDetailView: View {
                 initialPetID: presentation.petID,
                 sharedPet: sharedPet
             )
+        }
+        .alert(
+            "删除“\(recordPendingDeletion?.title ?? "这条记录")”？",
+            isPresented: Binding(
+                get: { recordPendingDeletion != nil },
+                set: { if !$0 { recordPendingDeletion = nil } }
+            )
+        ) {
+            Button("取消", role: .cancel) { recordPendingDeletion = nil }
+            Button("删除记录", role: .destructive) {
+                guard let record = recordPendingDeletion else { return }
+                recordPendingDeletion = nil
+                Task {
+                    do {
+                        try await familyStore.deleteHealthRecord(record, in: sharedPet)
+                    } catch {
+                        operationMessage = error.localizedDescription
+                    }
+                }
+            }
+        } message: {
+            Text("此操作会将记录从时间线中移除；如果它关联了提醒，提醒也会一并删除。")
+        }
+        .alert(
+            "删除这条提醒？",
+            isPresented: Binding(
+                get: { reminderPendingDeletion != nil },
+                set: { if !$0 { reminderPendingDeletion = nil } }
+            )
+        ) {
+            Button("取消", role: .cancel) { reminderPendingDeletion = nil }
+            Button("删除提醒", role: .destructive) {
+                guard let reminder = reminderPendingDeletion else { return }
+                reminderPendingDeletion = nil
+                Task {
+                    do {
+                        try await familyStore.deleteReminder(reminder, in: sharedPet)
+                    } catch {
+                        operationMessage = error.localizedDescription
+                    }
+                }
+            }
         }
         .alert(
             "退出“\(sharedPet.pet.name)”的共享？",
