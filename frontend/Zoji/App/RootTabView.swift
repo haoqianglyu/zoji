@@ -17,8 +17,25 @@ struct RootTabView: View {
         case profile
     }
 
-    @State private var selectedTab: Tab = .home
+    @State private var selectedTab: Tab
     @State private var reminderRoute: ReminderNotificationRoute?
+
+    init() {
+        let initialTab: Tab
+        if PersistenceController.isMarketingFamilyScreenshot {
+            initialTab = .profile
+        } else if PersistenceController.isMarketingRecordsScreenshot
+                    || PersistenceController.isMarketingHealthRecordScreenshot {
+            initialTab = .records
+        } else if PersistenceController.isMarketingRemindersScreenshot {
+            initialTab = .reminders
+        } else if PersistenceController.isMarketingHospitalsUSScreenshot {
+            initialTab = .hospitals
+        } else {
+            initialTab = .home
+        }
+        _selectedTab = State(initialValue: initialTab)
+    }
 
     var body: some View {
         TabView(selection: $selectedTab) {

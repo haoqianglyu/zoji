@@ -6,13 +6,19 @@ struct ZojiApp: App {
     @UIApplicationDelegateAdaptor(ZojiAppDelegate.self) private var appDelegate
     private let persistenceController: PersistenceController
     @State private var store: AppStore
-    @State private var familyStore = FamilySharingStore()
+    @State private var familyStore: FamilySharingStore
     @AppStorage(AppAppearance.storageKey) private var appearance = AppAppearance.system
     @AppStorage(AppColorTheme.storageKey) private var colorTheme = AppColorTheme.warm
 
     init() {
         let persistenceController = PersistenceController.shared
         self.persistenceController = persistenceController
+        #if DEBUG
+        MarketingDemoData.installIfRequested(in: persistenceController.container)
+        _familyStore = State(initialValue: MarketingDemoData.makeFamilySharingStore())
+        #else
+        _familyStore = State(initialValue: FamilySharingStore())
+        #endif
         _store = State(initialValue: AppStore.live(
             petRepository: SwiftDataPetRepository(modelContainer: persistenceController.container),
             healthRecordRepository: SwiftDataHealthRecordRepository(modelContainer: persistenceController.container),

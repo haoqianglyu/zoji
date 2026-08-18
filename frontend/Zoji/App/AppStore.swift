@@ -262,6 +262,10 @@ final class AppStore {
     private func performPersistedAndFamilyReload(using familyStore: FamilySharingStore) async {
         await reloadPersistedData()
         familyStore.resolveLaunchSelection(hasPrivatePets: !activePets.isEmpty)
+        // The App Store fixture already contains a deterministic family snapshot.
+        // Never reconcile that empty screenshot payload back into the in-memory
+        // private records, otherwise launch refresh would erase demo timelines.
+        guard !PersistenceController.isMarketingDemo else { return }
         guard PersistenceController.isCloudKitConfigured else { return }
 
         let payloads: [FamilyPetSharePayload]

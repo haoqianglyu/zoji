@@ -2723,6 +2723,9 @@ final class FamilySharingStore {
     }
 
     func refresh(privatePayloads: [FamilyPetSharePayload]) async {
+        // App Store screenshot fixtures are intentionally in-memory and must not
+        // be replaced by the developer account's live CloudKit state.
+        guard !PersistenceController.isMarketingDemo else { return }
         if let refreshTask {
             await refreshTask.value
             return

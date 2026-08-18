@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "device": {
+    "name": "iphone-6.9",
+    "width": 1320,
+    "height": 2868
+  },
+  "scenes": [
+    {
+      "id": "01-home",
+      "source": "01-home.png",
+      "captions": {
+        "zh-Hans": {
+          "line1": "每只宠物",
+          "line2": "都有一份专属档案",
+          "highlight": "专属档案"
+        },
+        "en": {
+          "line1": "A profile for every pet",
+          "line2": "Everything important, at a glance",
+          "highlight": "every pet"
+        }
+      }
+    },
+    {
+      "id": "02-records",
+      "source": "02-records.png",
+      "captions": {
+        "zh-Hans": {
+          "line1": "生活与健康",
+          "line2": "每个变化都有迹可循",
+          "highlight": "有迹可循"
+        },
+        "en": {
+          "line1": "Life and health",
+          "line2": "Every change, all in one place",
+          "highlight": "all in one place"
+        }
+      }
+    },
+    {
+      "id": "03-reminders",
+      "source": "03-reminders.png",
+      "captions": {
+        "zh-Hans": {
+          "line1": "重要照护",
+          "line2": "准时提醒，不再遗漏",
+          "highlight": "准时提醒"
+        },
+        "en": {
+          "line1": "Never miss important care",
+          "line2": "Thoughtful reminders, right on time",
+          "highlight": "right on time"
+        }
+      }
+    },
+    {
+      "id": "04-family",
+      "source": "04-family.png",
+      "captions": {
+        "zh-Hans": {
+          "line1": "与家人一起",
+          "line2": "照顾共同牵挂的它",
+          "highlight": "一起"
+        },
+        "en": {
+          "line1": "Care together",
+          "line2": "Keep the whole family in sync",
+          "highlight": "together"
+        }
+      }
+    },
+    {
+      "id": "05-hospitals",
+      "source": "05-hospitals.png",
+      "captions": {
+        "zh-Hans": {
+          "line1": "附近宠物医院",
+          "line2": "需要时，快速找到",
+          "highlight": "快速找到"
+        },
+        "en": {
+          "line1": "Find veterinary care nearby",
+          "line2": "Directions and details when needed",
+          "highlight": "nearby"
+        }
+      }
+    },
+    {
+      "id": "06-health-record",
+      "source": "06-health-record.png",
+      "captions": {
+        "zh-Hans": {
+          "line1": "健康档案",
+          "line2": "重要资料清晰整理",
+          "highlight": "清晰整理"
+        },
+        "en": {
+          "line1": "Health records",
+          "line2": "Important details, clearly organized",
+          "highlight": "clearly organized"
+        }
+      }
+    }
+  ]
+}

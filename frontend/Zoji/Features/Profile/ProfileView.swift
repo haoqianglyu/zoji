@@ -13,6 +13,7 @@ struct ProfileView: View {
     @State private var isUnitPickerPresented = false
     @State private var iCloudStatus = ICloudStorageStatus.checking
     @State private var isRefreshingData = false
+    @State private var isMarketingFamilyPresented = PersistenceController.isMarketingFamilyScreenshot
 
     var body: some View {
         NavigationStack {
@@ -203,6 +204,10 @@ struct ProfileView: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
+            }
+            .navigationDestination(isPresented: $isMarketingFamilyPresented) {
+                FamilySharingView()
+                    .environment(store)
             }
             .scrollContentBackground(.hidden)
             .background(theme.background)

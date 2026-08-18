@@ -39,6 +39,8 @@ struct RecordsView: View {
     @State private var recordPendingDeletion: HealthRecord?
     @State private var selectedExpenseYear = Calendar.autoupdatingCurrent.component(.year, from: Date())
     @State private var expenseReferenceDate = Date()
+    @State private var isMarketingHealthRecordPresented =
+        PersistenceController.isMarketingHealthRecordScreenshot
 
     private var selectedPet: SelectedPet? { store.selectedPet(using: familyStore) }
     private var selectablePets: [SelectedPet] { store.selectablePets(using: familyStore) }
@@ -214,6 +216,11 @@ struct RecordsView: View {
                 prompt: "搜索文字、类型或地点"
             )
             .navigationTitle("记录")
+            .navigationDestination(isPresented: $isMarketingHealthRecordPresented) {
+                HealthRecordDetailView(
+                    recordID: UUID(uuidString: "C0C2F7A3-2E88-4F7C-9404-7C811914E001")!
+                )
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {

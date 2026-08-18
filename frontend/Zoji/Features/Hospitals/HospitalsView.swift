@@ -103,6 +103,9 @@ struct HospitalsView: View {
             .animation(.easeInOut(duration: 0.2), value: mode)
             .task {
                 model.activate()
+                if configureMarketingUSSceneIfNeeded() {
+                    return
+                }
                 if !store.hospitals.isEmpty, model.hospitals.isEmpty {
                     model.hospitals = store.hospitals
                 }
@@ -416,6 +419,25 @@ struct HospitalsView: View {
     private var emptyStateTitle: LocalizedStringKey {
         if scope == .favorites { return "还没有收藏医院" }
         return model.hasSearchError ? "医院加载失败" : "暂未找到医院"
+    }
+
+    /// App Store captures need a stable U.S. MapKit scene without touching
+    /// location services, the network search provider, or the AMap consent path.
+    /// This route is compiled out of release builds.
+    private func configureMarketingUSSceneIfNeeded() -> Bool {
+        #if DEBUG
+        guard PersistenceController.isMarketingHospitalsUSScreenshot else { return false }
+        currentRegion = MarketingDemoData.usHospitalRegion
+        position = .region(MarketingDemoData.usHospitalRegion)
+        hasCenteredOnUser = true
+        model.hospitals = MarketingDemoData.usHospitals
+        model.favorites = []
+        model.message = nil
+        model.hasSearchError = false
+        return true
+        #else
+        return false
+        #endif
     }
 }
 

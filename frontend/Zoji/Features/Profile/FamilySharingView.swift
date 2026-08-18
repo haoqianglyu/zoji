@@ -79,7 +79,9 @@ struct FamilySharingView: View {
                             HStack(spacing: 13) {
                                 PetAvatarView(
                                     avatarData: sharedPet.pet.avatarData,
-                                    avatarPresetID: sharedPet.pet.avatarPresetID,
+                                    avatarPresetID: PersistenceController.isMarketingFamilyScreenshot
+                                        ? nil
+                                        : sharedPet.pet.avatarPresetID,
                                     fallbackSymbol: sharedPet.pet.avatarSymbol,
                                     size: 46
                                 )
@@ -146,7 +148,9 @@ struct FamilySharingView: View {
                         HStack(spacing: 13) {
                             PetAvatarView(
                                 avatarData: pet.avatarData,
-                                avatarPresetID: pet.avatarPresetID,
+                                avatarPresetID: PersistenceController.isMarketingFamilyScreenshot
+                                    ? nil
+                                    : pet.avatarPresetID,
                                 fallbackSymbol: pet.avatarSymbol,
                                 size: 46
                             )
@@ -161,7 +165,7 @@ struct FamilySharingView: View {
 
                             Spacer()
 
-                            if ownedSharedPetIDs.contains(pet.id) {
+                            if isOwnedSharedPet(pet) {
                                 Button {
                                     managedPetID = pet.id
                                 } label: {
@@ -412,12 +416,19 @@ struct FamilySharingView: View {
     }
 
     private func sharingStatusText(for pet: Pet) -> String {
-        if ownedSharedPetIDs.contains(pet.id) { return L10n.string("已开启家庭共享") }
+        if isOwnedSharedPet(pet) { return L10n.string("已开启家庭共享") }
         if ownedShareCheckTimedOut { return L10n.string("iCloud 响应较慢，请重试") }
         if familyStore.isRefreshing { return L10n.string("正在检查共享状态…") }
         return hasCheckedOwnedShares
             ? L10n.string("当前仅自己可见")
             : L10n.string("正在检查共享状态…")
+    }
+
+    private func isOwnedSharedPet(_ pet: Pet) -> Bool {
+        if PersistenceController.isMarketingFamilyScreenshot {
+            return familyStore.ownedSharedPets.contains { $0.pet.name == pet.name }
+        }
+        return ownedSharedPetIDs.contains(pet.id)
     }
 
     private func accessiblePetCountText(_ count: Int) -> String {
@@ -484,6 +495,13 @@ struct FamilySharingView: View {
     }
 
     private func refreshSharingState() async {
+        if PersistenceController.isMarketingDemo {
+            ownedSharedPetIDs = Set(familyStore.ownedSharedPets.map(\.pet.id))
+                .intersection(store.pets.map(\.id))
+            hasCheckedOwnedShares = true
+            ownedShareCheckTimedOut = false
+            return
+        }
         guard PersistenceController.isCloudKitConfigured else { return }
         ownedShareCheckDeadline?.cancel()
         hasCheckedOwnedShares = false

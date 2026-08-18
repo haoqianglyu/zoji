@@ -38,6 +38,7 @@
 		B10000000000000000000025 /* WeightTrendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000025 /* WeightTrendView.swift */; };
 		B10000000000000000000026 /* MedicalRecordRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000026 /* MedicalRecordRecognitionService.swift */; };
 		B10000000000000000000027 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000027 /* PrivacyInfo.xcprivacy */; };
+		B10000000000000000000028 /* MarketingDemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000028 /* MarketingDemoData.swift */; };
 		B683FAB085992DFF561438E0 /* Pods_ZojiTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D9C8A869DEDF052FDBAA562 /* Pods_ZojiTests.framework */; };
 /* End PBXBuildFile section */
 
@@ -91,6 +92,7 @@
 		F10000000000000000000025 /* WeightTrendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightTrendView.swift; sourceTree = "<group>"; };
 		F10000000000000000000026 /* MedicalRecordRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicalRecordRecognitionService.swift; sourceTree = "<group>"; };
 		F10000000000000000000027 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		F10000000000000000000028 /* MarketingDemoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketingDemoData.swift; sourceTree = "<group>"; };
 		F20000000000000000000001 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		F20000000000000000000002 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		F20000000000000000000003 /* Secrets.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig.example; sourceTree = "<group>"; };
@@ -169,6 +171,7 @@
 			isa = PBXGroup;
 			children = (
 				F10000000000000000000001 /* ZojiApp.swift */,
+				F10000000000000000000028 /* MarketingDemoData.swift */,
 				F10000000000000000000021 /* AppLifecycleDelegate.swift */,
 				F10000000000000000000022 /* AppLanguage.swift */,
 				F10000000000000000000014 /* AppRootView.swift */,
@@ -462,6 +465,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B10000000000000000000001 /* ZojiApp.swift in Sources */,
+				B10000000000000000000028 /* MarketingDemoData.swift in Sources */,
 				B10000000000000000000012 /* AppRootView.swift in Sources */,
 				B10000000000000000000002 /* RootTabView.swift in Sources */,
 				B10000000000000000000003 /* AppStore.swift in Sources */,

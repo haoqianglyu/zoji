@@ -19,6 +19,11 @@ xcuserdata/
 frontend/Config/Secrets.xcconfig
 frontend/Pods/
 
+# Marketing compositor output stays local because screenshots can contain
+# personal pet, family, location, and health-record data.
+marketing/cards/out/
+marketing/screenshots/
+
 # Swift Package Manager
 .build/
 .swiftpm/
