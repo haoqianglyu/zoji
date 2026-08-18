@@ -18,6 +18,7 @@ import argparse
 import html
 import json
 from pathlib import Path
+import shutil
 import struct
 import subprocess
 import sys
@@ -211,6 +212,15 @@ def main() -> int:
                 outputs.append(output)
                 print(f"{locale}: {scene['id']} -> {output.relative_to(REPO_ROOT)}")
             locale_outputs[locale] = outputs
+
+            submission_dir = run_root / locale / "submission"
+            submission_dir.mkdir(parents=True, exist_ok=True)
+            for output in outputs:
+                shutil.copy2(output, submission_dir / output.name)
+            print(
+                f"{locale}: synced {len(outputs)} cards -> "
+                f"{submission_dir.relative_to(REPO_ROOT)}"
+            )
 
     write_review(run_root, locale_outputs)
     print(f"review -> {(run_root / 'review.html').relative_to(REPO_ROOT)}")
