@@ -90,6 +90,11 @@ are made from mainland China, Apple's MapKit tiles may still carry the local
 map-data-provider attribution; that attribution comes from Apple MapKit and
 must not be covered or altered.
 
+The batch capture script applies `-zojiMarketingHospitalsUSScreenshot` only to
+the English locale. The Simplified Chinese storefront must use a Chinese-region
+hospital capture; do not reuse the Seattle fixture merely by translating the
+surrounding interface.
+
 ## Generate and verify cards
 
 ```bash

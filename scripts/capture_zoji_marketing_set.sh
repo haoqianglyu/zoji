@@ -55,7 +55,13 @@ capture_scene "01-home.png"
 capture_scene "02-records.png" "-zojiMarketingRecordsScreenshot"
 capture_scene "03-reminders.png" "-zojiMarketingRemindersScreenshot"
 capture_scene "04-family.png" "-zojiMarketingFamilyScreenshot"
-capture_scene "05-hospitals.png" "-zojiMarketingHospitalsUSScreenshot" 12
+if [ "$LOCALE" = "en" ]; then
+    capture_scene "05-hospitals.png" "-zojiMarketingHospitalsUSScreenshot" 12
+else
+    # The U.S. fixture deliberately contains Seattle map labels and English
+    # hospital data. Never use it for the Simplified Chinese storefront.
+    capture_scene "05-hospitals.png" "" 12
+fi
 capture_scene "06-health-record.png" "-zojiMarketingHealthRecordScreenshot" 6
 
 python3 "$ROOT/marketing/cards/make_cards.py" --date "$RUN_DATE" --locales "$LOCALE"
