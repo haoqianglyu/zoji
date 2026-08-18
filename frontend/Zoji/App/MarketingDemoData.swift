@@ -2,6 +2,7 @@
 import Foundation
 import MapKit
 import SwiftData
+import UIKit
 
 /// Deterministic, fictional data for App Store screenshots.
 ///
@@ -27,7 +28,6 @@ enum MarketingDemoData {
 
         let huhuID = uuid("B0C2F7A3-2E88-4F7C-9404-7C811914E001")
         let zhazhaID = uuid("B0C2F7A3-2E88-4F7C-9404-7C811914E002")
-        let tangdouID = uuid("B0C2F7A3-2E88-4F7C-9404-7C811914E003")
 
         let huhu = PetEntity(
             id: huhuID,
@@ -61,20 +61,7 @@ enum MarketingDemoData {
         zhazha.weightKilograms = 4.6
         zhazha.profileStatusRawValue = PetProfileStatus.active.rawValue
 
-        let tangdou = PetEntity(
-            id: tangdouID,
-            ownerID: PrivateDataScope.ownerID,
-            name: localized(chinese: "糖豆", english: "Sunny"),
-            species: .dog
-        )
-        tangdou.breed = localized(chinese: "威尔士柯基", english: "Welsh Corgi")
-        tangdou.avatarPresetID = "dog-corgi"
-        tangdou.sexRawValue = PetSex.female.rawValue
-        tangdou.birthday = calendar.date(byAdding: .year, value: -4, to: today)
-        tangdou.weightKilograms = 10.8
-        tangdou.profileStatusRawValue = PetProfileStatus.active.rawValue
-
-        [huhu, zhazha, tangdou].forEach(context.insert)
+        [huhu, zhazha].forEach(context.insert)
 
         let records: [(UUID, RecordKind, String, Int, String?, Int?)] = [
             (uuid("C0C2F7A3-2E88-4F7C-9404-7C811914E001"), .vaccine, localized(chinese: "疫苗接种", english: "Vaccination"), -1, localized(chinese: "安心宠物医院", english: "Cedar Veterinary Center"), 32000),
@@ -132,9 +119,9 @@ enum MarketingDemoData {
 
         let calendar = Calendar(identifier: .gregorian)
         let today = calendar.startOfDay(for: Date())
-        let petID = uuid("B0C2F7A3-2E88-4F7C-9404-7C811914E001")
-        let pet = Pet(
-            id: petID,
+        let ownedPetID = uuid("B0C2F7A3-2E88-4F7C-9404-7C811914E001")
+        let ownedPet = Pet(
+            id: ownedPetID,
             name: localized(chinese: "呼呼", english: "Mochi"),
             species: .cat,
             breed: localized(chinese: "英国短毛猫", english: "British Shorthair"),
@@ -144,7 +131,7 @@ enum MarketingDemoData {
             weightKilograms: 5.2,
             profileStatus: .active
         )
-        let members = [
+        let ownedMembers = [
             FamilyShareMember(
                 id: "marketing-owner",
                 personID: "marketing-owner",
@@ -164,7 +151,7 @@ enum MarketingDemoData {
                 isCurrentUser: false
             )
         ]
-        let sharedPet = FamilySharedPet(
+        let ownedSharedPet = FamilySharedPet(
             location: FamilyShareLocation(
                 zoneName: "marketing-family-huhu",
                 zoneOwnerName: "marketing-owner",
@@ -174,20 +161,176 @@ enum MarketingDemoData {
             role: .owner,
             payload: FamilyPetSharePayload(
                 exportedAt: today,
-                pet: pet,
+                pet: ownedPet,
                 records: [],
                 reminders: []
             ),
-            members: members
+            members: ownedMembers
+        )
+
+        let receivedPetID = uuid("B0C2F7A3-2E88-4F7C-9404-7C811914E004")
+        let receivedPet = Pet(
+            id: receivedPetID,
+            name: localized(chinese: "哈基米", english: "Hachi"),
+            species: .dog,
+            breed: localized(chinese: "柴犬", english: "Shiba Inu"),
+            avatarPresetID: "dog-shiba-inu",
+            sex: .male,
+            birthday: calendar.date(byAdding: .year, value: -3, to: today),
+            weightKilograms: 9.4,
+            weightEntries: [
+                WeightEntry(
+                    id: uuid("F0C2F7A3-2E88-4F7C-9404-7C811914E001"),
+                    measuredAt: calendar.date(byAdding: .month, value: -5, to: today)!,
+                    kilograms: 8.8
+                ),
+                WeightEntry(
+                    id: uuid("F0C2F7A3-2E88-4F7C-9404-7C811914E002"),
+                    measuredAt: calendar.date(byAdding: .month, value: -2, to: today)!,
+                    kilograms: 9.1
+                ),
+                WeightEntry(
+                    id: uuid("F0C2F7A3-2E88-4F7C-9404-7C811914E003"),
+                    measuredAt: today,
+                    kilograms: 9.4
+                )
+            ],
+            profileStatus: .active
+        )
+        let receivedRecords = [
+            HealthRecord(
+                id: uuid("C0C2F7A3-2E88-4F7C-9404-7C811914E001"),
+                petID: receivedPetID,
+                kind: .vaccine,
+                title: localized(chinese: "疫苗接种", english: "Vaccination"),
+                occurredAt: calendar.date(byAdding: .day, value: -1, to: today)!,
+                providerName: localized(chinese: "安心宠物医院", english: "Cedar Veterinary Center"),
+                costCents: 32000,
+                currencyCode: L10n.usesEnglish ? "USD" : "CNY",
+                timeZoneIdentifier: L10n.usesEnglish ? "America/Los_Angeles" : "Asia/Shanghai",
+                attachments: [
+                    vaccinationCertificateAttachment(
+                        petName: receivedPet.name,
+                        clinicName: localized(
+                            chinese: "安心宠物医院",
+                            english: "Cedar Veterinary Center"
+                        ),
+                        occurredAt: calendar.date(byAdding: .day, value: -1, to: today)!
+                    )
+                ]
+            ),
+            HealthRecord(
+                id: uuid("C0C2F7A3-2E88-4F7C-9404-7C811914E002"),
+                petID: receivedPetID,
+                kind: .internalDeworming,
+                title: localized(chinese: "体内驱虫", english: "Internal Deworming"),
+                occurredAt: calendar.date(byAdding: .day, value: -32, to: today)!,
+                costCents: 8500,
+                currencyCode: L10n.usesEnglish ? "USD" : "CNY",
+                timeZoneIdentifier: L10n.usesEnglish ? "America/Los_Angeles" : "Asia/Shanghai"
+            ),
+            HealthRecord(
+                id: uuid("C0C2F7A3-2E88-4F7C-9404-7C811914E003"),
+                petID: receivedPetID,
+                kind: .medicalVisit,
+                title: localized(chinese: "年度健康检查", english: "Annual Wellness Exam"),
+                occurredAt: calendar.date(byAdding: .day, value: -74, to: today)!,
+                providerName: localized(chinese: "安心宠物医院", english: "Cedar Veterinary Center"),
+                costCents: 26000,
+                currencyCode: L10n.usesEnglish ? "USD" : "CNY",
+                timeZoneIdentifier: L10n.usesEnglish ? "America/Los_Angeles" : "Asia/Shanghai"
+            ),
+            HealthRecord(
+                id: uuid("C0C2F7A3-2E88-4F7C-9404-7C811914E004"),
+                petID: receivedPetID,
+                kind: .life,
+                title: localized(chinese: "第一次去海边", english: "First Beach Day"),
+                occurredAt: calendar.date(byAdding: .day, value: -9, to: today)!,
+                notes: localized(
+                    chinese: "海风很舒服，哈基米第一次踩沙滩。",
+                    english: "A breezy afternoon and Hachi's first walk on the sand."
+                )
+            )
+        ]
+        let receivedReminders = [
+            ReminderItem(
+                id: uuid("D0C2F7A3-2E88-4F7C-9404-7C811914E001"),
+                petID: receivedPetID,
+                title: localized(chinese: "疫苗加强针", english: "Vaccine Booster"),
+                kind: .vaccine,
+                dueAt: calendar.date(byAdding: .day, value: 1, to: today)!,
+                scheduleType: .calendarYears,
+                intervalValue: 1,
+                advanceDays: [3, 1, 0]
+            ),
+            ReminderItem(
+                id: uuid("D0C2F7A3-2E88-4F7C-9404-7C811914E002"),
+                petID: receivedPetID,
+                title: localized(chinese: "体内驱虫", english: "Internal Deworming"),
+                kind: .internalDeworming,
+                dueAt: calendar.date(byAdding: .day, value: 4, to: today)!,
+                scheduleType: .intervalDays,
+                intervalValue: 90,
+                advanceDays: [3, 1, 0]
+            ),
+            ReminderItem(
+                id: uuid("D0C2F7A3-2E88-4F7C-9404-7C811914E003"),
+                petID: receivedPetID,
+                title: localized(chinese: "洗澡护理", english: "Bath & Grooming"),
+                kind: .bathGrooming,
+                dueAt: calendar.date(byAdding: .day, value: 6, to: today)!,
+                scheduleType: .intervalDays,
+                intervalValue: 30,
+                advanceDays: [3, 1, 0]
+            )
+        ]
+        let receivedSharedPet = FamilySharedPet(
+            location: FamilyShareLocation(
+                zoneName: "marketing-family-hachi",
+                zoneOwnerName: "marketing-caregiver",
+                databaseScope: .shared
+            ),
+            ownerName: localized(chinese: "小雨", english: "Alex"),
+            role: .editor,
+            payload: FamilyPetSharePayload(
+                exportedAt: today,
+                pet: receivedPet,
+                records: receivedRecords,
+                reminders: receivedReminders
+            ),
+            members: [
+                FamilyShareMember(
+                    id: "marketing-caregiver",
+                    personID: "marketing-caregiver",
+                    displayName: localized(chinese: "小雨", english: "Alex"),
+                    accountIdentifier: nil,
+                    role: .owner,
+                    status: .accepted,
+                    isCurrentUser: false
+                ),
+                FamilyShareMember(
+                    id: "marketing-viewer",
+                    personID: "marketing-viewer",
+                    displayName: localized(chinese: "我", english: "Me"),
+                    accountIdentifier: nil,
+                    role: .editor,
+                    status: .accepted,
+                    isCurrentUser: true
+                )
+            ]
         )
 
         let store = FamilySharingStore(restoredSharedPets: [])
-        store.ownedSharedPets = [sharedPet]
+        store.sharedPets = [receivedSharedPet]
+        store.ownedSharedPets = [ownedSharedPet]
+        // Populate after init so launch-selection resolution treats this as an
+        // intentional screenshot choice rather than a cache auto-selection.
+        store.selectedSharedPetID = receivedSharedPet.id
         store.recentActivities = [
             FamilyShareActivity(
                 id: uuid("E0C2F7A3-2E88-4F7C-9404-7C811914E001"),
-                petID: petID,
-                petName: pet.name,
+                petID: receivedPetID,
+                petName: receivedPet.name,
                 memberName: localized(chinese: "小雨", english: "Alex"),
                 kind: .joined,
                 occurredAt: calendar.date(byAdding: .day, value: -2, to: today)!,
@@ -237,6 +380,85 @@ enum MarketingDemoData {
             distanceMeters: 2700
         )
     ]
+
+    private static func vaccinationCertificateAttachment(
+        petName: String,
+        clinicName: String,
+        occurredAt: Date
+    ) -> HealthRecordAttachment {
+        // Keep the sample certificate square so the attachment grid can show
+        // the entire document without cropping either localized version.
+        let size = CGSize(width: 800, height: 800)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let imageData = renderer.jpegData(withCompressionQuality: 0.88) { rendererContext in
+            let context = rendererContext.cgContext
+            context.setFillColor(UIColor(red: 0.96, green: 0.94, blue: 0.86, alpha: 1).cgColor)
+            context.fill(CGRect(origin: .zero, size: size))
+
+            context.setStrokeColor(UIColor(red: 0.18, green: 0.48, blue: 0.44, alpha: 1).cgColor)
+            context.setLineWidth(8)
+            context.stroke(CGRect(x: 34, y: 34, width: size.width - 68, height: size.height - 68))
+
+            let title = localized(chinese: "宠物疫苗接种凭证", english: "PET VACCINATION CERTIFICATE")
+            let subtitle = localized(chinese: "演示附件 · 非真实医疗文件", english: "SAMPLE ATTACHMENT · NOT A MEDICAL DOCUMENT")
+            let dateText = occurredAt.formatted(
+                .dateTime.year().month(.wide).day().locale(L10n.locale)
+            )
+            let rows = [
+                localized(chinese: "宠物：\(petName)", english: "Pet: \(petName)"),
+                localized(chinese: "项目：核心疫苗加强针", english: "Service: Core Vaccine Booster"),
+                localized(chinese: "日期：\(dateText)", english: "Date: \(dateText)"),
+                localized(chinese: "机构：\(clinicName)", english: "Clinic: \(clinicName)")
+            ]
+
+            let titleStyle: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: L10n.usesEnglish ? 32 : 40, weight: .bold),
+                .foregroundColor: UIColor(red: 0.12, green: 0.34, blue: 0.31, alpha: 1)
+            ]
+            let subtitleStyle: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 17, weight: .semibold),
+                .foregroundColor: UIColor(red: 0.42, green: 0.46, blue: 0.43, alpha: 1)
+            ]
+            let rowStyle: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 25, weight: .medium),
+                .foregroundColor: UIColor(red: 0.14, green: 0.18, blue: 0.17, alpha: 1)
+            ]
+
+            (title as NSString).draw(at: CGPoint(x: 68, y: 88), withAttributes: titleStyle)
+            (subtitle as NSString).draw(at: CGPoint(x: 70, y: 148), withAttributes: subtitleStyle)
+
+            for (index, row) in rows.enumerated() {
+                let y = 230 + CGFloat(index * 78)
+                context.setStrokeColor(UIColor.black.withAlphaComponent(0.10).cgColor)
+                context.setLineWidth(2)
+                context.move(to: CGPoint(x: 82, y: y + 52))
+                context.addLine(to: CGPoint(x: 718, y: y + 52))
+                context.strokePath()
+                (row as NSString).draw(at: CGPoint(x: 72, y: y), withAttributes: rowStyle)
+            }
+
+            context.setStrokeColor(UIColor(red: 0.72, green: 0.24, blue: 0.20, alpha: 0.72).cgColor)
+            context.setLineWidth(7)
+            context.strokeEllipse(in: CGRect(x: 570, y: 585, width: 140, height: 140))
+            let stamp = localized(chinese: "示例", english: "SAMPLE")
+            let stampStyle: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: L10n.usesEnglish ? 22 : 32, weight: .bold),
+                .foregroundColor: UIColor(red: 0.72, green: 0.24, blue: 0.20, alpha: 0.72)
+            ]
+            (stamp as NSString).draw(
+                in: CGRect(x: 580, y: 632, width: 120, height: 48),
+                withAttributes: stampStyle
+            )
+        }
+
+        return HealthRecordAttachment(
+            id: uuid("A0C2F7A3-2E88-4F7C-9404-7C811914E001"),
+            kind: .image,
+            data: imageData,
+            originalName: localized(chinese: "疫苗接种凭证.jpg", english: "vaccination-certificate.jpg"),
+            createdAt: occurredAt
+        )
+    }
 
     private static func localized(chinese: String, english: String) -> String {
         L10n.usesEnglish ? english : chinese

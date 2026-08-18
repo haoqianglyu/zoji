@@ -6,6 +6,7 @@ struct ProfileView: View {
     @Environment(AppStore.self) private var store
     @Environment(FamilySharingStore.self) private var familyStore
     @Environment(\.appColorTheme) private var theme
+    @Environment(\.openURL) private var openURL
     @AppStorage(AppAppearance.storageKey) private var appearance = AppAppearance.system
     @AppStorage(AppColorTheme.storageKey) private var colorTheme = AppColorTheme.warm
     @AppStorage(AppUnitSystem.storageKey) private var unitSystem = AppUnitSystem.system
@@ -200,6 +201,30 @@ struct ProfileView: View {
                 }
 
                 Section {
+                    Button {
+                        openAppStoreReviewPage()
+                    } label: {
+                        HStack {
+                            Label {
+                                Text(verbatim: LegalCopy.text("给爪记评分", "Rate Zoji"))
+                                    .foregroundStyle(.primary)
+                            } icon: {
+                                Image(systemName: "star.fill")
+                                    .foregroundStyle(theme.accent)
+                            }
+                            Spacer()
+                            Image(systemName: "arrow.up.forward.app")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                } header: {
+                    Text(verbatim: LegalCopy.text("支持爪记", "Support Zoji"))
+                }
+
+                Section {
                     Text("健康周期模板仅用于提高录入效率，请以接种凭证、产品说明或兽医建议为准。")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
@@ -257,6 +282,13 @@ struct ProfileView: View {
     private func openAppSettings() {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
         UIApplication.shared.open(url)
+    }
+
+    private func openAppStoreReviewPage() {
+        guard let url = URL(
+            string: "https://apps.apple.com/app/id6802273364?action=write-review"
+        ) else { return }
+        openURL(url)
     }
 }
 

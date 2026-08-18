@@ -217,9 +217,12 @@ struct RecordsView: View {
             )
             .navigationTitle("记录")
             .navigationDestination(isPresented: $isMarketingHealthRecordPresented) {
-                HealthRecordDetailView(
-                    recordID: UUID(uuidString: "C0C2F7A3-2E88-4F7C-9404-7C811914E001")!
-                )
+                let recordID = UUID(uuidString: "C0C2F7A3-2E88-4F7C-9404-7C811914E001")!
+                if let sharedPet = selectedPet?.sharedPet {
+                    FamilySharedRecordDetailView(sharedPet: sharedPet, recordID: recordID)
+                } else {
+                    HealthRecordDetailView(recordID: recordID)
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

@@ -79,9 +79,7 @@ struct FamilySharingView: View {
                             HStack(spacing: 13) {
                                 PetAvatarView(
                                     avatarData: sharedPet.pet.avatarData,
-                                    avatarPresetID: PersistenceController.isMarketingFamilyScreenshot
-                                        ? nil
-                                        : sharedPet.pet.avatarPresetID,
+                                    avatarPresetID: sharedPet.pet.avatarPresetID,
                                     fallbackSymbol: sharedPet.pet.avatarSymbol,
                                     size: 46
                                 )
@@ -148,9 +146,7 @@ struct FamilySharingView: View {
                         HStack(spacing: 13) {
                             PetAvatarView(
                                 avatarData: pet.avatarData,
-                                avatarPresetID: PersistenceController.isMarketingFamilyScreenshot
-                                    ? nil
-                                    : pet.avatarPresetID,
+                                avatarPresetID: pet.avatarPresetID,
                                 fallbackSymbol: pet.avatarSymbol,
                                 size: 46
                             )
