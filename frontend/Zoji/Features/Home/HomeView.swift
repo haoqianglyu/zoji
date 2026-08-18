@@ -79,10 +79,6 @@ struct SelectedPetSwitcher: View {
         let isSelected = selection.id == selectedID
         return VStack(spacing: 7) {
             avatar(selection, size: 48, isSelected: isSelected)
-                .overlay {
-                    Circle()
-                        .strokeBorder(isSelected ? theme.accent : .clear, lineWidth: 2.5)
-                }
 
             Text(selection.pet.name)
                 .font(.caption.weight(isSelected ? .bold : .medium))
@@ -117,6 +113,12 @@ struct SelectedPetSwitcher: View {
             background: isSelected ? (style == .avatar ? theme.accent : .white.opacity(0.22)) : theme.accentSoft,
             foreground: isSelected ? .white : theme.accent
         )
+        .overlay {
+            if style == .avatar {
+                Circle()
+                    .strokeBorder(isSelected ? theme.accent : .clear, lineWidth: 2.5)
+            }
+        }
         .overlay(alignment: .bottomTrailing) {
             if selection.isShared {
                 Image(systemName: "person.2.fill")
