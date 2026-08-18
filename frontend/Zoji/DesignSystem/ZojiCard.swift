@@ -85,8 +85,7 @@ struct PetAvatarView: View {
         .frame(width: size, height: size)
         .clipShape(Circle())
         .overlay {
-            if avatarData == nil,
-               PetAvatarPreset.find(avatarPresetID) != nil {
+            if avatarData != nil || PetAvatarPreset.find(avatarPresetID) != nil {
                 Circle()
                     .strokeBorder(
                         LinearGradient(
