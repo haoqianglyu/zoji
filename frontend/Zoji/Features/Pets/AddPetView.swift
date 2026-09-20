@@ -22,6 +22,7 @@ struct PetEditorView: View {
     @State private var avatarData: Data?
     @State private var avatarPresetID: String?
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var avatarCropSource: AvatarCropSource?
     @State private var isShowingAvatarLibrary = false
     @State private var isLoadingAvatar = false
     @State private var isSaving = false
@@ -135,7 +136,7 @@ struct PetEditorView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") { savePet() }
                         .fontWeight(.semibold)
-                        .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
+                        .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving || isLoadingAvatar)
                 }
             }
             .interactiveDismissDisabled(isSaving)
@@ -145,6 +146,12 @@ struct PetEditorView: View {
             .sheet(isPresented: $isShowingAvatarLibrary) {
                 PetAvatarLibraryView(selectedPresetID: avatarPresetID) { preset in
                     selectAvatarPreset(preset)
+                }
+            }
+            .fullScreenCover(item: $avatarCropSource) { source in
+                AvatarCropView(image: source.image) { croppedData in
+                    avatarData = croppedData
+                    avatarPresetID = nil
                 }
             }
             .alert("保存失败", isPresented: Binding(
@@ -228,6 +235,13 @@ struct PetEditorView: View {
                 fallbackSymbol: species.avatarSymbol,
                 size: 62
             )
+            .overlay {
+                if isLoadingAvatar {
+                    ProgressView()
+                        .padding(8)
+                        .background(.regularMaterial, in: Circle())
+                }
+            }
 
             VStack(alignment: .leading, spacing: 7) {
                 Text(hasSelectedAvatar ? "已选择头像" : "头像可稍后添加")
@@ -533,39 +547,19 @@ struct PetEditorView: View {
 
             do {
                 guard let sourceData = try await item.loadTransferable(type: Data.self),
-                      let processedData = Self.processAvatar(sourceData)
+                      let image = await Task.detached(priority: .userInitiated, operation: {
+                          AvatarImageProcessor.prepare(sourceData)
+                      }).value
                 else {
                     errorMessage = L10n.string("无法读取这张照片，请换一张后再试。")
                     return
                 }
-                avatarData = processedData
-                avatarPresetID = nil
+                focusedField = nil
+                avatarCropSource = AvatarCropSource(image: image)
             } catch {
                 errorMessage = L10n.string("无法读取这张照片，请换一张后再试。")
             }
         }
-    }
-
-    private static func processAvatar(_ data: Data) -> Data? {
-        guard let image = UIImage(data: data) else { return nil }
-        let maximumDimension: CGFloat = 1_024
-        let currentMaximum = max(image.size.width, image.size.height)
-        guard currentMaximum > 0 else { return nil }
-
-        let ratio = min(1, maximumDimension / currentMaximum)
-        let targetSize = CGSize(
-            width: max(1, image.size.width * ratio),
-            height: max(1, image.size.height * ratio)
-        )
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        format.opaque = true
-        let resizedImage = UIGraphicsImageRenderer(size: targetSize, format: format).image { _ in
-            UIColor.systemBackground.setFill()
-            UIRectFill(CGRect(origin: .zero, size: targetSize))
-            image.draw(in: CGRect(origin: .zero, size: targetSize))
-        }
-        return resizedImage.jpegData(compressionQuality: 0.82)
     }
 }
 

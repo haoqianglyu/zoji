@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-09",
+  "appId": "6802273364",
+  "localizations": {
+    "zh-Hans": {
+      "name": "爪记 Zoji - 宠物健康记录与疫苗驱虫提醒",
+      "subtitle": "养猫养狗日记，体重管理、病历整理与家人共同照护",
+      "keywords": "猫咪,狗狗,养宠,多宠,档案,用药,体检,接种,就医,复诊,医院,记账,费用,相册,成长,生日,定时,待办,周期,同步,iCloud,家庭共享,铲屎官,记录本",
+      "promotionalText": "猫咪狗狗的疫苗、驱虫和用药时间，交给爪记提醒。体重变化、病历照片与日常记录集中保存，还能邀请家人一起照顾多只宠物。无需注册账号，支持 iCloud 同步。",
+      "whatsNew": "本次更新优化了 App Store 中的功能介绍和截图展示，帮助你更清楚地了解疫苗驱虫提醒、健康记录和家庭照护功能。"
+    },
+    "en-US": {
+      "name": "Zoji: Pet Health Tracker",
+      "subtitle": "Care Reminders, Family Sharing",
+      "keywords": "dog,cat,vaccine,deworming,medication,weight,vet,records,diary,appointment,kitten,puppy,medical,log",
+      "promotionalText": "Keep pet care on track with vaccine, deworming and medication reminders. Save weight and vet records, and care together with family. No sign-up; optional iCloud sync.",
+      "whatsNew": "Updated our App Store description and screenshot presentation to make pet care reminders, health records, and family sharing easier to discover."
+    }
+  },
+  "screenshotOrder": [
+    "03-reminders.png",
+    "06-health-record.png",
+    "01-home.png",
+    "04-family.png",
+    "02-records.png",
+    "05-hospitals.png"
+  ],
+  "version": "1.0.1",
+  "build": "7",
+  "submissionStatus": "Waiting for Review",
+  "submissionUrl": "https://appstoreconnect.apple.com/apps/6802273364/distribution/reviewsubmissions/details/28e20791-1572-40b7-ab2a-eea09b6ece02",
+  "releaseMode": "manual"
+}

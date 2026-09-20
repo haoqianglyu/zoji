@@ -1,52 +1,72 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
-    "宠物资料、生活与健康记录会先保存在本机；开启 iCloud 后，可通过你的私有 iCloud 空间在 Apple 设备间同步。" : {
+    "使用头像" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pet profiles, life entries, and health records are stored on this device first. With iCloud enabled, they can sync across your Apple devices through your private iCloud storage."
+            "value" : "Use Avatar"
           }
         }
       }
     },
-    "可以按宠物邀请家人共同维护资料、生活与健康记录和提醒。邀请时可选择“可更改”或“仅查看”。" : {
+    "头像裁剪区域" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invite family members to help care for each pet, including life entries and health records. Choose edit or view-only access for every invitation."
+            "value" : "Avatar Crop Area"
           }
         }
       }
     },
-    "生活与健康记录、照片和附件" : {
+    "拖动照片调整位置，双指缩放" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Life & Health Records, Photos & Attachments"
+            "value" : "Drag to reposition, pinch to zoom"
           }
         }
       }
     },
-    "对方可以修改宠物资料、生活与健康记录、附件和提醒。" : {
+    "无法裁剪这张照片，请重试。" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "They can edit this pet’s profile, life and health records, attachments, and reminders."
+            "value" : "This photo could not be cropped. Please try again."
           }
         }
       }
     },
-    "恢复 %@ 为日常档案" : {
+    "缩放" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Restore %@ to Active Profiles"
+            "value" : "Zoom"
+          }
+        }
+      }
+    },
+    "裁剪头像" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crop Avatar"
+          }
+        }
+      }
+    },
+    "重置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset"
           }
         }
       }
@@ -1834,11 +1854,22 @@
       }
     },
     "可以按宠物邀请家人共同维护资料、健康记录和提醒。邀请时可选择“可更改”或“仅查看”。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Invite family members to help care for each pet. Choose edit or view-only access for every invitation."
+          }
+        }
+      }
+    },
+    "可以按宠物邀请家人共同维护资料、生活与健康记录和提醒。邀请时可选择“可更改”或“仅查看”。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite family members to help care for each pet, including life entries and health records. Choose edit or view-only access for every invitation."
           }
         }
       }
@@ -2431,6 +2462,17 @@
         }
       }
     },
+    "宠物资料、生活与健康记录会先保存在本机；开启 iCloud 后，可通过你的私有 iCloud 空间在 Apple 设备间同步。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pet profiles, life entries, and health records are stored on this device first. With iCloud enabled, they can sync across your Apple devices through your private iCloud storage."
+          }
+        }
+      }
+    },
     "宠物资料与头像" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2575,11 +2617,22 @@
       }
     },
     "对方可以修改宠物资料、健康记录、附件和提醒。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "They can edit this pet’s profile, records, attachments, and reminders."
+          }
+        }
+      }
+    },
+    "对方可以修改宠物资料、生活与健康记录、附件和提醒。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They can edit this pet’s profile, life and health records, attachments, and reminders."
           }
         }
       }
@@ -3410,8 +3463,17 @@
         }
       }
     },
+    "恢复 %@ 为日常档案" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore %@ to Active Profiles"
+          }
+        }
+      }
+    },
     "恢复 %@？" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6117,6 +6179,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Life"
+          }
+        }
+      }
+    },
+    "生活与健康记录、照片和附件" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Life & Health Records, Photos & Attachments"
           }
         }
       }
